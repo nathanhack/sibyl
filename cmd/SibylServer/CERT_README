@@ -1,0 +1,44 @@
+//Use the following to generate self-singed certs
+// Generate private key (.key)
+//   Key considerations for algorithm "RSA" ≥ 2048-bit
+openssl genrsa -out server.key 2048
+
+//   Key considerations for algorithm "ECDSA" ≥ secp384r1
+//   List ECDSA the supported curves (openssl ecparam -list_curves)
+openssl ecparam -genkey -name secp384r1 -out server.key
+
+// Generation of self-signed(x509) public key (PEM-encodings .pem|.crt) based on the private (.key)
+openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
+
+
+
+//////////////////////////////////////////////////////
+// The following may also be used instead
+//Generation of self-sign a certificate with a private (.key) and public key (PEM-encodings .pem|.crt) in one command:
+// ECDSA recommendation key ≥ secp384r1
+// List ECDSA the supported curves (openssl ecparam -list_curves)
+openssl req -x509 -nodes -newkey ec:secp384r1 -keyout server.ecdsa.key -out server.ecdsa.crt -days 3650
+// openssl req -x509 -nodes -newkey ec:<(openssl ecparam -name secp384r1) -keyout server.ecdsa.key -out server.ecdsa.crt -days 3650
+// -pkeyopt ec_paramgen_curve:… / ec:<(openssl ecparam -name …) / -newkey ec:…
+
+// RSA recommendation key ≥ 2048-bit
+openssl req -x509 -nodes -newkey rsa:2048 -keyout server.rsa.key -out server.rsa.crt -days 3650
+
+
+//Finally here is how to create CSRs to be used and how to use it
+// Generating the Certficate Signing Request
+openssl req -new -sha256 -key server.key -out server.csr
+openssl x509 -req -sha256 -in server.csr -signkey server.key -out server.crt -days 3650
+
+
+//FOR MORE help goto https://github.com/denji/golang-tls for more info
+// https://www.digitalocean.com/community/tutorials/openssl-essentials-working-with-ssl-certificates-private-keys-and-csrs
+//https://www.ibm.com/support/knowledgecenter/en/SSWHYP_4.0.0/com.ibm.apimgmt.cmc.doc/task_apionprem_gernerate_self_signed_openSSL.html
+
+
+//USE the following to make a p12 to import into chrome
+openssl pkcs12 -inkey server.ecdsa.key -in server.ecdsa.crt -export -out server.ecdsa.p12
+
+
+//ALSO look into this page for making certs
+https://github.com/golang/go/blob/master/src/crypto/tls/generate_cert.go
