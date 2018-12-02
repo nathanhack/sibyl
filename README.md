@@ -1,6 +1,6 @@
 ![sibylwithtextgrad2](https://user-images.githubusercontent.com/9204400/49330993-96c7a080-f564-11e8-9285-069ebb91d06c.png)
 
-Sibyl is a **Display Only** stock trading platform. For most discount brokers that provide an API, any access to that API would be required to be Display Only program.  Sibyl was created to provide a platform that would satisfy that requirement and provide a UI for trading regardless of your discount broker.
+Sibyl is a **Display Only** stock trading platform. For most discount brokers that provide an API, any access to that API would be required to be Display Only.  Sibyl was created to provide a platform that would satisfy that requirement and provide a UI for trading regardless of your discount broker.
 
 # Table of Contents
 
