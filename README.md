@@ -80,7 +80,7 @@ To set the creds for the discount broker use the following command:
 
     SibylCli set ally key secret token tokenSecret
     
-Note currently only Ally is supported.
+Note currently only [Ally Invest](https://www.ally.com/invest/) is supported.
 
 ## Web GUI
 To be added in a future release.
