@@ -13,6 +13,7 @@ Sibyl is a **Display Only** stock trading platform. For most discount brokers th
     * [Showing](#showing)
     * [Enabling](#enabling)
     * [Deleting](#deleting)
+    * [Setting](#setting)
   - [Web GUI](#web-gui)
 
 # Installing
@@ -47,10 +48,10 @@ Additionally, this is a system value that must be set:
     SET GLOBAL local_infile = 'ON';
 
 ## SibylCli
-To interact with the SibylServer there is a cli tool called SibylCli. Tool supports adding and deleting stocks, history and intraday values.  Once a stock is added it will validate symbol was a valid stock.
+To interact with the SibylServer there is a cli tool called SibylCli. The tool supports adding and deleting stocks, showing stocks, history and intraday values, and setting up creds for the discount broker.  Once a stock is added it will validate the symbol was a valid stock and depending on which actions are enabled it will being downloading the appropriate information.
 
 ### Adding
-To add a stock for the SibylServer track you execute the following command. Note you must [enable](#enabling) downloading for the stock.
+To add a stock for the SibylServer track you execute the following command. Note you must [enable](#enabling) downloading for the stock, because any new stocks added default to disabled for all actions.
 
     SibylCli add STOCK
 
@@ -65,13 +66,21 @@ To show the history for a particular stock:
     SibylCli show history STOCK
 
 ### Enabling
-SibylServer will take perform several actions for all the stocks that has been added to it.  The actions are determined by internal state to the server for each particular stock.
+SibylServer will take perform several actions for all the stocks that has been added to it.  The actions are determined by internal state to the server for each particular stock.  There are lots of options but the easiest one to get started is to run the following command after your done adding stocks (or after adding new ones later).
 
+    SibylCli enable all
 
 ### Deleting
 To remove a stock from SibylServer use the following command. Note that it will delete all data associated with that stock so use carefully.
 
     SibylCli delete STOCK
+
+### Setting
+To set the creds for the discount broker use the following command:
+
+    SibylCli set ally key secret token tokenSecret
+    
+Note currently only Ally is supported.
 
 ## Web GUI
 To be added in a future release.
