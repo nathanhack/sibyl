@@ -17,7 +17,7 @@ Sibyl is a **Display Only** stock trading platform. For most discount brokers th
   - [Web GUI](#web-gui)
 
 # Installing
-Using Sibyl is easy. First, use `go get` to install the latest version.  Note Sibyl requires Golang version 1.11+.
+Using Sibyl is easy. First, use `go get` to install the latest version.  Note Sibyl requires Golang version 1.11.2+.
 
     go get -u github.com/nathanhack/sibyl/cmd/...
 
