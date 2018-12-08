@@ -48,26 +48,25 @@ func (sqg *StableQuoteGrabber) Run() error {
 			case <-sqg.killCtx.Done():
 				break mainLoop
 			case <-time.After(durationToWait):
-				runGrabber <- true
-			case <-sqg.symbolCache.StableQuoteStockSymbolsChanged:
-				//since this and the options changed MAY happen around the same
-				// time we'll put in a small delay here to give the signals time
-				// to propagate
-				time.Sleep(100 * time.Millisecond)
-				runGrabber <- true
-			case <-sqg.symbolCache.StableQuoteOptionSymbolsChanged:
-				runGrabber <- true
-			case <-runGrabber:
-				//first drain the channel of requests
-			drainGrabberLoop:
-				for {
-					select {
-					case <-runGrabber:
-						continue
-					default:
-						break drainGrabberLoop
-					}
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
 				}
+			case <-sqg.symbolCache.StableQuoteStockSymbolsChanged:
+				//this is a signal from the cache that we've had an update
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
+				}
+			case <-sqg.symbolCache.StableQuoteOptionSymbolsChanged:
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
+				}
+			case <-runGrabber:
 				//now schedule the to do this again in 4 hrs there is the chance we didn't get everything so
 				// this will give us 6 trys per day
 				durationToWait = 4 * time.Hour
