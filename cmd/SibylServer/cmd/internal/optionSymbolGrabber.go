@@ -48,9 +48,8 @@ func (osg *OptionSymbolGrabber) Run() error {
 		waitForForever := 1000 * time.Hour
 		wait1Min := 1 * time.Minute
 		tryAgainIn := waitForForever
-		failedSymbols := make(map[core.StockSymbolType]bool)
-
-		runGrabber := make(chan bool, 100)
+		failedSymbols := make(map[core.StockSymbolType]int)
+		runGrabber := make(chan bool, 1)
 	mainLoop:
 		for {
 			select {
@@ -58,12 +57,20 @@ func (osg *OptionSymbolGrabber) Run() error {
 				break mainLoop
 			case <-time.After(durationToWait):
 				//clean out any failed ones
-				failedSymbols = make(map[core.StockSymbolType]bool)
+				failedSymbols = make(map[core.StockSymbolType]int)
 				tryAgainIn = waitForForever
-				runGrabber <- true
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
+				}
 			case <-time.After(tryAgainIn):
 				tryAgainIn = waitForForever
-				runGrabber <- true
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
+				}
 			case <-osg.RequestUpdate:
 				//first we drain the chan
 			drainRequestUpdateLoop:
@@ -76,20 +83,14 @@ func (osg *OptionSymbolGrabber) Run() error {
 					}
 				}
 				//clear all history
-				failedSymbols = make(map[core.StockSymbolType]bool)
+				failedSymbols = make(map[core.StockSymbolType]int)
 				tryAgainIn = waitForForever
-				runGrabber <- true
-			case <-runGrabber:
-				//first we drain the chan
-			drainGrabberLoop:
-				for {
-					select {
-					case <-runGrabber:
-						continue
-					default:
-						break drainGrabberLoop
-					}
+				select {
+				//non-blocking add
+				case runGrabber <- true:
+				default:
 				}
+			case <-runGrabber:
 				//now we start the actual task
 				startTime := time.Now()
 				agent, err := osg.db.GetAgent(osg.killCtx)
@@ -105,7 +106,6 @@ func (osg *OptionSymbolGrabber) Run() error {
 				symbols := make([]core.StockSymbolType, 0)
 
 				if len(failedSymbols) == 0 {
-
 					stocks, err := osg.db.GetAllStockRecords(osg.killCtx)
 					if err != nil {
 						logrus.Errorf("OptionSymbolGrabber: had a problem getting list of stocks: %v", err)
@@ -119,8 +119,10 @@ func (osg *OptionSymbolGrabber) Run() error {
 						}
 					}
 				} else {
-					for stock := range failedSymbols {
-						symbols = append(symbols, stock)
+					for stock, count := range failedSymbols {
+						if count < 4 {
+							symbols = append(symbols, stock)
+						}
 					}
 				}
 
@@ -144,13 +146,21 @@ func (osg *OptionSymbolGrabber) Run() error {
 						if err := osg.db.SetOptionsForStock(osg.killCtx, symbol, options); err != nil {
 							logrus.Errorf("OptionSymbolGrabber: failed during adding options to data, submitting to retry, error found: %v", err)
 							//request an another update until we get a clean run
-							failedSymbols[symbol] = true
+							if _, has := failedSymbols[symbol]; has {
+								failedSymbols[symbol]++
+							} else {
+								failedSymbols[symbol] = 0
+							}
 							tryAgainIn = wait1Min
 						}
 					} else if len(options) == 0 {
 						//there should have been something so we should do another request
 						logrus.Errorf("OptionSymbolGrabber: found 0 option symbols for %v, submitting to retry", symbol)
-						failedSymbols[symbol] = true
+						if _, has := failedSymbols[symbol]; has {
+							failedSymbols[symbol]++
+						} else {
+							failedSymbols[symbol] = 0
+						}
 						tryAgainIn = wait1Min
 					}
 				}
