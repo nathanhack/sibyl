@@ -325,7 +325,7 @@ func init() {
 	showCmd.PersistentFlags().BoolVarP(&useCSV, "csv", "", false, "makes output CSV formatted")
 
 	showStocksCmd.Flags().BoolVarP(&details, "details", "d", false, "show all details about the stocks")
-	showStocksCmd.Flags().BoolVarP(&validOnly, "validOnly", "v", false, "show ONLY validated stocks")
+	showStocksCmd.Flags().BoolVarP(&validOnly, "valid", "v", false, "show ONLY validated stocks")
 	showStocksCmd.Flags().BoolVarP(&invalidOnly, "invalid", "i", false, "show ONLY invalidated stocks")
 
 	showCmd.AddCommand(showHistoryCmd)
