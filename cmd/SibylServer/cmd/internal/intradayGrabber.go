@@ -43,28 +43,27 @@ func (ig *IntradayGrabber) Run() error {
 		//we'll start this up with a short delay
 		durationToWait := 15 * time.Second
 		failedStocksAndDays := make(map[core.StockSymbolType]core.TimestampType)
-		runIntradyGrabber := make(chan bool, 100)
+		runIntradyGrabber := make(chan bool, 1)
 	mainLoop:
 		for {
 			select {
 			case <-ig.killCtx.Done():
 				break mainLoop
 			case <-ig.symbolCache.IntradaySymbolsChanged:
-				runIntradyGrabber <- true
-			case <-time.After(durationToWait):
-				runIntradyGrabber <- true
-			case <-runIntradyGrabber:
-				//first we drain the chan
-			drainLoop:
-				for {
-					select {
-					case <-runIntradyGrabber:
-						continue
-					default:
-						break drainLoop
-					}
+				select {
+				//non-blocking add
+				case runIntradyGrabber <- true:
+				default:
 				}
-
+				failedStocksAndDays = make(map[core.StockSymbolType]core.TimestampType)
+			case <-time.After(durationToWait):
+				select {
+				//non-blocking add
+				case runIntradyGrabber <- true:
+				default:
+				}
+				failedStocksAndDays = make(map[core.StockSymbolType]core.TimestampType)
+			case <-runIntradyGrabber:
 				currentTime := time.Now()
 				agent, err := ig.db.GetAgent(ig.killCtx)
 				if err != nil {
@@ -88,48 +87,56 @@ func (ig *IntradayGrabber) Run() error {
 				//first we make a map of stocks and the number of days we need to get for each one upto yesterdayOrLastWeekday
 				// intraday should also be upto 1600 however, sometimes the there are missing values so we'll be an earlier time just in case
 				yesterdayOrLastWeekday := core.NewTimestampTypeFromTime(time.Date(year, month, day-1, 12, 0, 0, 0, time.Local))
-				for yesterdayOrLastWeekday.IsWeekDay() {
+				for !yesterdayOrLastWeekday.IsWeekDay() {
 					yesterdayOrLastWeekday = yesterdayOrLastWeekday.AddDate(0, 0, -1)
 				}
-				for stock := range intradaySymbolsToDownload {
-					//TODO make the intradayhistory time a configuration
-					startTime, err := ig.db.LastIntradayHistoryDate(ig.killCtx, stock)
-					if err != nil ||
-						startTime == emptyTime ||
-						(len(failedStocksAndDays) == 0 && rand.Intn(2) == 0) {
-						// if we couldn't find the last date or the date was zero or if we randomly picked it we'll
-						// want the max number of days of intradays data which is either 5 or 10 days (as defined by the services web sites)
-						// HOWEVER, depending on discount broker .. it can b e 45 - 60 days depending on the stock
-						// so we'll start high and over time roll down on error
-						if _, has := failedStocksAndDays[stock]; has {
-							//if it was in the failedStockAndDays it means we want to move the date up by one day
-							nTime := failedStocksAndDays[stock].AddDate(0, 0, 1)
-							if nTime.Before(yesterdayOrLastWeekday) {
-								stockAndDays[stock] = nTime
-							} else {
-								stockAndDays[stock] = yesterdayOrLastWeekday.AddDate(0, 0, -60)
-							}
-						} else {
-							stockAndDays[stock] = yesterdayOrLastWeekday.AddDate(0, 0, -60)
+
+				//if this wasn't a repeat for failed intradays
+				if len(failedStocksAndDays) == 0 {
+					for stock := range intradaySymbolsToDownload {
+						//TODO make the intradayhistory time a configuration
+						intrdayMaxHistory := 60
+						startTime, err := ig.db.LastIntradayHistoryDate(ig.killCtx, stock)
+						if err != nil ||
+							startTime == emptyTime ||
+							(len(failedStocksAndDays) == 0 && rand.Intn(6) == 0) {
+							// if we couldn't find the last date or the date was zero or if we randomly picked it we'll
+							// want the max number of days of intradays data which is either 5 or 10 days (as defined by the services web sites)
+							// HOWEVER, depending on discount broker .. it can b e 45 - 60 days depending on the stock
+							// so we'll start high and over time roll down on error
+							stockAndDays[stock] = yesterdayOrLastWeekday.AddDate(0, 0, -intrdayMaxHistory)
 						}
 
-					} else {
-						if startTime.Before(yesterdayOrLastWeekday) {
+						//at a min, we make sure the startTime is before yesterday
+						if !startTime.Before(yesterdayOrLastWeekday) {
 							stockAndDays[stock] = startTime.AddDate(0, 0, -1)
 						}
+
+						if startTime, has := stockAndDays[stock]; has {
+							logrus.Debugf("IntradayGrabber: Grabbing Intraday for %v startTime: %v and endTime: %v", stock, startTime, yesterdayOrLastWeekday)
+						}
 					}
-					if startTime, has := stockAndDays[stock]; has {
-						logrus.Debugf("IntradayGrabber: Grabbing Intraday for %v startTime: %v and endTime: %v", stock, startTime, yesterdayOrLastWeekday)
+				} else {
+					for stock, time := range failedStocksAndDays {
+						// we assume that the failure was because the start datetime was to far in the past
+						// so we'll reduce it by one day and give it another shot
+						nTime := time.AddDate(0, 0, 1)
+						if nTime.Before(yesterdayOrLastWeekday) {
+							stockAndDays[stock] = nTime
+						}
+						//ELSE
+						//we'll just skip this one until the next time we do all the intradays
 					}
 				}
 
-				//we clear out the failed stocks from the previous run and so we can get
+				//we clear out the failed stocks from the previous run, so it will only contain failures from this time
 				failedStocksAndDays = make(map[core.StockSymbolType]core.TimestampType)
 
-				//now we have a set of stock that need to be updated
+				//now we have a set of stocks that need to be updated, go get 'em
 				for stock, startTime := range stockAndDays {
-					// so we'll wait in a select watching for killCtx
+					// if we have gotten the killCtx well jump out of this loop
 					select {
+					// non-blocking check the killCtx
 					case <-ig.killCtx.Done():
 						logrus.Errorf("IntradayGrabber: context canceled")
 						break mainLoop
@@ -150,7 +157,11 @@ func (ig *IntradayGrabber) Run() error {
 
 				if len(failedStocksAndDays) > 0 {
 					//if we had failures we start up right away
-					runIntradyGrabber <- true
+					select {
+					//non-blocking add
+					case runIntradyGrabber <- true:
+					default:
+					}
 					logrus.Infof("IntradayGrabber: finished a round in %v some stocks were not updated, next round to being in %v", time.Since(currentTime), durationToWait)
 				} else {
 					//else everything was successful and we'll schedule the to do this again in 4 hrs
