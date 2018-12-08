@@ -57,7 +57,7 @@ func (sv *StockValidator) Run() error {
 				if stocks, err := sv.db.GetAllStockRecords(sv.killCtx); err != nil {
 					logrus.Errorf("StockValidator: had a problem executing GetAllStocks: %v", err)
 				} else {
-					stocksWhereUpdated := false
+					stocksWereUpdated := false
 					for _, stock := range stocks {
 						if stock.ValidationStatus == core.ValidationPending {
 							good, hasOptions, exchange, exchangeName, name, err := agent.VerifyStockSymbol(sv.killCtx, stock.Symbol)
@@ -76,7 +76,7 @@ func (sv *StockValidator) Run() error {
 										//we'll let the cache and OptionSymbolGrabber know
 										// since the OptionSymbolGrabber will update the cache we'll
 										// just let it know and it will take care of the rest
-										stocksWhereUpdated = true
+										stocksWereUpdated = true
 									}
 								}
 							} else {
@@ -88,7 +88,7 @@ func (sv *StockValidator) Run() error {
 							}
 						}
 					}
-					if stocksWhereUpdated {
+					if stocksWereUpdated {
 						//TODO consider moving this action into the SymbolsCache
 						sv.optionSymbolGrabber.RequestUpdate <- true
 					}
