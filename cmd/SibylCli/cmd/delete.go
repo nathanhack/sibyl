@@ -32,7 +32,7 @@ var deleteCmd = &cobra.Command{
 		}
 
 		for _, s := range stocks {
-			resp, err := resty.R().Delete(fmt.Sprintf("%v/stocks/%v", address, s))
+			resp, err := resty.R().Delete(fmt.Sprintf("%v/stocks/delete/%v", address, s))
 			if err != nil {
 				return fmt.Errorf("There was an error while deleting stock %v, error: %v\n", s, err)
 			} else if resp.StatusCode() != http.StatusOK {

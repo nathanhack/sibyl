@@ -12,7 +12,7 @@ import (
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add stock [stock] ...",
 	Short: "Adds a stock to analyze and trade with",
 	Long:  `The add command adds a one or more stocks`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,7 +34,7 @@ var addCmd = &cobra.Command{
 		}
 
 		for _, s := range stocks {
-			resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/%v", address, s))
+			resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/add/%v", address, s))
 			if err != nil {
 				return fmt.Errorf("There was an error while adding stock %v, error: %v\n", s, err)
 			} else if resp.StatusCode() != http.StatusOK {
