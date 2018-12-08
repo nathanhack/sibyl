@@ -1,6 +1,6 @@
 ![sibylwithtextgrad2](https://user-images.githubusercontent.com/9204400/49330993-96c7a080-f564-11e8-9285-069ebb91d06c.png)
 
-Sibyl is a **Display Only** stock trading platform. For most discount brokers that provide an API, any access to that API would be required to be Display Only program.  Sibyl was created to provide a platform that would satisfy that requirement and provide a UI for trading regardless of your discount broker.
+Sibyl is a **Display Only** stock trading platform. For most discount brokers that provide an API, any access to that API would be required to be Display Only.  Sibyl was created to provide a platform that would satisfy that requirement and provide a UI for trading regardless of your discount broker.
 
 # Table of Contents
 
@@ -17,7 +17,7 @@ Sibyl is a **Display Only** stock trading platform. For most discount brokers th
   - [Web GUI](#web-gui)
 
 # Installing
-Using Sibyl is easy. First, use `go get` to install the latest version.
+Using Sibyl is easy. First, use `go get` to install the latest version.  Note Sibyl requires Golang version 1.11.2+.
 
     go get -u github.com/nathanhack/sibyl/cmd/...
 
@@ -80,7 +80,7 @@ To set the creds for the discount broker use the following command:
 
     SibylCli set ally key secret token tokenSecret
     
-Note currently only Ally is supported.
+Note currently only [Ally Invest](https://www.ally.com/invest/) is supported.
 
 ## Web GUI
 To be added in a future release.
