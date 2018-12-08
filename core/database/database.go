@@ -1495,7 +1495,10 @@ func (sd *SibylDatabase) StockSetExchangeInfoAndName(killCtx context.Context, sy
 	if err := sd.stockOneElementChange(killCtx, symbol, "exchangeDescription", exchangeDescription); err != nil {
 		return err
 	}
-	if err := sd.stockOneElementChange(killCtx, symbol, "name", name); err != nil {
+
+	escapeSingleQuote := strings.NewReplacer("'", "''")
+
+	if err := sd.stockOneElementChange(killCtx, symbol, "name", escapeSingleQuote.Replace(name)); err != nil {
 		return err
 	}
 	return nil
