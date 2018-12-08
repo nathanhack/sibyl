@@ -40,28 +40,25 @@ func (hg *HistoryGrabber) Run() error {
 	hg.running = true
 	go func(hg *HistoryGrabber) {
 		durationToWait := 23 * time.Second
-		runHistoryGrabber := make(chan bool, 100)
+		runHistoryGrabber := make(chan bool, 1)
 	mainLoop:
 		for {
 			select {
 			case <-hg.killCtx.Done():
 				break mainLoop
 			case <-hg.symbolCache.HistorySymbolsChanged:
-				runHistoryGrabber <- true
-			case <-time.After(durationToWait):
-				runHistoryGrabber <- true
-			case <-runHistoryGrabber:
-				//first we drain the chan
-			drainLoop:
-				for {
-					select {
-					case <-runHistoryGrabber:
-						continue
-					default:
-						break drainLoop
-					}
+				select {
+				//non-blocking add
+				case runHistoryGrabber <- true:
+				default:
 				}
-
+			case <-time.After(durationToWait):
+				select {
+				//non-blocking add
+				case runHistoryGrabber <- true:
+				default:
+				}
+			case <-runHistoryGrabber:
 				currentTime := time.Now()
 				agent, err := hg.db.GetAgent(hg.killCtx)
 				if err != nil {
@@ -77,7 +74,7 @@ func (hg *HistoryGrabber) Run() error {
 				zeroDate := core.NewDateTypeFromUnix(0)
 				today := core.NewDateTypeFromTime(currentTime)
 				yesterdayOrLastWeekday := today.AddDate(0, 0, -1)
-				for yesterdayOrLastWeekday.IsWeekDay() {
+				for !yesterdayOrLastWeekday.IsWeekDay() {
 					//since we need at least two days for history quote
 					yesterdayOrLastWeekday = yesterdayOrLastWeekday.AddDate(0, 0, -1)
 				}
@@ -118,15 +115,23 @@ func (hg *HistoryGrabber) Run() error {
 						logrus.Infof("HistoryGrabber: getting history info on stock %v", stock)
 						historyRecords, err := agent.GetHistory(hg.killCtx, stock, core.DailyTicks, startTime, today)
 						if err != nil {
-							logrus.Errorf("HistoryGrabber: had a problem getting History Records for %v: %v", stock, err)
+							logrus.Errorf("HistoryGrabber: had a problem getting History (%v-%v) Records for %v: %v", startTime.Time(), yesterdayOrLastWeekday.Time(), stock, err)
 							//well we failed to get the data give it another chance soon
-							runHistoryGrabber <- true
+							select {
+							//non-blocking add
+							case runHistoryGrabber <- true:
+							default:
+							}
 						}
 
 						if err = hg.db.LoadHistoryRecords(hg.killCtx, historyRecords); err != nil {
 							logrus.Errorf("HistoryGrabber: had a problem saving History Records for %v: %v", stock, err)
 							//well we failed to load the data give it another chance soon
-							runHistoryGrabber <- true
+							select {
+							//non-blocking add
+							case runHistoryGrabber <- true:
+							default:
+							}
 						}
 					}
 				}
