@@ -15,6 +15,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -755,8 +756,33 @@ func (ag *AllyAgent) GetQuotes(ctx context.Context, stockSymbols map[core.StockS
 	for stockSymbol := range stockSymbols {
 		symbolStringSlice = append(symbolStringSlice, string(stockSymbol))
 	}
+	sortedOptions := make([]core.OptionSymbolType, 0, len(optionSymbols))
+
 	for optionSymbol := range optionSymbols {
+		sortedOptions = append(sortedOptions, optionSymbol)
+	}
+	// because ally has a timeout we want to sort so the priority is the following
+	// stock then options.  Since options are less like to change a fequently when they are further out in time
+	// options are prioritized by expiration date.
+	sort.Slice(sortedOptions, func(i, j int) bool {
+		return sortedOptions[i].Expiration.Unix() < sortedOptions[j].Expiration.Unix()
+	})
+
+	for _, optionSymbol := range sortedOptions {
 		symbolStringSlice = append(symbolStringSlice, toAllySymbol(optionSymbol))
+	}
+	// since in general anything index over 60k will most like never get hit
+	// so we will randomly mix those up so we get them occasionally
+	if len(symbolStringSlice) > 50000 {
+		// it is assumed that we the last 10k (60k-50k) will get
+		// through we'll shuffle everything beyond 50k
+		rand.Shuffle(len(symbolStringSlice)-50000, func(i, j int) {
+			ii := i + 50000
+			jj := j + 50000
+			tmp := symbolStringSlice[ii]
+			symbolStringSlice[ii] = symbolStringSlice[jj]
+			symbolStringSlice[jj] = tmp
+		})
 	}
 
 	singleQuote := false
@@ -775,17 +801,6 @@ func (ag *AllyAgent) GetQuotes(ctx context.Context, stockSymbols map[core.StockS
 	// to be around the 8k mark
 	//TODO maybe consider a monte carlo method to explore other values and act greedy as on online policy
 	maxSymbolCount := 8000
-	//if the case is we have more than 22k symbols to lookup
-	// we'll want to do a shuffle because we'll be sending them off requests in batches
-	// and we want to ensure the we randomize (to help randomize failures - since
-	// we'll be staggering the requests)
-	if len(symbolStringSlice) > maxSymbolCount {
-		rand.Shuffle(len(symbolStringSlice), func(i, j int) {
-			tmp := symbolStringSlice[i]
-			symbolStringSlice[i] = symbolStringSlice[j]
-			symbolStringSlice[j] = tmp
-		})
-	}
 
 	if len(symbolStringSlice)%maxSymbolCount == 1 {
 		//and we make sure that the last request has more than one symbol in it

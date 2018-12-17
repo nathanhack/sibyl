@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/nathanhack/sibyl/core"
 	"github.com/sirupsen/logrus"
@@ -83,6 +84,41 @@ type allyJsonStableQuoteResponse struct {
 	} `json:"response"`
 }
 
+type xmlStableQuote struct {
+	AnnualDividend    string `xml:"iad"`
+	BookValue         string `xml:"prbook"`
+	ClosePrice        string `xml:"cl"`
+	ContractSize      string `xml:"contract_size"`
+	Div               string `xml:"div"`
+	DivExDate         string `xml:"divexdate"`
+	DivFreq           string `xml:"divfreq"`
+	DivPayDate        string `xml:"divpaydt"`
+	Eps               string `xml:"eps"`
+	HighPrice52Wk     string `xml:"wk52hi"`
+	HighPrice52WkDate string `xml:"wk52hidate"`
+	LowPrice52Wk      string `xml:"wk52lo"`
+	LowPrice52WkDate  string `xml:"wk52lodate"`
+	Multiplier        string `xml:"prem_mult"`
+	OpenPrice         string `xml:"opn"`
+	PriceEarnings     string `xml:"pe"`
+	SharesOutstanding string `xml:"sho"`
+	Symbol            string `xml:"symbol"`
+	Timestamp         string `xml:"timestamp"`
+	Volatility        string `xml:"volatility12"`
+	Yield             string `xml:"yield"`
+}
+
+type allyXMLStableQuoteResponse struct {
+	XMLName     xml.Name `xml:"response"`
+	ID          string   `xml:"id,attr"`
+	Elapsedtime string   `xml:"elapsedtime"`
+	Quotes      struct {
+		Quotetype string           `xml:"quotetype"`
+		Quote     []xmlStableQuote `xml:"quote"`
+	} `xml:"quotes"`
+	Error string `xml:"error"`
+}
+
 func createAllyJsonStableQuoteResponse(response string) (*allyJsonStableQuoteResponse, error) {
 	var allyJsonResponse allyJsonStableQuoteResponse
 	if err := json.Unmarshal([]byte(response), &allyJsonResponse); err != nil {
@@ -93,6 +129,18 @@ func createAllyJsonStableQuoteResponse(response string) (*allyJsonStableQuoteRes
 		return &allyJsonResponse, fmt.Errorf("createAllyJsonStableQuoteResponse: error: %v : %v", allyJsonResponse.Response.Error, string(response))
 	}
 	return &allyJsonResponse, nil
+}
+
+func createAllyXMLStockStableQuoteResponse(response string) (*allyXMLStableQuoteResponse, error) {
+	var allyXMLResponse allyXMLStableQuoteResponse
+	if err := xml.Unmarshal([]byte(response), &allyXMLResponse); err != nil {
+		return &allyXMLResponse, fmt.Errorf("createAllyXMLStockStableQuoteResponse: unmarshal failure: %v\n on response: %v", err, response)
+	}
+
+	if allyXMLResponse.Error != "Success" {
+		return &allyXMLResponse, fmt.Errorf("createAllyXMLStockStableQuoteResponse: error: %v : %v", allyXMLResponse.Error, string(response))
+	}
+	return &allyXMLResponse, nil
 }
 
 ///////////////////////////
@@ -303,6 +351,213 @@ func allyJsonStableQuoteToSibylStableOptionQuoteRecord(quote jsonStableQuote) (*
 	}, nil
 }
 
+func allyXMLStableQuoteToSibylStableStockQuoteRecord(quote xmlStableQuote) (*core.SibylStableStockQuoteRecord, error) {
+	var err error
+
+	///////////////////////
+	var timestamp int64
+	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableStockQuote: the time stamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+	}
+	///////////////////////
+	var annualDividend sql.NullFloat64
+	if annualDividend.Float64, err = strconv.ParseFloat(quote.AnnualDividend, 64); err == nil {
+		annualDividend.Valid = true
+	}
+	/////////////////////////
+	var bookValue sql.NullFloat64
+	if bookValue.Float64, err = strconv.ParseFloat(quote.BookValue, 64); err == nil {
+		bookValue.Valid = true
+	}
+	/////////////////////////
+	var closePrice sql.NullFloat64
+	if closePrice.Float64, err = strconv.ParseFloat(quote.ClosePrice, 64); err == nil {
+		closePrice.Valid = true
+	}
+	/////////////////////////
+	var div sql.NullFloat64
+	if div.Float64, err = strconv.ParseFloat(quote.Div, 64); err == nil {
+		div.Valid = true
+	}
+	/////////////////////////
+	var divFreq core.NullDivFrequency
+	divFreq.DivFreq = core.DivFrequencyType(strings.ToUpper(quote.DivFreq))
+	if divFreq.DivFreq == core.AnnualDiv ||
+		divFreq.DivFreq == core.SemiAnnualDiv ||
+		divFreq.DivFreq == core.QuarterlyDiv ||
+		divFreq.DivFreq == core.MonthlyDiv ||
+		divFreq.DivFreq == core.NoDiv {
+		divFreq.Valid = true
+	}
+	/////////////////////////
+	var divExTimestamp sql.NullInt64
+	//format ex. 20180820
+	if t, err := time.Parse("20060102", quote.DivExDate); err == nil {
+		divExTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		divExTimestamp.Valid = true
+	}
+	/////////////////////////
+	var divPayTimestamp sql.NullInt64
+	//format ex. 20180820
+	if t, err := time.Parse("20060102", quote.DivPayDate); err == nil {
+		divPayTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		divPayTimestamp.Valid = true
+	}
+	/////////////////////////
+	var eps sql.NullFloat64
+	if eps.Float64, err = strconv.ParseFloat(quote.Eps, 64); err == nil {
+		eps.Valid = true
+	}
+	/////////////////////////
+	var highPrice52Wk sql.NullFloat64
+	if highPrice52Wk.Float64, err = strconv.ParseFloat(quote.HighPrice52Wk, 64); err == nil {
+		highPrice52Wk.Valid = true
+	}
+	/////////////////////////
+	var highPrice52WkTimestamp sql.NullInt64
+	// example : 20180116
+	if t, err := time.Parse("20060102", quote.HighPrice52WkDate); err == nil {
+		highPrice52WkTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		highPrice52WkTimestamp.Valid = true
+	}
+	/////////////////////////
+	var lowPrice52Wk sql.NullFloat64
+	if lowPrice52Wk.Float64, err = strconv.ParseFloat(quote.LowPrice52Wk, 64); err == nil {
+		lowPrice52Wk.Valid = true
+	}
+	/////////////////////////
+	var lowPrice52WkTimestamp sql.NullInt64
+	// example : 20170928
+	if t, err := time.Parse("20060102", quote.LowPrice52WkDate); err == nil {
+		lowPrice52WkTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		lowPrice52WkTimestamp.Valid = true
+	}
+	/////////////////////////
+	var openPrice sql.NullFloat64
+	if openPrice.Float64, err = strconv.ParseFloat(quote.OpenPrice, 64); err == nil {
+		openPrice.Valid = true
+	}
+	/////////////////////////
+	var priceEarnings sql.NullFloat64
+	if priceEarnings.Float64, err = strconv.ParseFloat(quote.PriceEarnings, 64); err == nil {
+		priceEarnings.Valid = true
+	}
+	/////////////////////////
+	var sharesOutstanding sql.NullInt64
+	if sharesOutstanding.Int64, err = strconv.ParseInt(quote.SharesOutstanding, 10, 64); err == nil {
+		sharesOutstanding.Valid = true
+	}
+	/////////////////////////
+	var volatility sql.NullFloat64
+	if volatility.Float64, err = strconv.ParseFloat(quote.Volatility, 64); err == nil {
+		volatility.Valid = true
+	}
+	/////////////////////////
+	var yield sql.NullFloat64
+	if yield.Float64, err = strconv.ParseFloat(quote.Yield, 64); err == nil {
+		yield.Valid = true
+	}
+
+	return &core.SibylStableStockQuoteRecord{
+		AnnualDividend:         annualDividend,
+		BookValue:              bookValue,
+		ClosePrice:             closePrice,
+		Div:                    div,
+		DivFreq:                divFreq,
+		DivExTimestamp:         divExTimestamp,
+		DivPayTimestamp:        divPayTimestamp,
+		Eps:                    eps,
+		HighPrice52Wk:          highPrice52Wk,
+		HighPrice52WkTimestamp: highPrice52WkTimestamp,
+		LowPrice52Wk:           lowPrice52Wk,
+		LowPrice52WkTimestamp:  lowPrice52WkTimestamp,
+		OpenPrice:              openPrice,
+		PriceEarnings:          priceEarnings,
+		SharesOutstanding:      sharesOutstanding,
+		Symbol:                 core.StockSymbolType(quote.Symbol),
+		Timestamp:              core.NewDateTypeFromUnix(timestamp),
+		Volatility:             volatility,
+		Yield:                  yield,
+	}, nil
+}
+
+func allyXMLStableQuoteToSibylStableOptionQuoteRecord(quote xmlStableQuote) (*core.SibylStableOptionQuoteRecord, error) {
+	var err error
+
+	///////////////////////
+	var optionSymbolType *core.OptionSymbolType
+	if optionSymbolType, err = toOptionSymbol(quote.Symbol); err != nil {
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: had an error with the symbol %v error: %v", quote.Symbol, err)
+	}
+	///////////////////////
+	var timestamp int64
+	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: had an error processing the timestamp for the symbol %v error: %v", quote.Symbol, err)
+	}
+	/////////////////////////
+	var closePrice sql.NullFloat64
+	if closePrice.Float64, err = strconv.ParseFloat(quote.ClosePrice, 64); err == nil {
+		closePrice.Valid = true
+	}
+	/////////////////////////
+	var contractSize sql.NullInt64
+	if contractSize.Int64, err = strconv.ParseInt(quote.ContractSize, 10, 64); err == nil {
+		contractSize.Valid = true
+	}
+	/////////////////////////
+	var highPrice52Wk sql.NullFloat64
+	if highPrice52Wk.Float64, err = strconv.ParseFloat(quote.HighPrice52Wk, 64); err == nil {
+		highPrice52Wk.Valid = true
+	}
+	/////////////////////////
+	var highPrice52WkTimestamp sql.NullInt64
+	// example : 20180116
+	if t, err := time.Parse("20060102", quote.HighPrice52WkDate); err == nil {
+		highPrice52WkTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		highPrice52WkTimestamp.Valid = true
+	}
+	/////////////////////////
+	var lowPrice52Wk sql.NullFloat64
+	if lowPrice52Wk.Float64, err = strconv.ParseFloat(quote.LowPrice52Wk, 64); err == nil {
+		lowPrice52Wk.Valid = true
+	}
+	/////////////////////////
+	var lowPrice52WkTimestamp sql.NullInt64
+	// example : 20170928
+	if t, err := time.Parse("20060102", quote.LowPrice52WkDate); err == nil {
+		lowPrice52WkTimestamp.Int64 = t.Unix() //number of seconds since epoch
+		lowPrice52WkTimestamp.Valid = true
+	}
+	/////////////////////////
+	var multiplier sql.NullInt64
+	if multiplier.Int64, err = strconv.ParseInt(quote.Multiplier, 10, 64); err == nil {
+		multiplier.Valid = true
+	}
+	/////////////////////////
+	var openPrice sql.NullFloat64
+	if openPrice.Float64, err = strconv.ParseFloat(quote.OpenPrice, 64); err == nil {
+		openPrice.Valid = true
+	}
+	/////////////////////////
+
+	return &core.SibylStableOptionQuoteRecord{
+		ClosePrice:             closePrice,
+		ContractSize:           contractSize,
+		EquityType:             optionSymbolType.OptionType,
+		Expiration:             optionSymbolType.Expiration,
+		HighPrice52Wk:          highPrice52Wk,
+		HighPrice52WkTimestamp: highPrice52WkTimestamp,
+		LowPrice52Wk:           lowPrice52Wk,
+		LowPrice52WkTimestamp:  lowPrice52WkTimestamp,
+		Multiplier:             multiplier,
+		OpenPrice:              openPrice,
+		Symbol:                 optionSymbolType.Symbol,
+		StrikePrice:            optionSymbolType.StrikePrice,
+		Timestamp:              core.NewDateTypeFromUnix(timestamp),
+	}, nil
+}
+
+//////////////////////////
 func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.StockSymbolType]bool, optionSymbols map[core.OptionSymbolType]bool) ([]*core.SibylStableStockQuoteRecord, []*core.SibylStableOptionQuoteRecord, error) {
 	startTime := time.Now()
 	emptyStockRecords := make([]*core.SibylStableStockQuoteRecord, 0)
@@ -333,11 +588,13 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 		symbolStringSlice = append(symbolStringSlice, symbolStringSlice[0])
 	}
 
-	//if the case is we have more than 22k symbols to lookup
+	//Ally doesn't say this anywhere but it seems like after 30 seconds a
+	// request will time out.  After manually testing it, the best seems to be around the 8k mark however
+	// unlike the normal GetQuotes() we dont' care about speed here so long as we get the job done.  To that
+	// end we'll drop it down to 1k so that it doesn't effect GetQuotes() when then are occurring around the same time.
 	// we'll want to do a shuffle because we'll be sending them off requests in batches
-	// and we want to ensure the we randomize (to help randomize failures - since
-	// we'll be staggering the requests)
-	maxSymbolCount := 22000
+	// and we want to ensure the we randomize (to help randomize failures - since we'll be staggering the requests)
+	maxSymbolCount := 1000
 	if len(symbolStringSlice) > maxSymbolCount {
 		rand.Shuffle(len(symbolStringSlice), func(i, j int) {
 			tmp := symbolStringSlice[i]
@@ -375,7 +632,7 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 		//next specify the fields we're interested in; this will help reduce bandwidth usage
 		data.Add("fids", strings.Join(stableQuoteRequestFields, ","))
 
-		request, err := http.NewRequest(http.MethodPost, "https://api.tradeking.com/v1/market/ext/quotes.json", strings.NewReader(data.Encode()))
+		request, err := http.NewRequest(http.MethodPost, "https://api.tradeking.com/v1/market/ext/quotes.xml", strings.NewReader(data.Encode()))
 		if logrus.GetLevel() == logrus.DebugLevel {
 			if dump, err := httputil.DumpRequest(request, true); err != nil {
 				logrus.Debugf("GetStableQuotes: the request:%v", string(dump))
@@ -407,13 +664,13 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 			logrus.Debugf("GetStableQuotes: response body: %v", string(body))
 		}
 
-		response, err := createAllyJsonStableQuoteResponse(string(body))
+		response, err := createAllyXMLStockStableQuoteResponse(string(body))
 		if err != nil {
 			return emptyStockRecords, emptyOptionRecords, fmt.Errorf("GetStableQuotes: %v", err)
 		}
 
 		//TODO performance this loop is slow consider something faster
-		for _, quote := range response.Response.Quotes.Quote {
+		for _, quote := range response.Quotes.Quote {
 			select {
 			case <-ctx.Done():
 				return emptyStockRecords, emptyOptionRecords, fmt.Errorf("context canceled")
@@ -423,7 +680,7 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 			//so for each quote we could have either a stock or option
 			// to check we take the quotes' symbol and see if it's in the the stocks list
 			if _, has := stockSymbols[core.StockSymbolType(quote.Symbol)]; has {
-				if sq, err := allyJsonStableQuoteToSibylStableStockQuoteRecord(quote); err != nil {
+				if sq, err := allyXMLStableQuoteToSibylStableStockQuoteRecord(quote); err != nil {
 					//if the feed is sending a bunch of bad data this can explode with errors
 					// so we limit it to 10
 					if len(errStrings) < 10 {
@@ -435,7 +692,7 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 
 			} else {
 				//else it must be an option
-				if sq, err := allyJsonStableQuoteToSibylStableOptionQuoteRecord(quote); err != nil {
+				if sq, err := allyXMLStableQuoteToSibylStableOptionQuoteRecord(quote); err != nil {
 					//if the feed is sending a bunch of bad data this can explode with errors
 					// so we limit it to 10
 					if len(errStrings) < 10 {
