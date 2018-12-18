@@ -17,9 +17,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"io"
 	"os"
+	"time"
 
+	"github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
 	"github.com/spf13/cobra"
 )
 
@@ -44,17 +46,27 @@ func Execute() {
 		}
 	}
 
-	logFile, err := os.OpenFile(responseErrorLog, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Printf("error log file could not be opened: %v", err)
-		return
-	} else {
-		mw := io.MultiWriter(os.Stdout, logFile)
-		logrus.SetOutput(mw)
-	}
-	defer logFile.Close()
+	writer, _ := rotatelogs.New(
+		responseErrorLog+".%Y%m%d%H%M",
+		rotatelogs.WithLinkName(responseErrorLog),
+		rotatelogs.WithMaxAge(time.Hour*24),         // one day logs
+		rotatelogs.WithRotationTime(time.Hour*24*7), // for seven days
+	)
 
-	err = rootCmd.Execute()
+	hook := lfshook.NewHook(
+		lfshook.WriterMap{
+			logrus.InfoLevel:  writer,
+			logrus.DebugLevel: writer,
+			logrus.ErrorLevel: writer,
+			logrus.WarnLevel:  writer,
+			logrus.FatalLevel: writer,
+		},
+		&logrus.JSONFormatter{},
+	)
+
+	logrus.AddHook(hook)
+
+	err := rootCmd.Execute()
 
 	if err != nil {
 		fmt.Println(err)
