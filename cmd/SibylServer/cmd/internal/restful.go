@@ -81,9 +81,9 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 		Addr: urlR.Host,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		// TODO make these timeouts part of the future configurations
-		WriteTimeout: time.Second * 15, // we'll make this a bit longer than the standard 15 for database downloads
-		ReadTimeout:  time.Second * 15, // we'll make this a bit longer than the standard 15 for database downloads
-		IdleTimeout:  time.Second * 60, // we'll make this a bit longer than the standard 60 for database downloads
+		WriteTimeout: time.Second * 60,  // we'll make this a bit longer than the standard 15 for database downloads
+		ReadTimeout:  time.Second * 60,  // we'll make this a bit longer than the standard 15 for database downloads
+		IdleTimeout:  time.Second * 300, // we'll make this a bit longer than the standard 60 for database downloads
 		Handler:      router,
 	}
 	return server, nil
