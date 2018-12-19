@@ -90,7 +90,7 @@ var databaseDownloadIntraday = &cobra.Command{
 				if databaseRecords.ErrorState.ErrorReturned {
 					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
+					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Intradays), 0644); err != nil {
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
 					fmt.Printf("Successfully downloaded Intraday to file: %v\n", dataBaseFilename)
@@ -135,7 +135,7 @@ var databaseDownloadStockQuoteCmd = &cobra.Command{
 				if databaseRecords.ErrorState.ErrorReturned {
 					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
+					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.StockQuotes), 0644); err != nil {
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
 					fmt.Printf("Successfully downloaded Stock Quotes to file: %v\n", dataBaseFilename)
@@ -174,7 +174,7 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 				if databaseRecords.ErrorState.ErrorReturned {
 					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
+					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.StockStableQuotes), 0644); err != nil {
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
 					fmt.Printf("Successfully downloaded Stock Stable Quotes to file: %v\n", dataBaseFilename)
@@ -219,7 +219,7 @@ var databaseDownloadOptionsQuoteCmd = &cobra.Command{
 				if databaseRecords.ErrorState.ErrorReturned {
 					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
+					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.OptionQuotes), 0644); err != nil {
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
 					fmt.Printf("Successfully downloaded Option Quotes to file: %v\n", dataBaseFilename)
@@ -258,7 +258,7 @@ var databaseDownloadOptionsStableCmd = &cobra.Command{
 				if databaseRecords.ErrorState.ErrorReturned {
 					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
+					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.OptionStableQuotes), 0644); err != nil {
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
 					fmt.Printf("Successfully downloaded Option Stable Quotes to file: %v\n", dataBaseFilename)
