@@ -80,9 +80,10 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	server := &http.Server{
 		Addr: urlR.Host,
 		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
+		// TODO make these timeouts part of the future configurations
+		WriteTimeout: time.Second * 15, // we'll make this a bit longer than the standard 15 for database downloads
+		ReadTimeout:  time.Second * 15, // we'll make this a bit longer than the standard 15 for database downloads
+		IdleTimeout:  time.Second * 60, // we'll make this a bit longer than the standard 60 for database downloads
 		Handler:      router,
 	}
 	return server, nil
@@ -490,7 +491,11 @@ func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, req
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadHistory: successfully downloaded(size:%v)", len(bytes))
 }
 
@@ -525,7 +530,11 @@ func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, re
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadIntraday: successfully downloaded(size:%v)", len(bytes))
 }
 
@@ -559,7 +568,11 @@ func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, 
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadStockQuote: successfully downloaded(size:%v)", len(bytes))
 }
 
@@ -594,7 +607,11 @@ func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter,
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadStockStable: successfully downloaded(size:%v)", len(bytes))
 }
 
@@ -624,7 +641,11 @@ func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadOptionsQuote: successfully downloaded(size:%v)", len(bytes))
 }
 
@@ -654,7 +675,11 @@ func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter
 		return
 	}
 
-	json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
+		return
+	}
 	logrus.Infof("DatabaseDownloadOptionStable: successfully downloaded(size:%v)", len(bytes))
 }
 
