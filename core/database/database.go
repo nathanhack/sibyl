@@ -436,7 +436,9 @@ func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, data
 	}
 
 	insertCommandBuilder := strings.Builder{}
-	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::test' ")
+	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE '")
+	insertCommandBuilder.WriteString(filePathname)
+	insertCommandBuilder.WriteString("' ")
 	insertCommandBuilder.WriteString(string(action))
 	insertCommandBuilder.WriteString(" INTO TABLE `")
 	insertCommandBuilder.WriteString(databaseName)
