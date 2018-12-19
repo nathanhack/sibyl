@@ -420,7 +420,7 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 	return nil
 }
 
-func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, databaseName, tableName string, recordFieldNames []string, action LoadDupAction) error {
+func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, databaseName, tableName string, combineIntoID []string, recordFieldNames []string, action LoadDupAction) error {
 	if _, err := os.Stat(filePathname); os.IsNotExist(err) {
 		return fmt.Errorf("loadFile: file must exist")
 	}
@@ -430,25 +430,58 @@ func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, data
 
 	mysql.RegisterLocalFile(filePathname)
 
+	variables := make(map[string]string)
+	for i, name := range combineIntoID {
+		variables[name] = fmt.Sprintf("var%v", i)
+	}
+
 	insertCommandBuilder := strings.Builder{}
-	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE '")
-	insertCommandBuilder.WriteString(filePathname)
-	insertCommandBuilder.WriteString("' ")
+	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::test' ")
 	insertCommandBuilder.WriteString(string(action))
 	insertCommandBuilder.WriteString(" INTO TABLE `")
 	insertCommandBuilder.WriteString(databaseName)
 	insertCommandBuilder.WriteString("`.`")
 	insertCommandBuilder.WriteString(tableName)
 	insertCommandBuilder.WriteString("` FIELDS TERMINATED BY ';' (")
-	insertCommandBuilder.WriteString("`")
-	insertCommandBuilder.WriteString(recordFieldNames[0])
-	insertCommandBuilder.WriteString("`")
-	for _, fieldName := range recordFieldNames[1:] {
-		insertCommandBuilder.WriteString(",`")
-		insertCommandBuilder.WriteString(fieldName)
+	if inList(recordFieldNames[0], combineIntoID) {
+		insertCommandBuilder.WriteString("@")
+		insertCommandBuilder.WriteString(variables[recordFieldNames[0]])
+	} else {
+		insertCommandBuilder.WriteString("`")
+		insertCommandBuilder.WriteString(recordFieldNames[0])
 		insertCommandBuilder.WriteString("`")
 	}
-	insertCommandBuilder.WriteString(");")
+	for _, fieldName := range recordFieldNames[1:] {
+		if inList(fieldName, combineIntoID) {
+			insertCommandBuilder.WriteString(",@")
+			insertCommandBuilder.WriteString(variables[fieldName])
+		} else {
+			insertCommandBuilder.WriteString(",`")
+			insertCommandBuilder.WriteString(fieldName)
+			insertCommandBuilder.WriteString("`")
+		}
+	}
+	insertCommandBuilder.WriteString(")")
+
+	if len(combineIntoID) > 0 {
+		// we take these and concat into 'id'
+		insertCommandBuilder.WriteString(" SET `id` = concat(")
+		insertCommandBuilder.WriteString("@")
+		insertCommandBuilder.WriteString(variables[combineIntoID[0]])
+		for _, name := range combineIntoID[1:] {
+			insertCommandBuilder.WriteString(",@")
+			insertCommandBuilder.WriteString(variables[name])
+		}
+		insertCommandBuilder.WriteString(")")
+
+		for _, name := range combineIntoID {
+			insertCommandBuilder.WriteString(", `")
+			insertCommandBuilder.WriteString(name)
+			insertCommandBuilder.WriteString("`= @")
+			insertCommandBuilder.WriteString(variables[name])
+		}
+	}
+	insertCommandBuilder.WriteString(";")
 	_, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String())
 
 	mysql.DeregisterLocalFile(filePathname)
@@ -505,42 +538,42 @@ func (sd *SibylDatabase) GetCreds(ctx context.Context) (*core.SibylCreds, error)
 	return nil, fmt.Errorf("GetCreds: no values")
 }
 
-func (sd *SibylDatabase) LoadOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+func (sd *SibylDatabase) LoadStockQuoteRecords(ctx context.Context, quotes []*core.SibylStockQuoteRecord) error {
 	startTime := time.Now()
+	if len(quotes) == 0 {
+		return nil
+	}
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, OptionQuotesTableName, []string{
+	records := make([]DatabaseStringer, len(quotes))
+	for i, q := range quotes {
+		records[i] = q
+	}
+
+	err := sd.loadRecords(ctx, records, SibylDatabaseName, StockQuotesTableName, []string{}, []string{
 		"ask",
 		"askTime",
 		"askSize",
+		"beta",
 		"bid",
 		"bidTime",
 		"bidSize",
 		"change",
-		"delta",
-		"equityType",
-		"expiration",
-		"gamma",
 		"highPrice",
-		"impliedVolatility",
 		"lastTradePrice",
 		"lastTradeTimestamp",
 		"lastTradeVolume",
 		"lowPrice",
-		"openInterest",
-		"rho",
-		"strikePrice",
 		"symbol",
-		"theta",
 		"timestamp",
-		"vega",
+		"volume",
+		"volWeightedAvgPrice",
 	}, NoAction)
 
 	if err != nil {
-		return fmt.Errorf("LoadOptionQuoteRecordsFromFile: had error while inserting into database: %v", err)
+		return fmt.Errorf("LoadStockQuoteRecords: had an error while inserting records: %v", err)
 	}
 
-	logrus.Debugf("LoadOptionQuoteRecordsFromFile: Data saved to %v in %s", OptionQuotesTableName, time.Since(startTime))
+	logrus.Debugf("LoadStockQuoteRecords: Data saved to %v in %s", StockQuotesTableName, time.Since(startTime))
 	return nil
 }
 
@@ -548,7 +581,7 @@ func (sd *SibylDatabase) LoadStockQuoteRecordsFromFile(ctx context.Context, file
 	//this assumes the file was dumped by this stuct's DumpToFile function
 	startTime := time.Now()
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StockQuotesTableName, []string{
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StockQuotesTableName, []string{}, []string{
 		"ask",
 		"askTime",
 		"askSize",
@@ -622,104 +655,42 @@ func (sd *SibylDatabase) LoadOptionQuoteRecords(ctx context.Context, quotes []*c
 	return nil
 }
 
-func (sd *SibylDatabase) LoadStockQuoteRecords(ctx context.Context, quotes []*core.SibylStockQuoteRecord) error {
+func (sd *SibylDatabase) LoadOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
+	//this assumes the file was dumped by this stuct's DumpToFile function
 	startTime := time.Now()
-	if len(quotes) == 0 {
-		return nil
-	}
 
-	records := make([]DatabaseStringer, len(quotes))
-	for i, q := range quotes {
-		records[i] = q
-	}
-
-	err := sd.loadRecords(ctx, records, SibylDatabaseName, StockQuotesTableName, []string{}, []string{
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, OptionQuotesTableName, []string{}, []string{
 		"ask",
 		"askTime",
 		"askSize",
-		"beta",
 		"bid",
 		"bidTime",
 		"bidSize",
 		"change",
+		"delta",
+		"equityType",
+		"expiration",
+		"gamma",
 		"highPrice",
+		"impliedVolatility",
 		"lastTradePrice",
 		"lastTradeTimestamp",
 		"lastTradeVolume",
 		"lowPrice",
-		"symbol",
-		"timestamp",
-		"volume",
-		"volWeightedAvgPrice",
-	}, NoAction)
-
-	if err != nil {
-		return fmt.Errorf("LoadStockQuoteRecords: had an error while inserting records: %v", err)
-	}
-
-	logrus.Debugf("LoadStockQuoteRecords: Data saved to %v in %s", StockQuotesTableName, time.Since(startTime))
-	return nil
-}
-
-func (sd *SibylDatabase) LoadStableOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
-	startTime := time.Now()
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableOptionQuotesTableName, []string{
-		"id",
-		"closePrice",
-		"contractSize",
-		"equityType",
-		"expiration",
-		"highPrice52Wk",
-		"highPrice52WkTimestamp",
-		"lowPrice52Wk",
-		"lowPrice52WkTimestamp",
-		"multiplier",
-		"openPrice",
+		"openInterest",
+		"rho",
 		"strikePrice",
 		"symbol",
+		"theta",
 		"timestamp",
+		"vega",
 	}, NoAction)
 
 	if err != nil {
-		return fmt.Errorf("LoadStableOptionQuoteRecordsFromFile: had error while inserting into database: %v", err)
+		return fmt.Errorf("LoadOptionQuoteRecordsFromFile: had error while inserting into database: %v", err)
 	}
 
-	logrus.Debugf("LoadStableOptionQuoteRecordsFromFile: Data saved to %v in %s", StableOptionQuotesTableName, time.Since(startTime))
-	return nil
-}
-
-func (sd *SibylDatabase) LoadStableStockQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
-	startTime := time.Now()
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableStockQuotesTableName, []string{
-		"id",
-		"annualDividend",
-		"bookValue",
-		"closePrice",
-		"div",
-		"divExTimestamp",
-		"divFreq",
-		"divPayTimestamp",
-		"eps",
-		"highPrice52Wk",
-		"highPrice52WkTimestamp",
-		"lowPrice52Wk",
-		"lowPrice52WkTimestamp",
-		"openPrice",
-		"priceEarnings",
-		"sharesOutstanding",
-		"symbol",
-		"timestamp",
-		"volatility",
-		"yield",
-	}, NoAction)
-
-	if err != nil {
-		return fmt.Errorf("LoadStableStockQuoteRecordsFromFile: had error while inserting into database: %v", err)
-	}
-
-	logrus.Debugf("LoadStableStockQuoteRecordsFromFile: Data saved to %v in %s", StableStockQuotesTableName, time.Since(startTime))
+	logrus.Debugf("LoadOptionQuoteRecordsFromFile: Data saved to %v in %s", OptionQuotesTableName, time.Since(startTime))
 	return nil
 }
 
@@ -762,6 +733,41 @@ func (sd *SibylDatabase) LoadStableOptionQuoteRecords(ctx context.Context, quote
 	}
 
 	logrus.Debugf("LoadStableOptionQuoteRecords: Data saved to %v in %s", StableOptionQuotesTableName, time.Since(startTime))
+	return nil
+}
+
+func (sd *SibylDatabase) LoadStableOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
+	//this assumes the file was dumped by this stuct's DumpToFile function
+	startTime := time.Now()
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableOptionQuotesTableName,
+		[]string{
+			"symbol",
+			"expiration",
+			"equityType",
+			"strikePrice",
+			"timestamp",
+		},
+		[]string{
+			"closePrice",
+			"contractSize",
+			"equityType",
+			"expiration",
+			"highPrice52Wk",
+			"highPrice52WkTimestamp",
+			"lowPrice52Wk",
+			"lowPrice52WkTimestamp",
+			"multiplier",
+			"openPrice",
+			"strikePrice",
+			"symbol",
+			"timestamp",
+		}, NoAction)
+
+	if err != nil {
+		return fmt.Errorf("LoadStableOptionQuoteRecordsFromFile: had error while inserting into database: %v", err)
+	}
+
+	logrus.Debugf("LoadStableOptionQuoteRecordsFromFile: Data saved to %v in %s", StableOptionQuotesTableName, time.Since(startTime))
 	return nil
 }
 
@@ -808,6 +814,41 @@ func (sd *SibylDatabase) LoadStableStockQuoteRecords(ctx context.Context, quotes
 	return nil
 }
 
+func (sd *SibylDatabase) LoadStableStockQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
+	//this assumes the file was dumped by this stuct's DumpToFile function
+	startTime := time.Now()
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableStockQuotesTableName,
+		[]string{"symbol", "timestamp"},
+		[]string{
+			"annualDividend",
+			"bookValue",
+			"closePrice",
+			"div",
+			"divExTimestamp",
+			"divFreq",
+			"divPayTimestamp",
+			"eps",
+			"highPrice52Wk",
+			"highPrice52WkTimestamp",
+			"lowPrice52Wk",
+			"lowPrice52WkTimestamp",
+			"openPrice",
+			"priceEarnings",
+			"sharesOutstanding",
+			"symbol",
+			"timestamp",
+			"volatility",
+			"yield",
+		}, NoAction)
+
+	if err != nil {
+		return fmt.Errorf("LoadStableStockQuoteRecordsFromFile: had error while inserting into database: %v", err)
+	}
+
+	logrus.Debugf("LoadStableStockQuoteRecordsFromFile: Data saved to %v in %s", StableStockQuotesTableName, time.Since(startTime))
+	return nil
+}
+
 func (sd *SibylDatabase) LoadHistoryRecords(ctx context.Context, histories []*core.SibylHistoryRecord) error {
 	startTime := time.Now()
 	if len(histories) == 0 {
@@ -843,16 +884,17 @@ func (sd *SibylDatabase) LoadHistoryRecordsFromFile(ctx context.Context, filePat
 	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, HistoryTableName, []string{
-		"id",
-		"closePrice",
-		"highPrice",
-		"lowPrice",
-		"openPrice",
-		"symbol",
-		"timeStamp",
-		"volume",
-	}, NoAction)
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, HistoryTableName,
+		[]string{"symbol", "timeStamp"},
+		[]string{
+			"closePrice",
+			"highPrice",
+			"lowPrice",
+			"openPrice",
+			"symbol",
+			"timeStamp",
+			"volume",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadHistoryRecordsFromFile: had error while inserting into database: %v", err)
@@ -897,16 +939,17 @@ func (sd *SibylDatabase) LoadIntradayRecordsFromFile(ctx context.Context, filePa
 	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, IntradayTableName, []string{
-		"id",
-		"highPrice",
-		"lastPrice",
-		"lowPrice",
-		"openPrice",
-		"symbol",
-		"timestamp",
-		"volume",
-	}, NoAction)
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, IntradayTableName,
+		[]string{"symbol", "timestamp"},
+		[]string{
+			"highPrice",
+			"lastPrice",
+			"lowPrice",
+			"openPrice",
+			"symbol",
+			"timestamp",
+			"volume",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadHistoryRecordsFromFile: had error while inserting into database: %v", err)
@@ -944,12 +987,12 @@ func (sd *SibylDatabase) DumpCredsToFile(ctx context.Context, filePathname strin
 
 	stringToWrite := ";" + creds.StringBlindWithDelimiter(";", "\\N", false)
 
-	count, err := buf.WriteString(stringToWrite)
+	count, err := buf.WriteString(stringToWrite + "\n")
 	if err != nil {
 		logrus.Errorf("DumpCredsToFile: failed to write out %v with error: %v", stringToWrite, err)
 		return err
 	}
-	if count != len(stringToWrite) {
+	if count != len(stringToWrite)+1 {
 		logrus.Errorf("DumpCredsToFile: failed to write out the expected number of bytes, expected %v found %v", len(stringToWrite), count)
 		return err
 	}
@@ -979,11 +1022,11 @@ func (sd *SibylDatabase) DumpOptionQuoteRecordsToFile(ctx context.Context, fileP
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
@@ -1016,11 +1059,11 @@ func (sd *SibylDatabase) DumpStockQuoteRecordsToFile(ctx context.Context, filePa
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
@@ -1054,11 +1097,11 @@ func (sd *SibylDatabase) DumpStableOptionQuoteRecordsToFile(ctx context.Context,
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpStableOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpStableOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
@@ -1092,11 +1135,11 @@ func (sd *SibylDatabase) DumpStableStockQuoteRecordsToFile(ctx context.Context, 
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpStableStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpStableStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
@@ -1130,11 +1173,11 @@ func (sd *SibylDatabase) DumpIntradayRecordsToFile(ctx context.Context, filePath
 		}
 
 		quoteStr := intradayRow.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
@@ -1168,11 +1211,11 @@ func (sd *SibylDatabase) DumpHistoryRecordsToFile(ctx context.Context, filePathn
 		}
 
 		quoteStr := historyRow.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr)
+		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
 			return fmt.Errorf("DumpHistoryRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
-		if count != len(quoteStr) {
+		if count != len(quoteStr)+1 {
 			return fmt.Errorf("DumpHistoryRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
