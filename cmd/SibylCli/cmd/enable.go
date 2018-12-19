@@ -108,8 +108,8 @@ var enableAllCmd = &cobra.Command{
 	Short: "Enables all attributes",
 	Long:  `Enables all attributes`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) > 0 {
-			return fmt.Errorf("No args allowed for 'all'")
+		if err := cobra.NoArgs(cmd, args); err != nil {
+			return err
 		}
 
 		address, err := cmd.Flags().GetString("serverAddress")

@@ -10,8 +10,10 @@ import (
 	"github.com/nathanhack/sibyl/core/database"
 	"github.com/nathanhack/sibyl/rest"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 )
@@ -24,7 +26,7 @@ type ServerContext struct {
 
 func makeServer(serverContext *ServerContext, serverAddress string) (*http.Server, error) {
 	router := mux.NewRouter()
-	//router.HandleFunc("/stocks", serverContext.StocksGetAll).Methods(http.MethodGet)
+
 	router.HandleFunc("/stocks/get", serverContext.StocksGetAll).Methods(http.MethodGet)
 	router.HandleFunc("/stocks/add/{stockSymbol}", serverContext.StockAdd).Methods(http.MethodPost)
 	router.HandleFunc("/stocks/delete/{stockSymbol}", serverContext.StockDelete).Methods(http.MethodDelete)
@@ -41,11 +43,26 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	router.HandleFunc("/stocks/disable/stableQuotes/{stockSymbol}", serverContext.StockDisableStableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/all", serverContext.StockEnableAll).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all", serverContext.StockDisableAll).Methods(http.MethodPut)
+
 	router.HandleFunc("/stocks/revalidate/{stockSymbol}", serverContext.StockRevalidate).Methods(http.MethodPut)
 
 	router.HandleFunc("/history/{stockSymbol}/{startTimestamp}/{endTimestamp}", serverContext.HistoryGet).Methods(http.MethodGet)
 
 	router.HandleFunc("/intraday/{stockSymbol}/{startTimestamp}/{endTimestamp}", serverContext.IntradayGet).Methods(http.MethodGet)
+
+	router.HandleFunc("/database/download/history", serverContext.DatabaseDownloadHistory).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/intraday", serverContext.DatabaseDownloadIntraday).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/stocks/quote", serverContext.DatabaseDownloadStockQuote).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/stocks/stable", serverContext.DatabaseDownloadStockStable).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/options/quote", serverContext.DatabaseDownloadOptionsQuote).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/options/stable", serverContext.DatabaseDownloadOptionStable).Methods(http.MethodGet)
+
+	router.HandleFunc("/database/upload/history", serverContext.DatabaseUploadHistory).Methods(http.MethodPost)
+	router.HandleFunc("/database/upload/intraday", serverContext.DatabaseUploadIntraday).Methods(http.MethodPost)
+	router.HandleFunc("/database/upload/stocks/quote", serverContext.DatabaseUploadStockQuote).Methods(http.MethodPost)
+	router.HandleFunc("/database/upload/stocks/stable", serverContext.DatabaseUploadStockStable).Methods(http.MethodPost)
+	router.HandleFunc("/database/upload/options/quote", serverContext.DatabaseUploadOptionsQuote).Methods(http.MethodPost)
+	router.HandleFunc("/database/upload/options/stable", serverContext.DatabaseUploadOptionStable).Methods(http.MethodPost)
 
 	//Agent related///////////////
 	router.HandleFunc("/agent/ally/{consumerKey}/{consumerSecret}/{oAuthToken}/{oAuthTokenSecret}", serverContext.AgentAllyCreds).Methods(http.MethodPost)
@@ -441,6 +458,305 @@ func (sc *ServerContext) IntradayGet(writer http.ResponseWriter, request *http.R
 	}
 
 	json.NewEncoder(writer).Encode(rest.Intradays{Intradays: restIntradays, ErrorState: errToRestErrorState(nil)})
+}
+
+func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpHistoryRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), ErrorState: errToRestErrorState(nil)})
+}
+
+func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpIntradayRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), ErrorState: errToRestErrorState(nil)})
+}
+
+func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+
+}
+
+func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpStableStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+}
+
+func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+}
+
+func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter, request *http.Request) {
+	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
+	// in and send it in the message (this doesn't have to be fast but it does have to work)
+	tmpFile, err := ioutil.TempFile("./", "dump*")
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = tmpFile.Close()
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	sc.db.DumpStableOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	bytes, err := ioutil.ReadFile(tmpFile.Name())
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)})
+}
+
+func databaseUploadStage(request *http.Request) (string, error) {
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return "", err
+	}
+	request.Body.Close()
+
+	var databaseRecords rest.DatabaseRecords
+	if err := json.Unmarshal(body, &databaseRecords); err != nil {
+		return "", err
+	}
+
+	var fileBody string
+	if len(databaseRecords.Histories) != 0 {
+		fileBody = databaseRecords.Histories
+	} else if len(databaseRecords.Intradays) != 0 {
+		fileBody = databaseRecords.Intradays
+	} else if len(databaseRecords.OptionStableQuotes) != 0 {
+		fileBody = databaseRecords.OptionStableQuotes
+	} else if len(databaseRecords.OptionQuotes) != 0 {
+		fileBody = databaseRecords.OptionQuotes
+	} else if len(databaseRecords.StockQuotes) != 0 {
+		fileBody = databaseRecords.StockQuotes
+	} else if len(databaseRecords.StockStableQuotes) != 0 {
+		fileBody = databaseRecords.StockStableQuotes
+	} else {
+		return "", fmt.Errorf("nothing to parse")
+	}
+
+	tmpFile, err := ioutil.TempFile("./", "load*")
+	if err != nil {
+		return "", err
+	}
+
+	n, err := tmpFile.WriteString(fileBody)
+	if err != nil {
+		return "", err
+	}
+	if n != len(databaseRecords.Histories) {
+		return "", fmt.Errorf("unable to stage before ingesting")
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+	return tmpFile.Name(), nil
+
+}
+
+func (sc *ServerContext) DatabaseUploadHistory(writer http.ResponseWriter, request *http.Request) {
+
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadHistoryRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
+
+}
+func (sc *ServerContext) DatabaseUploadIntraday(writer http.ResponseWriter, request *http.Request) {
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadIntradayRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
+}
+func (sc *ServerContext) DatabaseUploadStockQuote(writer http.ResponseWriter, request *http.Request) {
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadStockQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
+}
+func (sc *ServerContext) DatabaseUploadStockStable(writer http.ResponseWriter, request *http.Request) {
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadStableStockQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
+}
+func (sc *ServerContext) DatabaseUploadOptionsQuote(writer http.ResponseWriter, request *http.Request) {
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadOptionQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
+}
+func (sc *ServerContext) DatabaseUploadOptionStable(writer http.ResponseWriter, request *http.Request) {
+	if fileName, err := databaseUploadStage(request); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		return
+	} else {
+		defer os.Remove(fileName)
+		if err := sc.db.LoadStableOptionQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
+			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+			return
+		}
+	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	return
 }
 
 func (sc *ServerContext) AgentCreds(writer http.ResponseWriter, request *http.Request) {

@@ -11,6 +11,7 @@ SET GLOBAL innodb_max_dirty_pages_pct = 0;
 and these MUST be set:
 
 SET GLOBAL local_infile = 'ON';
+SHOW GLOBAL VARIABLES LIKE 'local_infile';
 ---------------------
 
 For setting up the user the following commands in order can be used (or use the GUI):
@@ -892,6 +893,29 @@ func (sd *SibylDatabase) LoadIntradayRecords(ctx context.Context, intradays []*c
 	return nil
 }
 
+func (sd *SibylDatabase) LoadIntradayRecordsFromFile(ctx context.Context, filePathname string) error {
+	//this assumes the file was dumped by this struct's DumpToFile function
+	startTime := time.Now()
+
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, IntradayTableName, []string{
+		"id",
+		"highPrice",
+		"lastPrice",
+		"lowPrice",
+		"openPrice",
+		"symbol",
+		"timestamp",
+		"volume",
+	}, NoAction)
+
+	if err != nil {
+		return fmt.Errorf("LoadHistoryRecordsFromFile: had error while inserting into database: %v", err)
+	}
+
+	logrus.Debugf("LoadHistoryRecordsFromFile: Data saved to %v in %s", HistoryTableName, time.Since(startTime))
+	return nil
+}
+
 func (sd *SibylDatabase) dropTempTable(ctx context.Context, tempTableName string) error {
 	dropExecStr := fmt.Sprintf("DROP TABLE `%v`.`%v`;", SibylDatabaseName, tempTableName)
 
@@ -968,7 +992,7 @@ func (sd *SibylDatabase) DumpOptionQuoteRecordsToFile(ctx context.Context, fileP
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpOptionQuoteRecordsToFile: dumped all quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	logrus.Infof("DumpOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
 	return nil
 }
 
@@ -1005,7 +1029,7 @@ func (sd *SibylDatabase) DumpStockQuoteRecordsToFile(ctx context.Context, filePa
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStockQuoteRecordsToFile: dumped all quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	logrus.Infof("DumpStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
 	return nil
 }
 
@@ -1043,7 +1067,7 @@ func (sd *SibylDatabase) DumpStableOptionQuoteRecordsToFile(ctx context.Context,
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStableOptionQuoteRecordsToFile: dumped all quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	logrus.Infof("DumpStableOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
 	return nil
 }
 
@@ -1081,7 +1105,45 @@ func (sd *SibylDatabase) DumpStableStockQuoteRecordsToFile(ctx context.Context, 
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStableStockQuoteRecordsToFile: dumped all quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	logrus.Infof("DumpStableStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nil
+}
+
+func (sd *SibylDatabase) DumpIntradayRecordsToFile(ctx context.Context, filePathname string) error {
+	startTime := time.Now()
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, IntradayTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return fmt.Errorf("DumpIntradayRecordsToFile: had an error: %v", err)
+	}
+	defer rows.Close()
+
+	file, err := os.Create(filePathname)
+	defer file.Close()
+	buf := bufio2.NewWriter(file)
+	rowCount := 0
+	for rows.Next() {
+		intradayRow, err := scanners.ScanSibylIntradayRecordRow(rows)
+		if err != nil {
+			return fmt.Errorf("DumpIntradayRecordsToFile: failed to scan quote %v: %v", intradayRow, err)
+		}
+
+		quoteStr := intradayRow.StringBlindWithDelimiter(";", "\\N", false)
+		count, err := buf.WriteString(quoteStr)
+		if err != nil {
+			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+		}
+		if count != len(quoteStr) {
+			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+		}
+		rowCount++
+		if rowCount%1000 == 0 {
+			buf.Flush()
+		}
+	}
+	buf.Flush()
+	logrus.Infof("DumpIntradayRecordsToFile: dumped all(%v) intradays to %v in %s", rowCount, filePathname, time.Since(startTime))
 	return nil
 }
 
@@ -1119,7 +1181,7 @@ func (sd *SibylDatabase) DumpHistoryRecordsToFile(ctx context.Context, filePathn
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpHistoryRecordsToFile: dumped all histories to %v in %s", rowCount, filePathname, time.Since(startTime))
+	logrus.Infof("DumpHistoryRecordsToFile: dumped all(%v) histories to %v in %s", rowCount, filePathname, time.Since(startTime))
 	return nil
 }
 
