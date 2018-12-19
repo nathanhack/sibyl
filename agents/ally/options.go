@@ -71,8 +71,6 @@ func (ag *AllyAgent) GetStockOptionSymbols(ctx context.Context, symbol core.Stoc
 	}
 
 	if resp.StatusCode != http.StatusOK {
-
-		//spew.Dump(resp)
 		return []*core.OptionSymbolType{}, fmt.Errorf("GetStockOptionSymbols: client error for %v with status code %v: %v", symbol, resp.StatusCode, resp.Status)
 	}
 
