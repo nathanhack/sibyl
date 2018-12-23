@@ -39,6 +39,8 @@ import (
 	"strings"
 	"time"
 
+	ulid "github.com/imdario/go-ulid"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/nathanhack/sibyl/agents/ally"
 	"github.com/nathanhack/sibyl/core"
@@ -353,10 +355,17 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 	}
 	buf := bytes.NewBufferString(recordStrBuilder.String())
 
-	// create and assign the Reader
-	mysql.RegisterReaderHandler("test", func() io.Reader {
+	// create and assign a unique filename to the Reader (needed for parallel uploads)
+	uuid, err := ulid.NewRandom()
+	if err != nil {
+		return fmt.Errorf("loadRecords: unable to create unique virtual file")
+	}
+
+	filename := "test" + uuid.String()
+	mysql.RegisterReaderHandler(filename, func() io.Reader {
 		return buf
 	})
+	defer mysql.DeregisterReaderHandler(filename)
 
 	variables := make(map[string]string)
 	for i, name := range combineIntoID {
@@ -364,7 +373,9 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 	}
 
 	insertCommandBuilder := strings.Builder{}
-	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::test' ")
+	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::")
+	insertCommandBuilder.WriteString(filename)
+	insertCommandBuilder.WriteString("' ")
 	insertCommandBuilder.WriteString(string(action))
 	insertCommandBuilder.WriteString(" INTO TABLE `")
 	insertCommandBuilder.WriteString(databaseName)
@@ -410,11 +421,9 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 		}
 	}
 	insertCommandBuilder.WriteString(";")
-	_, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String())
 
-	mysql.DeregisterReaderHandler("test")
-	if err != nil {
-		return fmt.Errorf("loadRecords: error during db exec insert exec make sure local_infle=ON,s [%v]: %v", insertCommandBuilder.String(), err)
+	if _, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String()); err != nil {
+		return fmt.Errorf("loadRecords: error during db exec insert exec make sure local_infile=ON,s [%v]: %v", insertCommandBuilder.String(), err)
 	}
 
 	return nil
@@ -429,9 +438,16 @@ func (sd *SibylDatabase) loadFileContents(ctx context.Context, fileContents, dat
 	buf := bytes.NewBufferString(fileContents)
 
 	// create and assign the Reader
-	mysql.RegisterReaderHandler("test", func() io.Reader {
+	uuid, err := ulid.NewRandom()
+	if err != nil {
+		return fmt.Errorf("loadRecords: unable to create unique virtual file")
+	}
+
+	filename := "test" + uuid.String()
+	mysql.RegisterReaderHandler(filename, func() io.Reader {
 		return buf
 	})
+	defer mysql.DeregisterReaderHandler(filename)
 
 	variables := make(map[string]string)
 	for i, name := range combineIntoID {
@@ -439,7 +455,9 @@ func (sd *SibylDatabase) loadFileContents(ctx context.Context, fileContents, dat
 	}
 
 	insertCommandBuilder := strings.Builder{}
-	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::test' ")
+	insertCommandBuilder.WriteString("LOAD DATA LOCAL INFILE 'Reader::")
+	insertCommandBuilder.WriteString(filename)
+	insertCommandBuilder.WriteString("' ")
 	insertCommandBuilder.WriteString(string(action))
 	insertCommandBuilder.WriteString(" INTO TABLE `")
 	insertCommandBuilder.WriteString(databaseName)
@@ -485,11 +503,9 @@ func (sd *SibylDatabase) loadFileContents(ctx context.Context, fileContents, dat
 		}
 	}
 	insertCommandBuilder.WriteString(";")
-	_, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String())
 
-	mysql.DeregisterReaderHandler("test")
-	if err != nil {
-		return fmt.Errorf("loadRecords: error during db exec insert exec make sure local_infle=ON,s [%v]: %v", insertCommandBuilder.String(), err)
+	if _, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String()); err != nil {
+		return fmt.Errorf("loadRecords: error during db exec insert exec make sure local_infile=ON,s [%v]: %v", insertCommandBuilder.String(), err)
 	}
 
 	return nil
@@ -504,6 +520,7 @@ func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, data
 	}
 
 	mysql.RegisterLocalFile(filePathname)
+	defer mysql.DeregisterLocalFile(filePathname)
 
 	variables := make(map[string]string)
 	for i, name := range combineIntoID {
@@ -559,12 +576,11 @@ func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, data
 		}
 	}
 	insertCommandBuilder.WriteString(";")
-	_, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String())
 
-	mysql.DeregisterLocalFile(filePathname)
-	if err != nil {
+	if _, err := sd.DBConn.ExecContext(ctx, insertCommandBuilder.String()); err != nil {
 		return fmt.Errorf("loadFile: error during db exec: %v", err)
 	}
+
 	return nil
 }
 
