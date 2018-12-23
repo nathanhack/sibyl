@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
@@ -464,24 +463,8 @@ func (sc *ServerContext) IntradayGet(writer http.ResponseWriter, request *http.R
 
 func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
 
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeHistoryRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeHistoryRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
@@ -497,41 +480,17 @@ func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, req
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadHistory: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadHistory: successfully downloaded(bytes:%v)", len(buffer))
 }
 
 func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
-
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeIntradayRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeIntradayRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
@@ -547,41 +506,18 @@ func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, re
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadIntraday: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadIntraday: successfully downloaded(bytes:%v)", len(buffer))
 }
 
 func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
 
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeStockQuoteRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
@@ -597,41 +533,17 @@ func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, 
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadStockQuote: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadStockQuote: successfully downloaded(bytes:%v)", len(buffer))
 }
 
 func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
-
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeStableStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeStableStockQuoteRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
@@ -647,41 +559,17 @@ func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter,
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadStockStable: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadStockStable: successfully downloaded(bytes:%v)", len(buffer))
 }
 
 func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
-
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeOptionQuoteRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
@@ -697,41 +585,17 @@ func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadOptionsQuote: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadOptionsQuote: successfully downloaded(bytes:%v)", len(buffer))
 }
 
 func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
-	// in and send it in the message (this doesn't have to be fast but it does have to work)
-	tmpFile, err := ioutil.TempFile("./", "dump*")
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
-		return
-	}
-	defer os.Remove(tmpFile.Name())
-
-	err = tmpFile.Close()
-	if err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
-		return
-	}
-
-	nextLastID, err := sc.db.DumpRangeStableOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	nextLastID, buffer, err := sc.db.DumpRangeStableOptionQuoteRecordsToBuffer(sc.Ctx, params["lastID"], 10000)
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
@@ -747,175 +611,143 @@ func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter
 		}
 	}
 
-	bytes, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: buffer, LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
 		return
 	}
-
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
-		return
-	}
-	logrus.Infof("DatabaseDownloadOptionStable: successfully downloaded(size:%v)", len(bytes))
+	logrus.Infof("DatabaseDownloadOptionStable: successfully downloaded(bytes:%v)", len(buffer))
 }
 
-func databaseUploadStage(request *http.Request) (string, int, error) {
+func readDatabaseRecords(request *http.Request) (*rest.DatabaseRecords, error) {
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		return "", -1, err
+		return nil, fmt.Errorf("problems with reading body of request: %v", err)
 	}
-	defer request.Body.Close()
+	request.Body.Close()
 
 	var databaseRecords rest.DatabaseRecords
 	if err := json.Unmarshal(body, &databaseRecords); err != nil {
-		return "", -1, err
+		return nil, fmt.Errorf("problems unmarshalling json: %v", err)
 	}
-
-	var fileBody string
-	if len(databaseRecords.Histories) != 0 {
-		fileBody = databaseRecords.Histories
-	} else if len(databaseRecords.Intradays) != 0 {
-		fileBody = databaseRecords.Intradays
-	} else if len(databaseRecords.OptionStableQuotes) != 0 {
-		fileBody = databaseRecords.OptionStableQuotes
-	} else if len(databaseRecords.OptionQuotes) != 0 {
-		fileBody = databaseRecords.OptionQuotes
-	} else if len(databaseRecords.StockQuotes) != 0 {
-		fileBody = databaseRecords.StockQuotes
-	} else if len(databaseRecords.StockStableQuotes) != 0 {
-		fileBody = databaseRecords.StockStableQuotes
-	} else {
-		return "", -1, fmt.Errorf("nothing to parse")
-	}
-
-	tmpFile, err := ioutil.TempFile("./", "load*")
-	if err != nil {
-		return "", -1, err
-	}
-
-	n, err := tmpFile.WriteString(fileBody)
-	if err != nil {
-		return "", -1, err
-	}
-	if n != len(databaseRecords.Histories) {
-		return "", -1, fmt.Errorf("unable to stage before ingesting")
-	}
-
-	if err := tmpFile.Close(); err != nil {
-		return "", -1, err
-	}
-	return tmpFile.Name(), n, nil
+	return &databaseRecords, nil
 }
 
 func (sc *ServerContext) DatabaseUploadHistory(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadHistory: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadHistoryRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadHistory: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadHistory: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadHistoryRecordsFromFileContents(sc.Ctx, databaseRecords.Histories); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadHistory: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadHistory: successfully upload(bytes:%v)", len(databaseRecords.Histories))
+	return
 }
 
 func (sc *ServerContext) DatabaseUploadIntraday(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadIntraday: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadIntradayRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadIntraday: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadIntraday: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadIntradayRecordsFromFileContents(sc.Ctx, databaseRecords.Intradays); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadIntraday: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadIntraday: successfully upload(bytes:%v)", len(databaseRecords.Intradays))
+	return
+
 }
 
 func (sc *ServerContext) DatabaseUploadStockQuote(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadStockQuote: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadStockQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadStockQuote: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadStockQuote: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadStockQuoteRecordsFromFileContents(sc.Ctx, databaseRecords.StockQuotes); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadStockQuote: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadStockQuote: successfully upload(bytes:%v)", len(databaseRecords.StockQuotes))
+	return
+
 }
 
 func (sc *ServerContext) DatabaseUploadStockStable(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadStockStable: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadStableStockQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadStockStable: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadStockStable: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadStableStockQuoteRecordsFromFileContents(sc.Ctx, databaseRecords.StockStableQuotes); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadStockStable: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadStockStable: successfully upload(bytes:%v)", len(databaseRecords.StockStableQuotes))
+	return
+
 }
 
 func (sc *ServerContext) DatabaseUploadOptionsQuote(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadOptionsQuote: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadOptionQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadOptionsQuote: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadOptionsQuote: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadOptionQuoteRecordsFromFileContents(sc.Ctx, databaseRecords.OptionQuotes); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadOptionsQuote: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadOptionsQuote: successfully upload(bytes:%v)", len(databaseRecords.OptionQuotes))
+	return
 }
 
 func (sc *ServerContext) DatabaseUploadOptionStable(writer http.ResponseWriter, request *http.Request) {
-	if fileName, size, err := databaseUploadStage(request); err != nil {
+	databaseRecords, err := readDatabaseRecords(request)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadOptionStable: had a error: %v", err)
 		return
-	} else {
-		defer os.Remove(fileName)
-		if err := sc.db.LoadStableOptionQuoteRecordsFromFile(sc.Ctx, fileName); err != nil {
-			json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
-			logrus.Errorf("DatabaseUploadOptionStable: had a error: %v", err)
-			return
-		}
-		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
-		logrus.Infof("DatabaseUploadOptionStable: successfully upload(size:%v)", size)
+	}
+
+	if err := sc.db.LoadStableOptionQuoteRecordsFromFileContents(sc.Ctx, databaseRecords.OptionStableQuotes); err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseUploadOptionStable: had a error: %v", err)
 		return
 	}
+
+	json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(nil)})
+	logrus.Infof("DatabaseUploadOptionStable: successfully upload(bytes:%v)", len(databaseRecords.OptionStableQuotes))
+	return
 }
 
 func (sc *ServerContext) AgentCreds(writer http.ResponseWriter, request *http.Request) {
