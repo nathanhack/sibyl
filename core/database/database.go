@@ -1320,6 +1320,7 @@ func (sd *SibylDatabase) DumpRangeOptionQuoteRecordsToBuffer(ctx context.Context
 	var nextLastID string
 	var quote *core.SibylOptionQuoteRecord
 	for rows.Next() {
+		rowCount++
 		if nextLastID, quote, err = scanners.ScanSibylOptionQuoteRecordRow(rows); err != nil {
 			return "", "", fmt.Errorf("DumpRangeOptionQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
 		}
@@ -1413,6 +1414,7 @@ func (sd *SibylDatabase) DumpRangeStockQuoteRecordsToBuffer(ctx context.Context,
 	var nextLastID string
 	var quote *core.SibylStockQuoteRecord
 	for rows.Next() {
+		rowCount++
 		if nextLastID, quote, err = scanners.ScanSibylStockQuoteRecordRow(rows); err != nil {
 			return "", "", fmt.Errorf("DumpRangeStockQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
 		}
@@ -1505,6 +1507,7 @@ func (sd *SibylDatabase) DumpRangeStableOptionQuoteRecordsToBuffer(ctx context.C
 	var nextLastID string
 	var stableQuote *core.SibylStableOptionQuoteRecord
 	for rows.Next() {
+		rowCount++
 		if nextLastID, stableQuote, err = scanners.ScanSibylStableOptionQuoteRecordRow(rows); err != nil {
 			return "", "", fmt.Errorf("DumpRangeStableOptionQuoteRecordsToFile: failed to scan quote %v: %v", stableQuote, err)
 		}
@@ -1597,6 +1600,7 @@ func (sd *SibylDatabase) DumpRangeStableStockQuoteRecordsToBuffer(ctx context.Co
 	var nextLastID string
 	var stableQuote *core.SibylStableStockQuoteRecord
 	for rows.Next() {
+		rowCount++
 		if nextLastID, stableQuote, err = scanners.ScanSibylStableStockQuoteRecordRow(rows); err != nil {
 			return "", "", fmt.Errorf("DumpRangeStableStockQuoteRecordsToFile: failed to scan quote %v: %v", stableQuote, err)
 		}
@@ -1784,6 +1788,7 @@ func (sd *SibylDatabase) DumpRangeHistoryRecordsToBuffer(ctx context.Context, la
 	var nextLastID string
 	var history *core.SibylHistoryRecord
 	for rows.Next() {
+		rowCount++
 		if nextLastID, history, err = scanners.ScanSibylHistoryRecordRow(rows); err != nil {
 			return "", "", fmt.Errorf("DumpRangeHistoryRecordsToBuffer: failed to scan quote %v: %v", history, err)
 		}
