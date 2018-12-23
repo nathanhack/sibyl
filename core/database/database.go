@@ -35,16 +35,16 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
-
-	ulid "github.com/imdario/go-ulid"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/nathanhack/sibyl/agents/ally"
 	"github.com/nathanhack/sibyl/core"
 	"github.com/nathanhack/sibyl/core/database/internal/scanners"
+	"github.com/oklog/ulid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -356,7 +356,9 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 	buf := bytes.NewBufferString(recordStrBuilder.String())
 
 	// create and assign a unique filename to the Reader (needed for parallel uploads)
-	uuid, err := ulid.NewRandom()
+	t := time.Now()
+	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
+	uuid, err := ulid.New(ulid.Timestamp(t), entropy)
 	if err != nil {
 		return fmt.Errorf("loadRecords: unable to create unique virtual file")
 	}
@@ -438,7 +440,9 @@ func (sd *SibylDatabase) loadFileContents(ctx context.Context, fileContents, dat
 	buf := bytes.NewBufferString(fileContents)
 
 	// create and assign the Reader
-	uuid, err := ulid.NewRandom()
+	t := time.Now()
+	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
+	uuid, err := ulid.New(ulid.Timestamp(t), entropy)
 	if err != nil {
 		return fmt.Errorf("loadRecords: unable to create unique virtual file")
 	}
@@ -1627,7 +1631,7 @@ func (sd *SibylDatabase) DumpRangeStableStockQuoteRecordsToBuffer(ctx context.Co
 		}
 	}
 
-	logrus.Infof("DumpRangeStableStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, time.Since(startTime))
+	logrus.Infof("DumpRangeStableStockQuoteRecordsToFile: dumped all(%v) quotes in %s", rowCount, time.Since(startTime))
 	return nextLastID, buffer.String(), nil
 }
 
