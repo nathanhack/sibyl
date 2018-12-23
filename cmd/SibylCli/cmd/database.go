@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nathanhack/sibyl/rest"
 	"github.com/spf13/cobra"
@@ -53,6 +54,9 @@ var databaseDownloadHistory = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/history/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -134,6 +138,9 @@ var databaseDownloadIntraday = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/intraday/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -221,6 +228,9 @@ var databaseDownloadStockQuoteCmd = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/quote/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -301,6 +311,9 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/stable/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -387,6 +400,9 @@ var databaseDownloadOptionsQuoteCmd = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/quote/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -467,6 +483,9 @@ var databaseDownloadOptionsStableCmd = &cobra.Command{
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/stable/%v", address, lastID))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -563,6 +582,9 @@ var databaseUploadHistory = &cobra.Command{
 					n, err := bs.WriteString(s + "\n")
 					if n != len(s)+1 {
 						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					} else {
+						//if we failed we'll back off exponentially
+						time.Sleep((retry + 1) * (retry + 1) * time.Second)
 					}
 				}
 			}
@@ -642,6 +664,9 @@ var databaseUploadIntraday = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/intraday", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -712,6 +737,9 @@ var databaseUploadStockQuoteCmd = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/quote", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -776,6 +804,9 @@ var databaseUploadStockStableCmd = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/stable", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -845,6 +876,9 @@ var databaseUploadOptionsQuoteCmd = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/quote", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
@@ -909,6 +943,9 @@ var databaseUploadOptionsStableCmd = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/stable", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep((retry + 1) * (retry + 1) * time.Second)
 				}
 			}
 
