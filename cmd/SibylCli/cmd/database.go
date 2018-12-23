@@ -52,7 +52,7 @@ var databaseDownloadHistory = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/history/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -136,7 +136,7 @@ var databaseDownloadIntraday = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/intraday/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -226,7 +226,7 @@ var databaseDownloadStockQuoteCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/quote/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -309,7 +309,7 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/stable/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -398,7 +398,7 @@ var databaseDownloadOptionsQuoteCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/quote/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -481,7 +481,7 @@ var databaseDownloadOptionsStableCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/stable/%v", address, lastID))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -594,7 +594,7 @@ var databaseUploadHistory = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/history", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -662,7 +662,7 @@ var databaseUploadIntraday = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/intraday", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -735,7 +735,7 @@ var databaseUploadStockQuoteCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/quote", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -802,7 +802,7 @@ var databaseUploadStockStableCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/stable", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -874,7 +874,7 @@ var databaseUploadOptionsQuoteCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/quote", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
@@ -941,7 +941,7 @@ var databaseUploadOptionsStableCmd = &cobra.Command{
 			var resp *resty.Response
 			for retry := 0; retry < 3; retry++ {
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/stable", address))
-				if err == nil {
+				if err == nil && resp.StatusCode() == http.StatusOK {
 					break
 				} else {
 					//if we failed we'll back off exponentially
