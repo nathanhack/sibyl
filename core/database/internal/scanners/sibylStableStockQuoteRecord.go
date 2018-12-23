@@ -6,14 +6,14 @@ import (
 	"github.com/nathanhack/sibyl/core"
 )
 
-func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (*core.SibylStableStockQuoteRecord, error) {
-	var id int
+func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (string, *core.SibylStableStockQuoteRecord, error) {
+	var id string
 	var annualDividend sql.NullFloat64
 	var bookValue sql.NullFloat64
 	var closePrice sql.NullFloat64
 	var div sql.NullFloat64
-	var divFreq core.NullDivFrequency
 	var divExTimestamp sql.NullInt64
+	var divFreq core.NullDivFrequency
 	var divPayTimestamp sql.NullInt64
 	var eps sql.NullFloat64
 	var highPrice52Wk sql.NullFloat64
@@ -34,8 +34,8 @@ func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (*core.SibylStableStockQ
 		&bookValue,
 		&closePrice,
 		&div,
-		&divFreq,
 		&divExTimestamp,
+		&divFreq,
 		&divPayTimestamp,
 		&eps,
 		&highPrice52Wk,
@@ -52,7 +52,7 @@ func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (*core.SibylStableStockQ
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("ScanSibylStableStockQuoteRecordRow: had a error while scanning: %v", err)
+		return "", nil, fmt.Errorf("ScanSibylStableStockQuoteRecordRow: had a error while scanning: %v", err)
 	}
 
 	quote := core.SibylStableStockQuoteRecord{
@@ -60,8 +60,8 @@ func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (*core.SibylStableStockQ
 		BookValue:              bookValue,
 		ClosePrice:             closePrice,
 		Div:                    div,
-		DivFreq:                divFreq,
 		DivExTimestamp:         divExTimestamp,
+		DivFreq:                divFreq,
 		DivPayTimestamp:        divPayTimestamp,
 		Eps:                    eps,
 		HighPrice52Wk:          highPrice52Wk,
@@ -76,5 +76,5 @@ func ScanSibylStableStockQuoteRecordRow(rows *sql.Rows) (*core.SibylStableStockQ
 		Volatility:             volatility,
 		Yield:                  yield,
 	}
-	return &quote, nil
+	return id, &quote, nil
 }

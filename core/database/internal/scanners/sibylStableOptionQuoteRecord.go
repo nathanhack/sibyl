@@ -6,8 +6,8 @@ import (
 	"github.com/nathanhack/sibyl/core"
 )
 
-func ScanSibylStableOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylStableOptionQuoteRecord, error) {
-	var id int
+func ScanSibylStableOptionQuoteRecordRow(rows *sql.Rows) (string, *core.SibylStableOptionQuoteRecord, error) {
+	var id string
 	var closePrice sql.NullFloat64
 	var contractSize sql.NullInt64
 	var equityType core.EquityType
@@ -18,8 +18,8 @@ func ScanSibylStableOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylStableOptio
 	var lowPrice52WkTimestamp sql.NullInt64
 	var multiplier sql.NullInt64
 	var openPrice sql.NullFloat64
-	var symbol core.StockSymbolType
 	var strikePrice float64
+	var symbol core.StockSymbolType
 	var timestamp core.DateType
 
 	err := rows.Scan(
@@ -40,7 +40,7 @@ func ScanSibylStableOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylStableOptio
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("ScanSibylStableOptionQuoteRecordRow: had a error while scanning: %v", err)
+		return "", nil, fmt.Errorf("ScanSibylStableOptionQuoteRecordRow: had a error while scanning: %v", err)
 	}
 
 	quote := core.SibylStableOptionQuoteRecord{
@@ -58,5 +58,5 @@ func ScanSibylStableOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylStableOptio
 		StrikePrice:            strikePrice,
 		Timestamp:              timestamp,
 	}
-	return &quote, nil
+	return id, &quote, nil
 }

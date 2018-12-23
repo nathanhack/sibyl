@@ -29,20 +29,21 @@ FLUSH PRIVILEGES;
 */
 
 import (
-	bufio2 "bufio"
+	"bufio"
 	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/nathanhack/sibyl/agents/ally"
 	"github.com/nathanhack/sibyl/core"
 	"github.com/nathanhack/sibyl/core/database/internal/scanners"
 	"github.com/sirupsen/logrus"
-	"io"
-	"os"
-	"strings"
-	"time"
 )
 
 const (
@@ -75,7 +76,7 @@ const (
 		"PRIMARY KEY(`id`));"
 
 	optionQuotesTableCreate = "CREATE TABLE IF NOT EXISTS  `" + SibylDatabaseName + "`.`" + OptionQuotesTableName + "` ( " +
-		"`id` INT(18) NOT NULL AUTO_INCREMENT, " +
+		"`id` VARCHAR(45) NOT NULL, " +
 		"`ask` DECIMAL(36,18) NULL DEFAULT NULL, " +
 		"`askTime` INT(18) NULL DEFAULT NULL, " +
 		"`askSize` INT(18) NULL DEFAULT NULL, " +
@@ -100,12 +101,12 @@ const (
 		"`theta` DECIMAL(36,18) NULL DEFAULT NULL, " +
 		"`timestamp` INT(18) NOT NULL, " +
 		"`vega` DECIMAL(36,18) NULL DEFAULT NULL, " +
-		"PRIMARY KEY(`id`), " +
+		"PRIMARY KEY(`id`),UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE, " +
 		"INDEX `index0` (`symbol` ASC, `equityType` ASC, `timestamp` ASC) VISIBLE, " +
 		"INDEX `index1` (`symbol` ASC, `timestamp` ASC, `equityType` ASC, `expiration` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
 
 	stockQuotesTableCreate = "CREATE TABLE IF NOT EXISTS  `" + SibylDatabaseName + "`.`" + StockQuotesTableName + "` ( " +
-		"`id` INT(18) NOT NULL AUTO_INCREMENT, " +
+		"`id` VARCHAR(45) NOT NULL, " +
 		"`ask` DECIMAL(36,18) NULL DEFAULT NULL, " +
 		"`askTime` INT(18) NULL DEFAULT NULL, " +
 		"`askSize` INT(18) NULL DEFAULT NULL, " +
@@ -123,7 +124,7 @@ const (
 		"`timestamp` INT(18) NOT NULL, " +
 		"`volume` DECIMAL(18) NULL DEFAULT NULL, " +
 		"`volWeightedAvgPrice` DECIMAL(36,18) NULL DEFAULT NULL, " +
-		"PRIMARY KEY(`id`), " +
+		"PRIMARY KEY(`id`),UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE, " +
 		"INDEX `index0` (`symbol` ASC) VISIBLE, " +
 		"INDEX `index1` (`symbol` ASC, `timestamp` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
 
@@ -138,7 +139,6 @@ const (
 		"`lowPrice52Wk` DECIMAL(36,18) NULL default NULL," +
 		"`lowPrice52WkTimestamp` INT(18) NULL default NULL," +
 		"`multiplier` INT(18) NULL default NULL," +
-		"`name` VARCHAR(45) NULL default NULL," +
 		"`openPrice` DECIMAL(36,18) NULL default NULL," +
 		"`strikePrice` DECIMAL(36,18) NOT NULL," +
 		"`symbol` VARCHAR(20) NOT NULL," +
@@ -494,7 +494,7 @@ func (sd *SibylDatabase) loadFile(ctx context.Context, filePathname string, data
 }
 
 func (sd *SibylDatabase) LoadCredsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 	mysql.RegisterLocalFile(filePathname)
 
@@ -551,25 +551,27 @@ func (sd *SibylDatabase) LoadStockQuoteRecords(ctx context.Context, quotes []*co
 		records[i] = q
 	}
 
-	err := sd.loadRecords(ctx, records, SibylDatabaseName, StockQuotesTableName, []string{}, []string{
-		"ask",
-		"askTime",
-		"askSize",
-		"beta",
-		"bid",
-		"bidTime",
-		"bidSize",
-		"change",
-		"highPrice",
-		"lastTradePrice",
-		"lastTradeTimestamp",
-		"lastTradeVolume",
-		"lowPrice",
-		"symbol",
-		"timestamp",
-		"volume",
-		"volWeightedAvgPrice",
-	}, NoAction)
+	err := sd.loadRecords(ctx, records, SibylDatabaseName, StockQuotesTableName,
+		[]string{"symbol", "timestamp"},
+		[]string{
+			"ask",
+			"askTime",
+			"askSize",
+			"beta",
+			"bid",
+			"bidTime",
+			"bidSize",
+			"change",
+			"highPrice",
+			"lastTradePrice",
+			"lastTradeTimestamp",
+			"lastTradeVolume",
+			"lowPrice",
+			"symbol",
+			"timestamp",
+			"volume",
+			"volWeightedAvgPrice",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadStockQuoteRecords: had an error while inserting records: %v", err)
@@ -580,28 +582,30 @@ func (sd *SibylDatabase) LoadStockQuoteRecords(ctx context.Context, quotes []*co
 }
 
 func (sd *SibylDatabase) LoadStockQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StockQuotesTableName, []string{}, []string{
-		"ask",
-		"askTime",
-		"askSize",
-		"beta",
-		"bid",
-		"bidTime",
-		"bidSize",
-		"change",
-		"highPrice",
-		"lastTradePrice",
-		"lastTradeTimestamp",
-		"lastTradeVolume",
-		"lowPrice",
-		"symbol",
-		"timestamp",
-		"volume",
-		"volWeightedAvgPrice",
-	}, NoAction)
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StockQuotesTableName,
+		[]string{"symbol", "timestamp"},
+		[]string{
+			"ask",
+			"askTime",
+			"askSize",
+			"beta",
+			"bid",
+			"bidTime",
+			"bidSize",
+			"change",
+			"highPrice",
+			"lastTradePrice",
+			"lastTradeTimestamp",
+			"lastTradeVolume",
+			"lowPrice",
+			"symbol",
+			"timestamp",
+			"volume",
+			"volWeightedAvgPrice",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadStockQuoteRecordsFromFile: had error while inserting into database: %v", err)
@@ -622,32 +626,40 @@ func (sd *SibylDatabase) LoadOptionQuoteRecords(ctx context.Context, quotes []*c
 		records[i] = q
 	}
 
-	err := sd.loadRecords(ctx, records, SibylDatabaseName, OptionQuotesTableName, []string{}, []string{
-		"ask",
-		"askTime",
-		"askSize",
-		"bid",
-		"bidTime",
-		"bidSize",
-		"change",
-		"delta",
-		"equityType",
-		"expiration",
-		"gamma",
-		"highPrice",
-		"impliedVolatility",
-		"lastTradePrice",
-		"lastTradeTimestamp",
-		"lastTradeVolume",
-		"lowPrice",
-		"openInterest",
-		"rho",
-		"strikePrice",
-		"symbol",
-		"theta",
-		"timestamp",
-		"vega",
-	}, NoAction)
+	err := sd.loadRecords(ctx, records, SibylDatabaseName, OptionQuotesTableName,
+		[]string{
+			"symbol",
+			"expiration",
+			"equityType",
+			"strikePrice",
+			"timestamp",
+		},
+		[]string{
+			"ask",
+			"askTime",
+			"askSize",
+			"bid",
+			"bidTime",
+			"bidSize",
+			"change",
+			"delta",
+			"equityType",
+			"expiration",
+			"gamma",
+			"highPrice",
+			"impliedVolatility",
+			"lastTradePrice",
+			"lastTradeTimestamp",
+			"lastTradeVolume",
+			"lowPrice",
+			"openInterest",
+			"rho",
+			"strikePrice",
+			"symbol",
+			"theta",
+			"timestamp",
+			"vega",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadOptionQuoteRecords: had an error while inserting records: %v", err)
@@ -658,35 +670,43 @@ func (sd *SibylDatabase) LoadOptionQuoteRecords(ctx context.Context, quotes []*c
 }
 
 func (sd *SibylDatabase) LoadOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 
-	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, OptionQuotesTableName, []string{}, []string{
-		"ask",
-		"askTime",
-		"askSize",
-		"bid",
-		"bidTime",
-		"bidSize",
-		"change",
-		"delta",
-		"equityType",
-		"expiration",
-		"gamma",
-		"highPrice",
-		"impliedVolatility",
-		"lastTradePrice",
-		"lastTradeTimestamp",
-		"lastTradeVolume",
-		"lowPrice",
-		"openInterest",
-		"rho",
-		"strikePrice",
-		"symbol",
-		"theta",
-		"timestamp",
-		"vega",
-	}, NoAction)
+	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, OptionQuotesTableName,
+		[]string{
+			"symbol",
+			"expiration",
+			"equityType",
+			"strikePrice",
+			"timestamp",
+		},
+		[]string{
+			"ask",
+			"askTime",
+			"askSize",
+			"bid",
+			"bidTime",
+			"bidSize",
+			"change",
+			"delta",
+			"equityType",
+			"expiration",
+			"gamma",
+			"highPrice",
+			"impliedVolatility",
+			"lastTradePrice",
+			"lastTradeTimestamp",
+			"lastTradeVolume",
+			"lowPrice",
+			"openInterest",
+			"rho",
+			"strikePrice",
+			"symbol",
+			"theta",
+			"timestamp",
+			"vega",
+		}, NoAction)
 
 	if err != nil {
 		return fmt.Errorf("LoadOptionQuoteRecordsFromFile: had error while inserting into database: %v", err)
@@ -739,7 +759,7 @@ func (sd *SibylDatabase) LoadStableOptionQuoteRecords(ctx context.Context, quote
 }
 
 func (sd *SibylDatabase) LoadStableOptionQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableOptionQuotesTableName,
 		[]string{
@@ -817,7 +837,7 @@ func (sd *SibylDatabase) LoadStableStockQuoteRecords(ctx context.Context, quotes
 }
 
 func (sd *SibylDatabase) LoadStableStockQuoteRecordsFromFile(ctx context.Context, filePathname string) error {
-	//this assumes the file was dumped by this stuct's DumpToFile function
+	//this assumes the file was dumped by this struct's DumpToFile function
 	startTime := time.Now()
 	err := sd.loadFile(ctx, filePathname, SibylDatabaseName, StableStockQuotesTableName,
 		[]string{"symbol", "timestamp"},
@@ -961,16 +981,6 @@ func (sd *SibylDatabase) LoadIntradayRecordsFromFile(ctx context.Context, filePa
 	return nil
 }
 
-func (sd *SibylDatabase) dropTempTable(ctx context.Context, tempTableName string) error {
-	dropExecStr := fmt.Sprintf("DROP TABLE `%v`.`%v`;", SibylDatabaseName, tempTableName)
-
-	_, err := sd.DBConn.ExecContext(ctx, dropExecStr)
-	if err != nil {
-		return fmt.Errorf("dropTempTable: failed to execute statement: %v", err)
-	}
-	return nil
-}
-
 func (sd *SibylDatabase) DumpCredsToFile(ctx context.Context, filePathname string) error {
 	startTime := time.Now()
 
@@ -984,250 +994,382 @@ func (sd *SibylDatabase) DumpCredsToFile(ctx context.Context, filePathname strin
 	}
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return fmt.Errorf("DumpCredsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
 
+	buf := bufio.NewWriter(file)
 	stringToWrite := ";" + creds.StringBlindWithDelimiter(";", "\\N", false)
 
 	count, err := buf.WriteString(stringToWrite + "\n")
 	if err != nil {
+		file.Close()
+		os.Remove(filePathname)
 		logrus.Errorf("DumpCredsToFile: failed to write out %v with error: %v", stringToWrite, err)
 		return err
 	}
 	if count != len(stringToWrite)+1 {
+		file.Close()
+		os.Remove(filePathname)
 		logrus.Errorf("DumpCredsToFile: failed to write out the expected number of bytes, expected %v found %v", len(stringToWrite), count)
 		return err
 	}
 	buf.Flush()
-
+	file.Close()
 	logrus.Infof("DumpCredsToFile: wrote creds to %v in %s", filePathname, time.Since(startTime))
 	return nil
 }
 
 func (sd *SibylDatabase) DumpOptionQuoteRecordsToFile(ctx context.Context, filePathname string) error {
+	_, err := sd.DumpRangeOptionQuoteRecordsToFile(ctx, filePathname, "", -1)
+	return err
+}
+
+func (sd *SibylDatabase) DumpRangeOptionQuoteRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
 	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, OptionQuotesTableName)
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, OptionQuotesTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id` > '%v' limit %v;", SibylDatabaseName, OptionQuotesTableName, lastID, count)
+	}
+
 	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rows.Close()
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeOptionQuoteRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
 	rowCount := 0
+	var nextLastID string
+	var quote *core.SibylOptionQuoteRecord
 	for rows.Next() {
-		quote, err := scanners.ScanSibylOptionQuoteRecordRow(rows)
+		nextLastID, quote, err = scanners.ScanSibylOptionQuoteRecordRow(rows)
 		if err != nil {
-			return fmt.Errorf("DumpOptionQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeOptionQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
 		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
-			return fmt.Errorf("DumpOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
 		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
-		if rowCount%1000 == 0 {
+		if rowCount%10000 == 0 {
 			buf.Flush()
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	file.Close()
+	logrus.Infof("DumpRangeOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
 }
 
 func (sd *SibylDatabase) DumpStockQuoteRecordsToFile(ctx context.Context, filePathname string) error {
+	_, err := sd.DumpRangeStockQuoteRecordsToFile(ctx, filePathname, "", -1)
+	return err
+}
+
+func (sd *SibylDatabase) DumpRangeStockQuoteRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
 	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StockQuotesTableName)
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StockQuotesTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id` > '%v' limit %v;", SibylDatabaseName, StockQuotesTableName, lastID, count)
+	}
+
 	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rows.Close()
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeStockQuoteRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
 	rowCount := 0
+	var nextLastID string
+	var quote *core.SibylStockQuoteRecord
 	for rows.Next() {
-		quote, err := scanners.ScanSibylStockQuoteRecordRow(rows)
+		nextLastID, quote, err = scanners.ScanSibylStockQuoteRecordRow(rows)
 		if err != nil {
-			return fmt.Errorf("DumpStockQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStockQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
 		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
 		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
-			return fmt.Errorf("DumpStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
 		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
-		if rowCount%1000 == 0 {
+		if rowCount%10000 == 0 {
 			buf.Flush()
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	file.Close()
+	logrus.Infof("DumpRangeStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
 }
 
 func (sd *SibylDatabase) DumpStableOptionQuoteRecordsToFile(ctx context.Context, filePathname string) error {
+	_, err := sd.DumpRangeStableStockQuoteRecordsToFile(ctx, filePathname, "", -1)
+	return err
+}
+
+func (sd *SibylDatabase) DumpRangeStableOptionQuoteRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
 	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StableStockQuotesTableName)
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StableOptionQuotesTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id` > '%v' limit %v;", SibylDatabaseName, StableOptionQuotesTableName, lastID, count)
+	}
 
 	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rows.Close()
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeStableOptionQuoteRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
 	rowCount := 0
+	var nextLastID string
+	var stableQuote *core.SibylStableOptionQuoteRecord
 	for rows.Next() {
-		quote, err := scanners.ScanSibylStableOptionQuoteRecordRow(rows)
+		nextLastID, stableQuote, err = scanners.ScanSibylStableOptionQuoteRecordRow(rows)
 		if err != nil {
-			return fmt.Errorf("DumpStableOptionQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableOptionQuoteRecordsToFile: failed to scan quote %v: %v", stableQuote, err)
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
-		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
+		quoteStr := stableQuote.StringBlindWithDelimiter(";", "\\N", false)
 		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
-			return fmt.Errorf("DumpStableOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableOptionQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
 		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpStableOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableOptionQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
-		if rowCount%1000 == 0 {
+		if rowCount%10000 == 0 {
 			buf.Flush()
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStableOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	file.Close()
+	logrus.Infof("DumpRangeStableOptionQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
 }
 
 func (sd *SibylDatabase) DumpStableStockQuoteRecordsToFile(ctx context.Context, filePathname string) error {
+	_, err := sd.DumpRangeStableStockQuoteRecordsToFile(ctx, filePathname, "", -1)
+	return err
+}
+
+func (sd *SibylDatabase) DumpRangeStableStockQuoteRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
 	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StableStockQuotesTableName)
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, StableStockQuotesTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id` > '%v' limit %v;", SibylDatabaseName, StableStockQuotesTableName, lastID, count)
+	}
 
 	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rows.Close()
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeStableStockQuoteRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
 	rowCount := 0
+	var nextLastID string
+	var stableQuote *core.SibylStableStockQuoteRecord
 	for rows.Next() {
-		quote, err := scanners.ScanSibylStableStockQuoteRecordRow(rows)
+		nextLastID, stableQuote, err = scanners.ScanSibylStableStockQuoteRecordRow(rows)
 		if err != nil {
-			return fmt.Errorf("DumpStableStockQuoteRecordsToFile: failed to scan quote %v: %v", quote, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableStockQuoteRecordsToFile: failed to scan quote %v: %v", stableQuote, err)
 		}
 		//IMPORTANT NOTE : we use the \N to denote NULL field values
-		quoteStr := quote.StringBlindWithDelimiter(";", "\\N", false)
+		quoteStr := stableQuote.StringBlindWithDelimiter(";", "\\N", false)
 		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
-			return fmt.Errorf("DumpStableStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableStockQuoteRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
 		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpStableStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeStableStockQuoteRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
-		if rowCount%1000 == 0 {
+		if rowCount%10000 == 0 {
 			buf.Flush()
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpStableStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	file.Close()
+	logrus.Infof("DumpRangeStableStockQuoteRecordsToFile: dumped all(%v) quotes to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
 }
 
 func (sd *SibylDatabase) DumpIntradayRecordsToFile(ctx context.Context, filePathname string) error {
-	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, IntradayTableName)
-
-	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
-	if err != nil {
-		return fmt.Errorf("DumpIntradayRecordsToFile: had an error: %v", err)
-	}
-	defer rows.Close()
-
-	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
-	rowCount := 0
-	for rows.Next() {
-		intradayRow, err := scanners.ScanSibylIntradayRecordRow(rows)
-		if err != nil {
-			return fmt.Errorf("DumpIntradayRecordsToFile: failed to scan quote %v: %v", intradayRow, err)
-		}
-
-		quoteStr := intradayRow.StringBlindWithDelimiter(";", "\\N", false)
-		count, err := buf.WriteString(quoteStr + "\n")
-		if err != nil {
-			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
-		}
-		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpIntradayRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
-		}
-		rowCount++
-		if rowCount%1000 == 0 {
-			buf.Flush()
-		}
-	}
-	buf.Flush()
-	logrus.Infof("DumpIntradayRecordsToFile: dumped all(%v) intradays to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	_, err := sd.DumpRangeIntradayRecordsToFile(ctx, filePathname, "", -1)
+	return err
 }
 
-func (sd *SibylDatabase) DumpHistoryRecordsToFile(ctx context.Context, filePathname string) error {
+func (sd *SibylDatabase) DumpRangeIntradayRecordsToFile(ctx context.Context, filePathname string, lastId string, count int) (string, error) {
 	startTime := time.Now()
-	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, HistoryTableName)
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, IntradayTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id`> '%v' limit %v;", SibylDatabaseName, IntradayTableName, lastId, count)
+	}
 
 	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
 	if err != nil {
-		return fmt.Errorf("DumpHistoryRecordsToFile: had an error: %v", err)
+		return "", fmt.Errorf("DumpRangeIntradayRecordsToFile: had an error: %v", err)
 	}
 	defer rows.Close()
 
 	file, err := os.Create(filePathname)
-	defer file.Close()
-	buf := bufio2.NewWriter(file)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeIntradayRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
 	rowCount := 0
+	var nextLastID string
+	var intraday *core.SibylIntradayRecord
 	for rows.Next() {
-		historyRow, err := scanners.ScanSibylHistoryRecordRow(rows)
+		nextLastID, intraday, err = scanners.ScanSibylIntradayRecordRow(rows)
 		if err != nil {
-			return fmt.Errorf("DumpHistoryRecordsToFile: failed to scan quote %v: %v", historyRow, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeIntradayRecordsToFile: failed to scan quote %v: %v", intraday, err)
 		}
 
-		quoteStr := historyRow.StringBlindWithDelimiter(";", "\\N", false)
+		quoteStr := intraday.StringBlindWithDelimiter(";", "\\N", false)
 		count, err := buf.WriteString(quoteStr + "\n")
 		if err != nil {
-			return fmt.Errorf("DumpHistoryRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeIntradayRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
 		}
 		if count != len(quoteStr)+1 {
-			return fmt.Errorf("DumpHistoryRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeIntradayRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
 		}
 		rowCount++
-		if rowCount%1000 == 0 {
+		if rowCount%10000 == 0 {
 			buf.Flush()
 		}
 	}
 	buf.Flush()
-	logrus.Infof("DumpHistoryRecordsToFile: dumped all(%v) histories to %v in %s", rowCount, filePathname, time.Since(startTime))
-	return nil
+	file.Close()
+	logrus.Infof("DumpRangeIntradayRecordsToFile: dumped all(%v) intradays to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
+}
+func (sd *SibylDatabase) DumpHistoryRecordsToFile(ctx context.Context, filePathname string) error {
+	_, err := sd.DumpRangeHistoryRecordsToFile(ctx, filePathname, "", -1)
+	return err
+}
+func (sd *SibylDatabase) DumpRangeHistoryRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
+	startTime := time.Now()
+	var queryStr string
+	if count < 0 {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v`;", SibylDatabaseName, HistoryTableName)
+	} else {
+		queryStr = fmt.Sprintf("SELECT * FROM `%v`.`%v` where `id` > '%v' limit %v;", SibylDatabaseName, HistoryTableName, lastID, count)
+	}
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeHistoryRecordsToFile: had an error: %v", err)
+	}
+	defer rows.Close()
+
+	file, err := os.Create(filePathname)
+	if err != nil {
+		return "", fmt.Errorf("DumpRangeHistoryRecordsToFile: could not create file: %v had error: %v", filePathname, err)
+	}
+	buf := bufio.NewWriter(file)
+	rowCount := 0
+	var nextLastID string
+	var history *core.SibylHistoryRecord
+	for rows.Next() {
+		nextLastID, history, err = scanners.ScanSibylHistoryRecordRow(rows)
+		if err != nil {
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeHistoryRecordsToFile: failed to scan quote %v: %v", history, err)
+		}
+
+		quoteStr := history.StringBlindWithDelimiter(";", "\\N", false)
+		count, err := buf.WriteString(quoteStr + "\n")
+		if err != nil {
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeHistoryRecordsToFile: failed to write out %v with error: %v", quoteStr, err)
+		}
+		if count != len(quoteStr)+1 {
+			file.Close()
+			os.Remove(filePathname)
+			return "", fmt.Errorf("DumpRangeHistoryRecordsToFile: failed to write out the expected number of bytes, expected %v found %v", len(quoteStr), count)
+		}
+		rowCount++
+		if rowCount%10000 == 0 {
+			buf.Flush()
+		}
+	}
+	buf.Flush()
+	file.Close()
+	logrus.Infof("DumpRangeHistoryRecordsToFile: dumped all(%v) histories to %v in %s", rowCount, filePathname, time.Since(startTime))
+	return nextLastID, nil
 }
 
 func (gtd *SibylDatabase) connect(username, password string, address string) error {
@@ -1457,7 +1599,7 @@ func (sd *SibylDatabase) LastHistoryDate(ctx context.Context, symbol core.StockS
 	defer rows.Close()
 
 	if rows.Next() {
-		if history, err := scanners.ScanSibylHistoryRecordRow(rows); err != nil {
+		if _, history, err := scanners.ScanSibylHistoryRecordRow(rows); err != nil {
 			return core.NewDateTypeFromUnix(0), fmt.Errorf("LastHistoryDate: failed with error: %v", err)
 		} else {
 			return history.Timestamp, nil
@@ -1476,7 +1618,7 @@ func (sd *SibylDatabase) LastIntradayHistoryDate(ctx context.Context, symbol cor
 	defer rows.Close()
 
 	if rows.Next() {
-		if history, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
+		if _, history, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
 			return core.NewTimestampTypeFromUnix(0), fmt.Errorf("LastIntradayHistoryDate: failed with error: %v", err)
 		} else {
 			return history.Timestamp, nil
@@ -1621,7 +1763,7 @@ func (sd *SibylDatabase) GetHistory(ctx context.Context, stockSymbol core.StockS
 
 	toReturn := make([]*core.SibylHistoryRecord, 0)
 	for rows.Next() {
-		if record, err := scanners.ScanSibylHistoryRecordRow(rows); err != nil {
+		if _, record, err := scanners.ScanSibylHistoryRecordRow(rows); err != nil {
 			return nil, fmt.Errorf("GetHistory: had error reading results: %v", err)
 		} else {
 			toReturn = append(toReturn, record)
@@ -1641,11 +1783,125 @@ func (sd *SibylDatabase) GetIntraday(ctx context.Context, symbol core.StockSymbo
 
 	toReturn := make([]*core.SibylIntradayRecord, 0)
 	for rows.Next() {
-		if record, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
+		if _, record, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
 			return nil, fmt.Errorf("GetIntraday: had error reading results: %v", err)
 		} else {
 			toReturn = append(toReturn, record)
 		}
 	}
 	return toReturn, nil
+}
+
+func (sd *SibylDatabase) LastHistoryRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, HistoryTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastHistoryRecordID: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylHistoryRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastHistoryRecordID: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
+}
+
+func (sd *SibylDatabase) LastIntradayRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, IntradayTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastIntradayRecord: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastIntradayRecord: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
+}
+
+func (sd *SibylDatabase) LastStableStockQuoteRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, StableStockQuotesTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastStableStockQuoteRecordID: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylStableStockQuoteRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastStableStockQuoteRecordID: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
+}
+
+func (sd *SibylDatabase) LastStableOptionQuoteRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, StableOptionQuotesTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastStableOptionQuoteRecordID: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylStableOptionQuoteRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastStableOptionQuoteRecordID: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
+}
+
+func (sd *SibylDatabase) LastStockQuoteRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, StockQuotesTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastStockQuoteRecordID: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylStockQuoteRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastStockQuoteRecordID: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
+}
+
+func (sd *SibylDatabase) LastOptionQuoteRecordID(ctx context.Context) (string, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` ORDER by `id` desc LIMIT 1;", SibylDatabaseName, OptionQuotesTableName)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return "", fmt.Errorf("LastOptionQuoteRecordID: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if id, _, err := scanners.ScanSibylOptionQuoteRecordRow(rows); err != nil {
+			return "", fmt.Errorf("LastOptionQuoteRecordID: failed with error: %v", err)
+		} else {
+			return id, nil
+		}
+	}
+	return "", nil
 }

@@ -5,17 +5,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/nathanhack/sibyl/core"
-	"github.com/nathanhack/sibyl/core/database"
-	"github.com/nathanhack/sibyl/rest"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/nathanhack/sibyl/core"
+	"github.com/nathanhack/sibyl/core/database"
+	"github.com/nathanhack/sibyl/rest"
+	"github.com/sirupsen/logrus"
 )
 
 type ServerContext struct {
@@ -50,12 +51,12 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 
 	router.HandleFunc("/intraday/{stockSymbol}/{startTimestamp}/{endTimestamp}", serverContext.IntradayGet).Methods(http.MethodGet)
 
-	router.HandleFunc("/database/download/history", serverContext.DatabaseDownloadHistory).Methods(http.MethodGet)
-	router.HandleFunc("/database/download/intraday", serverContext.DatabaseDownloadIntraday).Methods(http.MethodGet)
-	router.HandleFunc("/database/download/stocks/quote", serverContext.DatabaseDownloadStockQuote).Methods(http.MethodGet)
-	router.HandleFunc("/database/download/stocks/stable", serverContext.DatabaseDownloadStockStable).Methods(http.MethodGet)
-	router.HandleFunc("/database/download/options/quote", serverContext.DatabaseDownloadOptionsQuote).Methods(http.MethodGet)
-	router.HandleFunc("/database/download/options/stable", serverContext.DatabaseDownloadOptionStable).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/history/{lastID:.*}", serverContext.DatabaseDownloadHistory).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/intraday/{lastID:.*}", serverContext.DatabaseDownloadIntraday).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/stocks/quote/{lastID:.*}", serverContext.DatabaseDownloadStockQuote).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/stocks/stable/{lastID:.*}", serverContext.DatabaseDownloadStockStable).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/options/quote/{lastID:.*}", serverContext.DatabaseDownloadOptionsQuote).Methods(http.MethodGet)
+	router.HandleFunc("/database/download/options/stable/{lastID:.*}", serverContext.DatabaseDownloadOptionStable).Methods(http.MethodGet)
 
 	router.HandleFunc("/database/upload/history", serverContext.DatabaseUploadHistory).Methods(http.MethodPost)
 	router.HandleFunc("/database/upload/intraday", serverContext.DatabaseUploadIntraday).Methods(http.MethodPost)
@@ -81,9 +82,9 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 		Addr: urlR.Host,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		// TODO make these timeouts part of the future configurations
-		WriteTimeout: time.Second * 60,  // we'll make this a bit longer than the standard 15 for database downloads
-		ReadTimeout:  time.Second * 60,  // we'll make this a bit longer than the standard 15 for database downloads
-		IdleTimeout:  time.Second * 300, // we'll make this a bit longer than the standard 60 for database downloads
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
 		Handler:      router,
 	}
 	return server, nil
@@ -462,6 +463,7 @@ func (sc *ServerContext) IntradayGet(writer http.ResponseWriter, request *http.R
 }
 
 func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -479,11 +481,22 @@ func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, req
 		return
 	}
 
-	if err := sc.db.DumpHistoryRecordsToFile(sc.Ctx, tmpFile.Name()); err != nil {
+	nextLastID, err := sc.db.DumpRangeHistoryRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
 		return
 	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastHistoryRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
@@ -491,7 +504,7 @@ func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, req
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Histories: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadHistory: had a error: %v", err)
 		return
@@ -500,6 +513,7 @@ func (sc *ServerContext) DatabaseDownloadHistory(writer http.ResponseWriter, req
 }
 
 func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -517,10 +531,20 @@ func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, re
 		return
 	}
 
-	if err := sc.db.DumpIntradayRecordsToFile(sc.Ctx, tmpFile.Name()); err != nil {
+	nextLastID, err := sc.db.DumpRangeIntradayRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
 		return
+	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastIntradayRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
 	}
 
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
@@ -530,7 +554,7 @@ func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, re
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{Intradays: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadIntraday: had a error: %v", err)
 		return
@@ -539,6 +563,7 @@ func (sc *ServerContext) DatabaseDownloadIntraday(writer http.ResponseWriter, re
 }
 
 func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -556,11 +581,22 @@ func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, 
 		return
 	}
 
-	if err := sc.db.DumpStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name()); err != nil {
+	nextLastID, err := sc.db.DumpRangeStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
 		return
 	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastStockQuoteRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
@@ -568,7 +604,7 @@ func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, 
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockQuote: had a error: %v", err)
 		return
@@ -577,6 +613,7 @@ func (sc *ServerContext) DatabaseDownloadStockQuote(writer http.ResponseWriter, 
 }
 
 func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -594,10 +631,20 @@ func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter,
 		return
 	}
 
-	if err := sc.db.DumpStableStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name()); err != nil {
+	nextLastID, err := sc.db.DumpRangeStableStockQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
 		return
+	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastStableStockQuoteRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
 	}
 
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
@@ -607,7 +654,7 @@ func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter,
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{StockStableQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadStockStable: had a error: %v", err)
 		return
@@ -616,6 +663,7 @@ func (sc *ServerContext) DatabaseDownloadStockStable(writer http.ResponseWriter,
 }
 
 func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -633,7 +681,22 @@ func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter
 		return
 	}
 
-	sc.db.DumpOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	nextLastID, err := sc.db.DumpRangeOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
+		return
+	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastOptionQuoteRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
@@ -641,7 +704,7 @@ func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionsQuote: had a error: %v", err)
 		return
@@ -650,6 +713,7 @@ func (sc *ServerContext) DatabaseDownloadOptionsQuote(writer http.ResponseWriter
 }
 
 func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter, request *http.Request) {
+	params := mux.Vars(request)
 	//so in order to do this we use the dump functionality, pass in a tmp file then read the file
 	// in and send it in the message (this doesn't have to be fast but it does have to work)
 	tmpFile, err := ioutil.TempFile("./", "dump*")
@@ -667,7 +731,22 @@ func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter
 		return
 	}
 
-	sc.db.DumpStableOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name())
+	nextLastID, err := sc.db.DumpRangeStableOptionQuoteRecordsToFile(sc.Ctx, tmpFile.Name(), params["lastID"], 10000)
+	if err != nil {
+		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
+		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
+		return
+	}
+
+	hasMore := false
+	if nextLastID != "" {
+		if dbLastID, err := sc.db.LastStableOptionQuoteRecordID(sc.Ctx); err == nil {
+			hasMore = nextLastID != dbLastID
+		} else {
+			hasMore = true
+		}
+	}
+
 	bytes, err := ioutil.ReadFile(tmpFile.Name())
 	if err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
@@ -675,7 +754,7 @@ func (sc *ServerContext) DatabaseDownloadOptionStable(writer http.ResponseWriter
 		return
 	}
 
-	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), ErrorState: errToRestErrorState(nil)}); err != nil {
+	if err := json.NewEncoder(writer).Encode(rest.DatabaseRecords{OptionStableQuotes: string(bytes), LastID: nextLastID, More: hasMore, ErrorState: errToRestErrorState(nil)}); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseDownloadOptionStable: had a error: %v", err)
 		return
@@ -732,7 +811,6 @@ func databaseUploadStage(request *http.Request) (string, int, error) {
 }
 
 func (sc *ServerContext) DatabaseUploadHistory(writer http.ResponseWriter, request *http.Request) {
-
 	if fileName, size, err := databaseUploadStage(request); err != nil {
 		json.NewEncoder(writer).Encode(rest.DatabaseRecords{ErrorState: errToRestErrorState(err)})
 		logrus.Errorf("DatabaseUploadHistory: had a error: %v", err)

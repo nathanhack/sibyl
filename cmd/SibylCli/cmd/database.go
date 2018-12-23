@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/nathanhack/sibyl/rest"
 	"github.com/spf13/cobra"
-	"gopkg.in/resty.v1"
-	"io/ioutil"
-	"net/http"
+	resty "gopkg.in/resty.v1"
 )
 
 var dataBaseFilename string
@@ -37,27 +40,69 @@ var databaseDownloadHistory = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/history", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/history/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Histories), 0644); err != nil {
-						return fmt.Errorf("There was a problem while writing the output file: %v", err)
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+						n, err := buf.WriteString(databaseRecords.Histories)
+						if err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem while writing the output file: %v", err)
+						}
+						if n != len(databaseRecords.Histories) {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.Histories), n)
+						}
+						if err := buf.Flush(); err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+						}
+						if !databaseRecords.More || databaseRecords.LastID == "" {
+							break
+						}
+						lastID = databaseRecords.LastID
 					}
-					fmt.Printf("Successfully downloaded History to file: %v\n", dataBaseFilename)
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded History to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -76,27 +121,69 @@ var databaseDownloadIntraday = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/intraday", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/intraday/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.Intradays), 0644); err != nil {
-						return fmt.Errorf("There was a problem while writing the output file: %v", err)
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+						n, err := buf.WriteString(databaseRecords.Intradays)
+						if err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem while writing the output file: %v", err)
+						}
+						if n != len(databaseRecords.Intradays) {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.Intradays), n)
+						}
+						if err := buf.Flush(); err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+						}
+						if !databaseRecords.More || databaseRecords.LastID == "" {
+							break
+						}
+						lastID = databaseRecords.LastID
 					}
-					fmt.Printf("Successfully downloaded Intraday to file: %v\n", dataBaseFilename)
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded Intraday to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -121,27 +208,69 @@ var databaseDownloadStockQuoteCmd = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/stocks/quote", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/quote/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.StockQuotes), 0644); err != nil {
-						return fmt.Errorf("There was a problem while writing the output file: %v", err)
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+						n, err := buf.WriteString(databaseRecords.StockQuotes)
+						if err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem while writing the output file: %v", err)
+						}
+						if n != len(databaseRecords.StockQuotes) {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.StockQuotes), n)
+						}
+						if err := buf.Flush(); err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+						}
+						if !databaseRecords.More || databaseRecords.LastID == "" {
+							break
+						}
+						lastID = databaseRecords.LastID
 					}
-					fmt.Printf("Successfully downloaded Stock Quotes to file: %v\n", dataBaseFilename)
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded Stock Quotes to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -159,28 +288,69 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
-
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/stocks/stable", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/stocks/stable/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.StockStableQuotes), 0644); err != nil {
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+					}
+					n, err := buf.WriteString(databaseRecords.StockStableQuotes)
+					if err != nil {
+						file.Close()
+						os.Remove(dataBaseFilename)
 						return fmt.Errorf("There was a problem while writing the output file: %v", err)
 					}
-					fmt.Printf("Successfully downloaded Stock Stable Quotes to file: %v\n", dataBaseFilename)
+					if n != len(databaseRecords.StockStableQuotes) {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.StockStableQuotes), n)
+					}
+					if err := buf.Flush(); err != nil {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+					}
+					if !databaseRecords.More || databaseRecords.LastID == "" {
+						break
+					}
+					lastID = databaseRecords.LastID
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded Stock Stable Quotes to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -204,28 +374,69 @@ var databaseDownloadOptionsQuoteCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
-
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/options/quote", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/quote/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.OptionQuotes), 0644); err != nil {
-						return fmt.Errorf("There was a problem while writing the output file: %v", err)
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+						n, err := buf.WriteString(databaseRecords.OptionQuotes)
+						if err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem while writing the output file: %v", err)
+						}
+						if n != len(databaseRecords.OptionQuotes) {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.OptionQuotes), n)
+						}
+						if err := buf.Flush(); err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+						}
+						if !databaseRecords.More || databaseRecords.LastID == "" {
+							break
+						}
+						lastID = databaseRecords.LastID
 					}
-					fmt.Printf("Successfully downloaded Option Quotes to file: %v\n", dataBaseFilename)
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded Option Quotes to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -243,28 +454,69 @@ var databaseDownloadOptionsStableCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
-
-		resp, err := resty.R().Get(fmt.Sprintf("%v/database/download/options/stable", address))
+		file, err := os.Create(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			var databaseRecords rest.DatabaseRecords
-			err := json.Unmarshal(resp.Body(), &databaseRecords)
+			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
+		}
+
+		buf := bufio.NewWriter(file)
+		var lastID string
+		for {
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().Get(fmt.Sprintf("%v/database/download/options/stable/%v", address, lastID))
+				if err == nil {
+					break
+				}
+			}
+
 			if err != nil {
-				return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				file.Close()
+				os.Remove(dataBaseFilename)
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
 			} else {
-				if databaseRecords.ErrorState.ErrorReturned {
-					return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+				var databaseRecords rest.DatabaseRecords
+				err := json.Unmarshal(resp.Body(), &databaseRecords)
+				if err != nil {
+					file.Close()
+					os.Remove(dataBaseFilename)
+					return fmt.Errorf("There was a problem parsing the server response: %v  had error:%v\n", string(resp.Body()), err)
 				} else {
-					if err := ioutil.WriteFile(dataBaseFilename, []byte(databaseRecords.OptionStableQuotes), 0644); err != nil {
-						return fmt.Errorf("There was a problem while writing the output file: %v", err)
+					if databaseRecords.ErrorState.ErrorReturned {
+						file.Close()
+						os.Remove(dataBaseFilename)
+						return fmt.Errorf("There was a problem server side: %v\n", databaseRecords.ErrorState.Error)
+					} else {
+						n, err := buf.WriteString(databaseRecords.OptionStableQuotes)
+						if err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem while writing the output file: %v", err)
+						}
+						if n != len(databaseRecords.OptionStableQuotes) {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a writing failure, expected to write %v bytes but only wrote %v", len(databaseRecords.OptionStableQuotes), n)
+						}
+						if err := buf.Flush(); err != nil {
+							file.Close()
+							os.Remove(dataBaseFilename)
+							return fmt.Errorf("There was a problem during flushing to disk: %v", err)
+						}
+						if !databaseRecords.More || databaseRecords.LastID == "" {
+							break
+						}
+						lastID = databaseRecords.LastID
 					}
-					fmt.Printf("Successfully downloaded Option Stable Quotes to file: %v\n", dataBaseFilename)
 				}
 			}
 		}
+		file.Close()
+		fmt.Printf("Successfully downloaded Option Stable Quotes to file: %v\n", dataBaseFilename)
 		return nil
 	},
 }
@@ -289,24 +541,52 @@ var databaseUploadHistory = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{Histories: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/history", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded History")
+		readValues := true
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{Histories: bs.String()})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/history", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded History")
 		return nil
 	},
 }
@@ -325,24 +605,53 @@ var databaseUploadIntraday = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{Intradays: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/intraday", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded Intraday")
+		readValues := true
+
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{Intradays: bs.String()})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/intraday", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded Intraday")
 		return nil
 	},
 }
@@ -367,24 +676,52 @@ var databaseUploadStockQuoteCmd = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{StockQuotes: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/quote", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded Stock Quotes")
+		readValues := true
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{StockQuotes: bs.String()})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/quote", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded Stock Quotes")
 		return nil
 	},
 }
@@ -403,24 +740,52 @@ var databaseUploadStockStableCmd = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{StockStableQuotes: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/stable", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded Stock Stable Quotes")
+		readValues := true
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{StockStableQuotes: bs.String()})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/stocks/stable", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v  response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded Stock Stable Quotes")
 		return nil
 	},
 }
@@ -444,25 +809,52 @@ var databaseUploadOptionsQuoteCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
-
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionQuotes: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/quote", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded Option Quotes")
+		readValues := true
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionQuotes: bs.String()})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/quote", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded Option Quotes")
 		return nil
 	},
 }
@@ -481,24 +873,52 @@ var databaseUploadOptionsStableCmd = &cobra.Command{
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
 
-		bytes, err := ioutil.ReadFile(dataBaseFilename)
+		//we will open the file and load it line by line and push them to the server in small chucks
+		file, err := os.Open(dataBaseFilename)
 		if err != nil {
-			return fmt.Errorf("Could not read file to upload: %v", err)
+			return fmt.Errorf("Unable to open file: %v", err)
 		}
+		defer file.Close()
 
-		jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionStableQuotes: string(bytes)})
-		if err != nil {
-			return fmt.Errorf("An error occured while encoding for upload: %v", err)
-		}
+		scanner := bufio.NewScanner(file)
 
-		resp, err := resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/stable", address))
-		if err != nil {
-			return fmt.Errorf("There was an error sending request to server: %v\n", err)
-		} else if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
-		} else {
-			fmt.Println("Successfully uploaded Option Stable Quotes")
+		readValues := true
+		for readValues {
+			bs := strings.Builder{}
+			rows := 0
+
+			for rows < 10000 {
+				rows++
+				readValues = scanner.Scan()
+				if readValues {
+					s := scanner.Text()
+					n, err := bs.WriteString(s + "\n")
+					if n != len(s)+1 {
+						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
+					}
+				}
+			}
+
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionStableQuotes: string(bytes)})
+			if err != nil {
+				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
+			}
+
+			var resp *resty.Response
+			for retry := 0; retry < 3; retry++ {
+				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/options/stable", address))
+				if err == nil {
+					break
+				}
+			}
+
+			if err != nil {
+				return fmt.Errorf("There was an error sending request to server: %v\n", err)
+			} else if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error statusCode: %v response: %v\n", resp.StatusCode(), resp)
+			}
 		}
+		fmt.Println("Successfully uploaded Option Stable Quotes")
 		return nil
 	},
 }

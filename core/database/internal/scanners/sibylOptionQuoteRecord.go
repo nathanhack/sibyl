@@ -6,8 +6,8 @@ import (
 	"github.com/nathanhack/sibyl/core"
 )
 
-func ScanSibylOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylOptionQuoteRecord, error) {
-	var id int
+func ScanSibylOptionQuoteRecordRow(rows *sql.Rows) (string,*core.SibylOptionQuoteRecord, error) {
+	var id string
 	var ask sql.NullFloat64
 	var askTime sql.NullInt64
 	var askSize sql.NullInt64
@@ -62,7 +62,7 @@ func ScanSibylOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylOptionQuoteRecord
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("ScanSibylQuoteRow: had an error while scanning: %v", err)
+		return "",nil, fmt.Errorf("ScanSibylQuoteRow: had an error while scanning: %v", err)
 	}
 
 	quote := core.SibylOptionQuoteRecord{
@@ -91,5 +91,5 @@ func ScanSibylOptionQuoteRecordRow(rows *sql.Rows) (*core.SibylOptionQuoteRecord
 		Timestamp:          timestamp,
 		Vega:               vega,
 	}
-	return &quote, nil
+	return id, &quote, nil
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/nathanhack/sibyl/core"
 )
 
-func ScanSibylIntradayRecordRow(rows *sql.Rows) (*core.SibylIntradayRecord, error) {
+func ScanSibylIntradayRecordRow(rows *sql.Rows) (string, *core.SibylIntradayRecord, error) {
 	var id string
 	var HighPrice sql.NullFloat64
 	var LastPrice sql.NullFloat64
@@ -28,10 +28,10 @@ func ScanSibylIntradayRecordRow(rows *sql.Rows) (*core.SibylIntradayRecord, erro
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("ScanSibylIntradayRecordRow: had an error while scanning: %v", err)
+		return "", nil, fmt.Errorf("ScanSibylIntradayRecordRow: had an error while scanning: %v", err)
 	}
 
-	return &core.SibylIntradayRecord{
+	return id, &core.SibylIntradayRecord{
 		HighPrice: HighPrice,
 		LastPrice: LastPrice,
 		LowPrice:  LowPrice,

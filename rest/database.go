@@ -7,5 +7,7 @@ type DatabaseRecords struct {
 	StockStableQuotes  string     `json:"StockStableQuotes"`
 	OptionQuotes       string     `json:"OptionQuotes"`
 	OptionStableQuotes string     `json:"OptionStableQuotes"`
+	LastID             string     `json:"LastID"`
+	More               bool       `json:"More"`
 	ErrorState         ErrorState `json:"ErrorState"`
 }
