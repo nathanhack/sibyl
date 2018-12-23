@@ -899,7 +899,7 @@ var databaseUploadOptionsStableCmd = &cobra.Command{
 				}
 			}
 
-			jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionStableQuotes: string(bytes)})
+			jsonBytes, err := json.Marshal(rest.DatabaseRecords{OptionStableQuotes: bs.String()})
 			if err != nil {
 				return fmt.Errorf("An error occurred while encoding for upload: %v", err)
 			}
