@@ -420,7 +420,7 @@ func (sd *SibylDatabase) loadRecords(ctx context.Context, records []DatabaseStri
 	return nil
 }
 
-func (sd *SibylDatabase) loadFileContents(ctx context.Context, databaseName, fileContents string, tableName string, combineIntoID []string, recordFieldNames []string, action LoadDupAction) error {
+func (sd *SibylDatabase) loadFileContents(ctx context.Context, fileContents, databaseName string, tableName string, combineIntoID []string, recordFieldNames []string, action LoadDupAction) error {
 	if len(fileContents) == 0 {
 		//there's no error for not passing in anything to insert
 		return nil
