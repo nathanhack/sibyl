@@ -56,7 +56,7 @@ var databaseDownloadHistory = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -140,7 +140,7 @@ var databaseDownloadIntraday = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -230,7 +230,7 @@ var databaseDownloadStockQuoteCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -313,7 +313,7 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -402,7 +402,7 @@ var databaseDownloadOptionsQuoteCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -485,7 +485,7 @@ var databaseDownloadOptionsStableCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -582,9 +582,6 @@ var databaseUploadHistory = &cobra.Command{
 					n, err := bs.WriteString(s + "\n")
 					if n != len(s)+1 {
 						return fmt.Errorf("Failed while reading line: %v : had the error: %v", s, err)
-					} else {
-						//if we failed we'll back off exponentially
-						time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
 					}
 				}
 			}
@@ -599,6 +596,9 @@ var databaseUploadHistory = &cobra.Command{
 				resp, err = resty.R().SetBody(jsonBytes).Post(fmt.Sprintf("%v/database/upload/history", address))
 				if err == nil {
 					break
+				} else {
+					//if we failed we'll back off exponentially
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -666,7 +666,7 @@ var databaseUploadIntraday = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -739,7 +739,7 @@ var databaseUploadStockQuoteCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -806,7 +806,7 @@ var databaseUploadStockStableCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -878,7 +878,7 @@ var databaseUploadOptionsQuoteCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
@@ -945,7 +945,7 @@ var databaseUploadOptionsStableCmd = &cobra.Command{
 					break
 				} else {
 					//if we failed we'll back off exponentially
-					time.Sleep(time.Duration(retry + 1) * time.Duration(retry + 1) * time.Second)
+					time.Sleep(time.Duration(retry+1) * time.Duration(retry+1) * time.Second)
 				}
 			}
 
