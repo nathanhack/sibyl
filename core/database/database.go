@@ -1352,7 +1352,7 @@ func (sd *SibylDatabase) DumpRangeOptionQuoteRecordsToBuffer(ctx context.Context
 	}
 
 	logrus.Infof("DumpRangeOptionQuoteRecordsToFile: dumped all(%v) quotes in %s", rowCount, time.Since(startTime))
-	return "", nextLastID, nil
+	return nextLastID, buffer.String(), nil
 }
 
 func (sd *SibylDatabase) DumpRangeOptionQuoteRecordsToFile(ctx context.Context, filePathname string, lastID string, count int) (string, error) {
