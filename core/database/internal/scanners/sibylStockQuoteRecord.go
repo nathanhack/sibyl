@@ -3,6 +3,7 @@ package scanners
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/nathanhack/sibyl/core"
 )
 
@@ -18,8 +19,8 @@ func ScanSibylStockQuoteRecordRow(rows *sql.Rows) (string, *core.SibylStockQuote
 	var change sql.NullFloat64
 	var highPrice sql.NullFloat64
 	var lastTradePrice sql.NullFloat64
-	var lastTradeVolume sql.NullInt64
 	var lastTradeTimestamp sql.NullInt64
+	var lastTradeVolume sql.NullInt64
 	var lowPrice sql.NullFloat64
 	var stockSymbol core.StockSymbolType
 	var timestamp core.TimestampType
@@ -38,8 +39,8 @@ func ScanSibylStockQuoteRecordRow(rows *sql.Rows) (string, *core.SibylStockQuote
 		&change,
 		&highPrice,
 		&lastTradePrice,
-		&lastTradeVolume,
 		&lastTradeTimestamp,
+		&lastTradeVolume,
 		&lowPrice,
 		&stockSymbol,
 		&timestamp,

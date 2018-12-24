@@ -298,6 +298,7 @@ var databaseDownloadStockStableCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 		}
+		
 		file, err := os.Create(dataBaseFilename)
 		if err != nil {
 			return fmt.Errorf("There was a problem while creating the output file %v, error: %v", dataBaseFilename, err)
