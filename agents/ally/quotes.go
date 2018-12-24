@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/nathanhack/sibyl/core"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context/ctxhttp"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -20,6 +17,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/nathanhack/sibyl/core"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 // for Ally we have a unified query, for both stock and options
@@ -170,7 +171,11 @@ func allyJsonQuoteToSibylStockQuoteRecord(quote jsonQuote) (*core.SibylStockQuot
 	///////////////////////
 	var Timestamp int64
 	if Timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
-		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the time stamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the timestamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+	}
+	if Timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var Ask sql.NullFloat64
@@ -302,6 +307,10 @@ func allyJsonQuoteToSibylOptionQuoteRecord(quote jsonQuote) (*core.SibylOptionQu
 	var Timestamp int64
 	if Timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonOptionQuoteToSibylQuote: had an error processing the timestamp for the symbol %v error: %v", quote.Symbol, err)
+	}
+	if Timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonOptionQuoteToSibylQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var Ask sql.NullFloat64
@@ -455,7 +464,11 @@ func allyXMLQuoteToSibylStockQuoteRecord(quote xmlQuote) (*core.SibylStockQuoteR
 	///////////////////////
 	var Timestamp int64
 	if Timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
-		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the time stamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the timestamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+	}
+	if Timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonStockQuoteToSibylQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var Ask sql.NullFloat64
@@ -587,6 +600,10 @@ func allyXMLQuoteToSibylOptionQuoteRecord(quote xmlQuote) (*core.SibylOptionQuot
 	var Timestamp int64
 	if Timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonOptionQuoteToSibylQuote: had an error processing the timestamp for the symbol %v error: %v", quote.Symbol, err)
+	}
+	if Timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonOptionQuoteToSibylQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var Ask sql.NullFloat64

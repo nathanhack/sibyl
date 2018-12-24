@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/nathanhack/sibyl/core"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context/ctxhttp"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -18,6 +15,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nathanhack/sibyl/core"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 // for Ally we have a unified query, for both stock and options
@@ -152,6 +153,10 @@ func allyJsonStableQuoteToSibylStableStockQuoteRecord(quote jsonStableQuote) (*c
 	var timestamp int64
 	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonQuoteToSibylStableStockQuote: the time stamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+	}
+	if timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableStockQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var annualDividend sql.NullFloat64
@@ -288,6 +293,10 @@ func allyJsonStableQuoteToSibylStableOptionQuoteRecord(quote jsonStableQuote) (*
 	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: had an error processing the timestamp for the symbol %v error: %v", quote.Symbol, err)
 	}
+	if timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
+	}
 	/////////////////////////
 	var closePrice sql.NullFloat64
 	if closePrice.Float64, err = strconv.ParseFloat(quote.ClosePrice, 64); err == nil {
@@ -358,6 +367,10 @@ func allyXMLStableQuoteToSibylStableStockQuoteRecord(quote xmlStableQuote) (*cor
 	var timestamp int64
 	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonQuoteToSibylStableStockQuote: the time stamp for %v was %v and could not convert", quote.Symbol, quote.Timestamp)
+	}
+	if timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableStockQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	///////////////////////
 	var annualDividend sql.NullFloat64
@@ -493,6 +506,10 @@ func allyXMLStableQuoteToSibylStableOptionQuoteRecord(quote xmlStableQuote) (*co
 	var timestamp int64
 	if timestamp, err = strconv.ParseInt(quote.Timestamp, 10, 64); err != nil {
 		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: had an error processing the timestamp for the symbol %v error: %v", quote.Symbol, err)
+	}
+	if timestamp == 0 {
+		//if the timestamp was erroneous so bail
+		return nil, fmt.Errorf("allyJsonQuoteToSibylStableOptionQuote: the timestamp for %v was erroneous: %v", quote.Symbol, quote.Timestamp)
 	}
 	/////////////////////////
 	var closePrice sql.NullFloat64

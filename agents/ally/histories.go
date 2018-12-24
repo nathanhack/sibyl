@@ -5,9 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/nathanhack/sibyl/core"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context/ctxhttp"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -15,14 +12,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nathanhack/sibyl/core"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context/ctxhttp"
 )
 
 type jsonData struct {
-	Timestamp  string `json:"date"`
+	ClosePrice string `json:"close"`
 	HighPrice  string `json:"high"`
 	LowPrice   string `json:"low"`
 	OpenPrice  string `json:"open"`
-	ClosePrice string `json:"close"`
+	Timestamp  string `json:"date"`
 	Volume     string `json:"volume"`
 }
 
