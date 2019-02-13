@@ -20,46 +20,91 @@ var disableCmd = &cobra.Command{
 
 var disableDownloadingCmd = &cobra.Command{
 	Use:   "downloading",
-	Short: "Disable Downloading for a particular stock",
-	Long:  `Disable Downloading for a particular stock`,
+	Short: "Disables Downloading for a particular stock",
+	Long:  `Disables Downloading for a particular stock`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDisableBlankCmd(cmd, args, "downloading", "downloading")
 	},
 }
 
+var disableAllDownloadingCmd = &cobra.Command{
+	Use:   "downloading",
+	Short: "Disables Downloading for all stocks",
+	Long:  `Disables Downloading for all stocks`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDisableAllBlankCmd(cmd, "downloading", "downloading")
+	},
+}
+
 var disableHistoryCmd = &cobra.Command{
 	Use:   "history",
-	Short: "Enable History for a particular stock (if downloading is enabled)",
-	Long:  `Enable gathering daily History for a particular stock (if downloading is enabled)`,
+	Short: "Disables History for a particular stock (if downloading is enabled)",
+	Long:  `Disables gathering daily History for a particular stock (if downloading is enabled)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDisableBlankCmd(cmd, args, "history", "history")
 	},
 }
 
+var disableAllHistoryCmd = &cobra.Command{
+	Use:   "history",
+	Short: "Disables History for all stocks (if downloading is enabled)",
+	Long:  `Disables gathering daily History for all stocks (if downloading is enabled)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDisableAllBlankCmd(cmd, "history", "history")
+	},
+}
+
 var disableIntradayCmd = &cobra.Command{
 	Use:   "intraday",
-	Short: "Disable Intraday History for a particular stock",
-	Long:  `Disable gathering 1 min resolution Intraday History for a particular stock`,
+	Short: "Disables Intraday History for a particular stock",
+	Long:  `Disables gathering 1 min resolution Intraday History for a particular stock`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDisableBlankCmd(cmd, args, "intraday", "intraday")
 	},
 }
 
+var disableAllIntradayCmd = &cobra.Command{
+	Use:   "intraday",
+	Short: "Disables Intraday History for all stocks",
+	Long:  `Disables gathering 1 min resolution Intraday History for all stocks`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDisableAllBlankCmd(cmd, "intraday", "intraday")
+	},
+}
+
 var disableQuotesCmd = &cobra.Command{
 	Use:   "quotes",
-	Short: "Disable Quotes for a particular stock",
-	Long:  `Disable gathering 1 min resolution Quotes for a particular stock`,
+	Short: "Disables Quotes for a particular stock",
+	Long:  `Disables gathering 1 min resolution Quotes for a particular stock`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDisableBlankCmd(cmd, args, "quotes", "quotes")
 	},
 }
 
+var disableAllQuotesCmd = &cobra.Command{
+	Use:   "quotes",
+	Short: "Disables Quotes for all stocks",
+	Long:  `Disables gathering 1 min resolution Quotes for all stocks`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDisableAllBlankCmd(cmd, "quotes", "quotes")
+	},
+}
+
 var disableStableQuotesCmd = &cobra.Command{
 	Use:   "stableQuotes",
-	Short: "Disable Stable Quotes for a particular stock",
-	Long:  `Disable gathering Stable Quotes every day for a particular stock`,
+	Short: "Disables Stable Quotes for a particular stock",
+	Long:  `Disables gathering Stable Quotes every day for a particular stock`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDisableBlankCmd(cmd, args, "stableQuotes", "stableQuotes")
+	},
+}
+
+var disableAllStableQuotesCmd = &cobra.Command{
+	Use:   "stableQuotes",
+	Short: "Disables Stable Quotes for all stocks",
+	Long:  `Disables gathering Stable Quotes every day for all stocks`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDisableAllBlankCmd(cmd, "stableQuotes", "stableQuotes")
 	},
 }
 
@@ -97,6 +142,33 @@ func runDisableBlankCmd(cmd *cobra.Command, args []string, commandName, restEndp
 				} else {
 					fmt.Printf("Successfullly disabled %v for stock: %v\n", commandName, s)
 				}
+			}
+		}
+	}
+	return nil
+}
+
+func runDisableAllBlankCmd(cmd *cobra.Command, commandName, restEndpoint string) error {
+	address, err := cmd.Flags().GetString("serverAddress")
+	if err != nil {
+		return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
+	}
+
+	resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/disable/all/%v", address, restEndpoint))
+	if err != nil {
+		return fmt.Errorf("There was an error while disabling %v for all stocks, error: %v\n", commandName, err)
+	} else if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("There was an error while disabling %v for all stocks, statusCode: %v  response: %v\n", commandName, resp.StatusCode(), resp)
+	} else {
+		var respErrors rest.ErrorState
+		err := json.Unmarshal(resp.Body(), &respErrors)
+		if err != nil {
+			return fmt.Errorf("There was a problem parsing the server response while disabling %v for all stocks: %v  had error:%v\n", commandName, string(resp.Body()), err)
+		} else {
+			if respErrors.ErrorReturned {
+				return fmt.Errorf("There was a problem server side while disabling %v for all stocks: %v\n", commandName, respErrors.ErrorReturned)
+			} else {
+				fmt.Printf("Successfullly disabled %v for all stocks\n", commandName)
 			}
 		}
 	}
@@ -146,5 +218,12 @@ func init() {
 	disableCmd.AddCommand(disableIntradayCmd)
 	disableCmd.AddCommand(disableQuotesCmd)
 	disableCmd.AddCommand(disableStableQuotesCmd)
+
 	disableCmd.AddCommand(disableAllCmd)
+	disableAllCmd.AddCommand(disableAllDownloadingCmd)
+	disableAllCmd.AddCommand(disableAllHistoryCmd)
+	disableAllCmd.AddCommand(disableAllIntradayCmd)
+	disableAllCmd.AddCommand(disableAllQuotesCmd)
+	disableAllCmd.AddCommand(disableAllStableQuotesCmd)
+
 }
