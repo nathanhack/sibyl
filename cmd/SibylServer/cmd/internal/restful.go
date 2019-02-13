@@ -44,6 +44,17 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	router.HandleFunc("/stocks/enable/all", serverContext.StockEnableAll).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all", serverContext.StockDisableAll).Methods(http.MethodPut)
 
+	router.HandleFunc("/stocks/enable/all/downloading", serverContext.StockEnableAllDownloading).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/downloading", serverContext.StockDisableAllDownloading).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/history", serverContext.StockEnableAllHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/history", serverContext.StockDisableAllHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/intraday", serverContext.StockEnableAllIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/intraday", serverContext.StockDisableAllIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/quotes", serverContext.StockEnableAllQuotes).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/quotes", serverContext.StockDisableAllQuotes).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/stableQuotes", serverContext.StockEnableAllStableQuotes).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/stableQuotes", serverContext.StockDisableAllStableQuotes).Methods(http.MethodPut)
+
 	router.HandleFunc("/stocks/revalidate/{stockSymbol}", serverContext.StockRevalidate).Methods(http.MethodPut)
 
 	router.HandleFunc("/history/{stockSymbol}/{startTimestamp}/{endTimestamp}", serverContext.HistoryGet).Methods(http.MethodGet)
@@ -90,11 +101,8 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 }
 func (sc *ServerContext) StockDisableAll(writer http.ResponseWriter, request *http.Request) {
 	err := sc.db.StockDisableAll(sc.Ctx)
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
 
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
@@ -103,10 +111,8 @@ func (sc *ServerContext) StockDisableAll(writer http.ResponseWriter, request *ht
 }
 func (sc *ServerContext) StockEnableAll(writer http.ResponseWriter, request *http.Request) {
 	err := sc.db.StockEnableAll(sc.Ctx)
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
+
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
@@ -117,10 +123,30 @@ func (sc *ServerContext) StockEnableAll(writer http.ResponseWriter, request *htt
 func (sc *ServerContext) StockDisableStableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockDisableStableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
+func (sc *ServerContext) StockDisableAllStableQuotes(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockDisableStableQuotes(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
@@ -129,91 +155,235 @@ func (sc *ServerContext) StockDisableStableQuotes(writer http.ResponseWriter, re
 func (sc *ServerContext) StockEnableStableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockEnableStableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockEnableAllStableQuotes(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockEnableStableQuotes(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockDisableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockDisableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
+
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockDisableAllQuotes(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockDisableQuotes(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockEnableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockEnableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockEnableAllQuotes(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockEnableQuotes(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockDisableIntraday(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockDisableIntradayHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockDisableAllIntraday(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockDisableIntradayHistory(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockEnableIntraday(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockEnableIntradayHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockEnableAllIntraday(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockEnableIntradayHistory(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockDisableHistory(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockDisableHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockDisableAllHistory(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockDisableHistory(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
 func (sc *ServerContext) StockEnableHistory(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockEnableHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
+func (sc *ServerContext) StockEnableAllHistory(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, stockRecord := range records {
+		err := sc.db.StockEnableHistory(sc.Ctx, stockRecord.Symbol)
+		errs := make([]string, 0)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(fmt.Errorf("%v", errs)))
 }
 
 func (sc *ServerContext) StockDelete(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	stockSymbol := params["stockSymbol"]
 	err := sc.db.StockDelete(sc.Ctx, core.StockSymbolType(stockSymbol))
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
+	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
@@ -221,6 +391,9 @@ func (sc *ServerContext) StockDelete(writer http.ResponseWriter, request *http.R
 func (sc *ServerContext) StockRevalidate(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockRevalidate(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
+	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
@@ -260,15 +433,18 @@ func (sc *ServerContext) StocksGetAll(writer http.ResponseWriter, request *http.
 
 func errToRestErrorState(err error) rest.ErrorState {
 	if err != nil {
-		return rest.ErrorState{err.Error(), true}
+		return rest.ErrorState{Error: err.Error(), ErrorReturned: true}
 	}
-	return rest.ErrorState{"", false}
+	return rest.ErrorState{Error: "", ErrorReturned: false}
 }
 
 func (sc *ServerContext) StockAdd(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	stockSymbol := params["stockSymbol"]
 	err := sc.db.StockAdd(sc.Ctx, core.StockSymbolType(stockSymbol))
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
+	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
@@ -276,24 +452,63 @@ func (sc *ServerContext) StockAdd(writer http.ResponseWriter, request *http.Requ
 func (sc *ServerContext) StockEnableDownloading(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockEnableDownloading(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
-	} else {
+	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
+
+func (sc *ServerContext) StockEnableAllDownloading(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, stockRecord := range records {
+		err := sc.db.StockEnableDownloading(sc.Ctx, stockRecord.Symbol)
+
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
+
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(fmt.Errorf("%v", errs)))
+}
+
 func (sc *ServerContext) StockDisableDownloading(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	err := sc.db.StockDisableDownloading(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	errs := make([]string, 0)
-	if err != nil {
-		errs = append(errs, err.Error())
+	if err == nil {
+		sc.stockValidator.RequestUpdate <- true
 	}
 
+	//now write it out as the response
+	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+}
+
+func (sc *ServerContext) StockDisableAllDownloading(writer http.ResponseWriter, request *http.Request) {
+	records, err := sc.db.GetAllStockRecords(sc.Ctx)
+	if err != nil {
+		json.NewEncoder(writer).Encode(errToRestErrorState(err))
+		return
+	}
+
+	errs := make([]string, 0)
+	for _, record := range records {
+		err := sc.db.StockDisableDownloading(sc.Ctx, record.Symbol)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	sc.stockValidator.RequestUpdate <- true
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
@@ -349,8 +564,6 @@ func (sc *ServerContext) AgentUseAlly(writer http.ResponseWriter, request *http.
 		creds.RefreshExpireTimestamp(),
 	)
 
-	sc.stockValidator.RequestUpdate <- true
-
 	json.NewEncoder(writer).Encode(errToRestErrorState(sc.db.LoadCreds(sc.Ctx, creds)))
 }
 
@@ -375,8 +588,6 @@ func (sc *ServerContext) AgentUseTdAmeritrade(writer http.ResponseWriter, reques
 		creds.ExpireTimestamp(),
 		creds.RefreshExpireTimestamp(),
 	)
-
-	sc.stockValidator.RequestUpdate <- true
 
 	json.NewEncoder(writer).Encode(errToRestErrorState(sc.db.LoadCreds(sc.Ctx, creds)))
 }
