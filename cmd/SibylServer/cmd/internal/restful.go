@@ -41,8 +41,6 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	router.HandleFunc("/stocks/disable/quotes/{stockSymbol}", serverContext.StockDisableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/stableQuotes/{stockSymbol}", serverContext.StockEnableStableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/stableQuotes/{stockSymbol}", serverContext.StockDisableStableQuotes).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/enable/all", serverContext.StockEnableAll).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/disable/all", serverContext.StockDisableAll).Methods(http.MethodPut)
 
 	router.HandleFunc("/stocks/enable/all/downloading", serverContext.StockEnableAllDownloading).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all/downloading", serverContext.StockDisableAllDownloading).Methods(http.MethodPut)
@@ -54,6 +52,8 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	router.HandleFunc("/stocks/disable/all/quotes", serverContext.StockDisableAllQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/all/stableQuotes", serverContext.StockEnableAllStableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all/stableQuotes", serverContext.StockDisableAllStableQuotes).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all", serverContext.StockEnableAll).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all", serverContext.StockDisableAll).Methods(http.MethodPut)
 
 	router.HandleFunc("/stocks/revalidate/{stockSymbol}", serverContext.StockRevalidate).Methods(http.MethodPut)
 
@@ -111,7 +111,6 @@ func (sc *ServerContext) StockDisableAll(writer http.ResponseWriter, request *ht
 }
 func (sc *ServerContext) StockEnableAll(writer http.ResponseWriter, request *http.Request) {
 	err := sc.db.StockEnableAll(sc.Ctx)
-
 	if err == nil {
 		sc.stockValidator.RequestUpdate <- true
 	}
@@ -149,7 +148,7 @@ func (sc *ServerContext) StockDisableAllStableQuotes(writer http.ResponseWriter,
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockEnableStableQuotes(writer http.ResponseWriter, request *http.Request) {
@@ -181,7 +180,7 @@ func (sc *ServerContext) StockEnableAllStableQuotes(writer http.ResponseWriter, 
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDisableQuotes(writer http.ResponseWriter, request *http.Request) {
@@ -214,7 +213,7 @@ func (sc *ServerContext) StockDisableAllQuotes(writer http.ResponseWriter, reque
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockEnableQuotes(writer http.ResponseWriter, request *http.Request) {
@@ -246,7 +245,7 @@ func (sc *ServerContext) StockEnableAllQuotes(writer http.ResponseWriter, reques
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDisableIntraday(writer http.ResponseWriter, request *http.Request) {
@@ -278,7 +277,7 @@ func (sc *ServerContext) StockDisableAllIntraday(writer http.ResponseWriter, req
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockEnableIntraday(writer http.ResponseWriter, request *http.Request) {
@@ -310,7 +309,7 @@ func (sc *ServerContext) StockEnableAllIntraday(writer http.ResponseWriter, requ
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDisableHistory(writer http.ResponseWriter, request *http.Request) {
@@ -342,7 +341,7 @@ func (sc *ServerContext) StockDisableAllHistory(writer http.ResponseWriter, requ
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockEnableHistory(writer http.ResponseWriter, request *http.Request) {
@@ -374,7 +373,7 @@ func (sc *ServerContext) StockEnableAllHistory(writer http.ResponseWriter, reque
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(fmt.Errorf("%v", errs)))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDelete(writer http.ResponseWriter, request *http.Request) {
@@ -438,6 +437,13 @@ func errToRestErrorState(err error) rest.ErrorState {
 	return rest.ErrorState{Error: "", ErrorReturned: false}
 }
 
+func errsToRestErrorState(errs []string) rest.ErrorState {
+	if len(errs) > 0 {
+		return rest.ErrorState{Error: fmt.Sprint(errs), ErrorReturned: true}
+	}
+	return rest.ErrorState{Error: "", ErrorReturned: false}
+}
+
 func (sc *ServerContext) StockAdd(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
 	stockSymbol := params["stockSymbol"]
@@ -479,7 +485,7 @@ func (sc *ServerContext) StockEnableAllDownloading(writer http.ResponseWriter, r
 	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(fmt.Errorf("%v", errs)))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDisableDownloading(writer http.ResponseWriter, request *http.Request) {
@@ -510,7 +516,7 @@ func (sc *ServerContext) StockDisableAllDownloading(writer http.ResponseWriter, 
 
 	sc.stockValidator.RequestUpdate <- true
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) AgentAllyCreds(writer http.ResponseWriter, request *http.Request) {

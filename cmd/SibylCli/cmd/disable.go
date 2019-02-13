@@ -126,7 +126,7 @@ func runDisableBlankCmd(cmd *cobra.Command, args []string, commandName, restEndp
 	}
 
 	for _, s := range stocks {
-		resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/disable/%v/%v", address, restEndpoint, s))
+		resp, err := resty.R().Put(fmt.Sprintf("%v/stocks/disable/%v/%v", address, restEndpoint, s))
 		if err != nil {
 			return fmt.Errorf("There was an error while disabling %v for stock %v, error: %v\n", commandName, s, err)
 		} else if resp.StatusCode() != http.StatusOK {
@@ -154,7 +154,7 @@ func runDisableAllBlankCmd(cmd *cobra.Command, commandName, restEndpoint string)
 		return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
 	}
 
-	resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/disable/all/%v", address, restEndpoint))
+	resp, err := resty.R().Put(fmt.Sprintf("%v/stocks/disable/all/%v", address, restEndpoint))
 	if err != nil {
 		return fmt.Errorf("There was an error while disabling %v for all stocks, error: %v\n", commandName, err)
 	} else if resp.StatusCode() != http.StatusOK {
