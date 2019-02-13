@@ -20,44 +20,89 @@ var enableCmd = &cobra.Command{
 
 var enableDownloadingCmd = &cobra.Command{
 	Use:   "downloading",
-	Short: "Enable downloading for a particular stock",
-	Long:  `Enable downloading for a particular stock`,
+	Short: "Enables downloading for a particular stock",
+	Long:  `Enables downloading for a particular stock`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEnableBlankCmd(cmd, args, "downloading", "downloading")
 	},
 }
 
+var enableAllDownloadingCmd = &cobra.Command{
+	Use:   "downloading",
+	Short: "Enables downloading for all stocks",
+	Long:  `Enables downloading for all stocks`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runEnableAllBlankCmd(cmd, "downloading", "downloading")
+	},
+}
+
 var enableHistoryCmd = &cobra.Command{
 	Use:   "history",
-	Short: "Enable history for a particular stock (if downloading is enabled)",
-	Long:  `Enable gathering daily History for a particular stock (if downloading is enabled)`,
+	Short: "Enables history for a particular stock (if downloading is enabled)",
+	Long:  `Enables gathering daily History for a particular stock (if downloading is enabled)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEnableBlankCmd(cmd, args, "history", "history")
 	},
 }
 
+var enableAllHistoryCmd = &cobra.Command{
+	Use:   "history",
+	Short: "Enables history for a all stocks (if downloading is enabled)",
+	Long:  `Enables gathering daily History for all stocks (if downloading is enabled)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runEnableAllBlankCmd(cmd, "history", "history")
+	},
+}
+
 var enableIntradayCmd = &cobra.Command{
 	Use:   "intraday",
-	Short: "Enable Intraday History for a particular stock (if downloading is enabled)",
-	Long:  `Enable gathering 1 min resolution Intraday History for a particular stock (if downloading is enabled)`,
+	Short: "Enables Intraday History for a particular stock (if downloading is enabled)",
+	Long:  `Enables gathering 1 min resolution Intraday History for a particular stock (if downloading is enabled)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEnableBlankCmd(cmd, args, "intraday", "intraday")
 	},
 }
 
+var enableAllIntradayCmd = &cobra.Command{
+	Use:   "intraday",
+	Short: "Enables Intraday History for all stocks (if downloading is enabled)",
+	Long:  `Enables gathering 1 min resolution Intraday History for all stocks (if downloading is enabled)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runEnableAllBlankCmd(cmd, "intraday", "intraday")
+	},
+}
+
 var enableQuotesCmd = &cobra.Command{
 	Use:   "quotes",
-	Short: "Enable Quotes for a particular stock (if downloading is enabled)",
-	Long:  `Enable gathering 1 min resolution Quotes for a particular stock (if downloading is enabled)`,
+	Short: "Enables Quotes for a particular stock (if downloading is enabled)",
+	Long:  `Enables gathering 1 min resolution Quotes for a particular stock (if downloading is enabled)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEnableBlankCmd(cmd, args, "quotes", "quotes")
 	},
 }
 
+var enableAllQuotesCmd = &cobra.Command{
+	Use:   "quotes",
+	Short: "Enables Quotes for all stocks (if downloading is enabled)",
+	Long:  `Enables gathering 1 min resolution Quotes for all stocks (if downloading is enabled)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runEnableAllBlankCmd(cmd, "quotes", "quotes")
+	},
+}
+
 var enableStableQuotesCmd = &cobra.Command{
 	Use:   "stableQuotes",
-	Short: "Enable Stable Quotes for a particular stock (if downloading is enabled)",
-	Long:  `Enable gathering Stable Quotes every day for a particular stock (if downloading is enabled)`,
+	Short: "Enables Stable Quotes for a particular stock (if downloading is enabled)",
+	Long:  `Enables gathering Stable Quotes every day for a particular stock (if downloading is enabled)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runEnableBlankCmd(cmd, args, "stableQuotes", "stableQuotes")
+	},
+}
+
+var enableAllStableQuotesCmd = &cobra.Command{
+	Use:   "stableQuotes",
+	Short: "Enables Stable Quotes for all stocks (if downloading is enabled)",
+	Long:  `Enables gathering Stable Quotes every day for all stocks (if downloading is enabled)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runEnableBlankCmd(cmd, args, "stableQuotes", "stableQuotes")
 	},
@@ -100,6 +145,34 @@ func runEnableBlankCmd(cmd *cobra.Command, args []string, commandName, restEndpo
 			}
 		}
 	}
+	return nil
+}
+
+func runEnableAllBlankCmd(cmd *cobra.Command, commandName, restEndpoint string) error {
+	address, err := cmd.Flags().GetString("serverAddress")
+	if err != nil {
+		return fmt.Errorf("Could not get server address from passed in arguments: %v\n", err)
+	}
+
+	resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/enable/all/%v", address, restEndpoint))
+	if err != nil {
+		return fmt.Errorf("There was an error while enabling %v for all stocks, error: %v\n", commandName, err)
+	} else if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("There was an error while enabling %v for all stocks, statusCode: %v  response: %v\n", commandName, resp.StatusCode(), resp)
+	} else {
+		var respErrors rest.ErrorState
+		err := json.Unmarshal(resp.Body(), &respErrors)
+		if err != nil {
+			return fmt.Errorf("There was a problem parsing the server response while enabling %v for all stocks: %v  had error:%v\n", commandName, string(resp.Body()), err)
+		} else {
+			if respErrors.ErrorReturned {
+				return fmt.Errorf("There was a problem server side while enabling %v for all stocks: %v\n", commandName, respErrors.ErrorReturned)
+			} else {
+				fmt.Printf("Successfullly enabled %v for all stocks\n", commandName)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -147,4 +220,10 @@ func init() {
 	enableCmd.AddCommand(enableQuotesCmd)
 	enableCmd.AddCommand(enableStableQuotesCmd)
 	enableCmd.AddCommand(enableAllCmd)
+
+	enableAllCmd.AddCommand(enableAllDownloadingCmd)
+	enableAllCmd.AddCommand(enableAllHistoryCmd)
+	enableAllCmd.AddCommand(enableAllIntradayCmd)
+	enableAllCmd.AddCommand(enableAllQuotesCmd)
+	enableAllCmd.AddCommand(enableAllStableQuotesCmd)
 }
