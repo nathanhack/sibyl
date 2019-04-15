@@ -26,18 +26,26 @@ import (
 )
 
 var logDirectory string
+var debug bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "SibylServer",
 	Short: "The Sibyl suite backend tool for stock data acquisition, Display Only views and manual trade execution",
 	Long:  `SibylServer is the Sibyl suite's backend server pursuant to being Display Only is used to acquire data from a discount broker, display data and perform trades.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		if debug {
+			logrus.Info("logging level set to: DEBUG")
+			logrus.SetLevel(logrus.DebugLevel)
+		}
+
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-
 	responseErrorLog := logDirectory + "/SibylServer.log"
 	if _, err := os.Stat(logDirectory); os.IsNotExist(err) {
 		if err := os.MkdirAll(logDirectory, 0775); err != nil {
@@ -67,7 +75,6 @@ func Execute() {
 	logrus.AddHook(hook)
 
 	err := rootCmd.Execute()
-
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -76,4 +83,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&logDirectory, "logs", "./", "specifies the directory to store logs defaults to current directory")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enables debug in the log output")
 }
