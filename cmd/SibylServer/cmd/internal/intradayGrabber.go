@@ -98,6 +98,10 @@ func (ig *IntradayGrabber) Run() error {
 				runningCount := 0
 				ctx, cancel := context.WithCancel(ig.killCtx)
 				for stock := range intradaySymbolsToDownload {
+					select {
+					case <-ig.killCtx.Done():
+						break
+					}
 					startTime, err := ig.db.LastIntradayHistoryDate(ig.killCtx, stock)
 					if err != nil || startTime == emptyTime {
 						// if there was an error or we couldn't find the last date
