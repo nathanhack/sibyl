@@ -662,10 +662,10 @@ func (ag *AllyAgent) GetStableQuotes(ctx context.Context, stockSymbols map[core.
 			return emptyStockRecords, emptyOptionRecords, fmt.Errorf("GetStableQuotes: request creation error: %v", err)
 		}
 
-		ag.quoteFlowLimit.Take(ctx)
-		_ = ag.rateLimitMarketCalls.Take(ctx) //we rate limit this call
+		ag.rateLimitMarketCalls.Take(ctx) // and it's a market call
+		ag.concurrentLimit.Take(ctx)      // and we limit concurrent requests
 		resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
-		ag.quoteFlowLimit.Return()
+		ag.concurrentLimit.Return()
 		if err != nil {
 			return emptyStockRecords, emptyOptionRecords, fmt.Errorf("GetStableQuotes: client error: %v", err)
 		}

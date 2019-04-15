@@ -862,10 +862,10 @@ func (ag *AllyAgent) GetQuotes(ctx context.Context, stockSymbols map[core.StockS
 		}
 
 		//we rate limit the quote calls and give each request one shot to be successful
-		ag.quoteFlowLimit.Take(ctx)
-		_ = ag.rateLimitMarketCalls.Take(ctx)
+		ag.rateLimitMarketCalls.Take(ctx) // we limit frequeny of market calls
+		ag.concurrentLimit.Take(ctx)      // and we limit concurrent requests
 		resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
-		ag.quoteFlowLimit.Return()
+		ag.concurrentLimit.Return()
 		if err != nil {
 			errStrings = append(errStrings, fmt.Sprintf("GetQuotes: client error: %v", err))
 			continue

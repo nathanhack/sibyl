@@ -81,9 +81,11 @@ func (ag *AllyAgent) GetHistory(ctx context.Context, symbol core.StockSymbolType
 		return []*core.SibylHistoryRecord{}, fmt.Errorf("GetHistory: request creation error on %v: %v", symbol, err)
 	}
 
-	ag.rateLimitMarketLowPriority.Take(ctx)
-	ag.rateLimitMarketCalls.Take(ctx)
+	ag.rateLimitMarketLowPriority.Take(ctx) // this is a lower priority
+	ag.rateLimitMarketCalls.Take(ctx)       // and it's a market call
+	ag.concurrentLimit.Take(ctx)            // and we limit concurrent requests
 	resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
+	ag.concurrentLimit.Return()
 	if err != nil {
 		return []*core.SibylHistoryRecord{}, fmt.Errorf("GetHistory: client error for %v: %v", symbol, err)
 	}

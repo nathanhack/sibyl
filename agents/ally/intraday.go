@@ -112,9 +112,11 @@ func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolTyp
 		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: request creation error: %v", err)
 	}
 
-	ag.rateLimitMarketLowPriority.Take(ctx)
-	ag.rateLimitMarketCalls.Take(ctx)
+	ag.rateLimitMarketLowPriority.Take(ctx) // this is a lower priority
+	ag.rateLimitMarketCalls.Take(ctx)       // and it's a market call
+	ag.concurrentLimit.Take(ctx)            // and we limit concurrent requests
 	resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
+	ag.concurrentLimit.Return()
 	if err != nil {
 		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: client error: %v", err)
 	}
@@ -150,7 +152,7 @@ func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolTyp
 		return toReturn, fmt.Errorf("GetIntraday: had errors while parsing quotes: %v", strings.Join(errStrings, ";"))
 	}
 
-	logrus.Infof("GetIntraday: finished getting intraday history for %v in %s", symbol, time.Since(startTime))
+	logrus.Debugf("GetIntraday: finished getting intraday history (%v - %v) for %v in %s", startDate.Time().Format("2006-01-02"), endDate.Time().Format("2006-01-02"), symbol, time.Since(startTime))
 	return toReturn, nil
 }
 func allyJsonIntradayToSibylIntraday(symbol core.StockSymbolType, intraday jsonIntraday) (*core.SibylIntradayRecord, error) {

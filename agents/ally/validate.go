@@ -149,11 +149,11 @@ func (ag *AllyAgent) verifyGetQuote(ctx context.Context, symbol core.StockSymbol
 		return nil, fmt.Errorf("verifyGetQuote: request creation error: %v", err)
 	}
 
-	ag.quoteFlowLimit.Take(ctx)
-	_ = ag.rateLimitMarketLowPriority.Take(ctx)
-	_ = ag.rateLimitMarketCalls.Take(ctx) //we rate limit this call
+	ag.rateLimitMarketLowPriority.Take(ctx) // this is a lower priority
+	ag.rateLimitMarketCalls.Take(ctx)       // and it's a market call
+	ag.concurrentLimit.Take(ctx)            // and we limit concurrent requests
 	resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
-	ag.quoteFlowLimit.Return()
+	ag.concurrentLimit.Return()
 	if err != nil {
 		return nil, fmt.Errorf("verifyGetQuote: client error: %v", err)
 	}

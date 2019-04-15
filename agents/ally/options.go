@@ -63,9 +63,11 @@ func (ag *AllyAgent) GetStockOptionSymbols(ctx context.Context, symbol core.Stoc
 		return []*core.OptionSymbolType{}, fmt.Errorf("GetStockOptionSymbols: request creation error: %v", err)
 	}
 
-	ag.rateLimitMarketLowPriority.Take(ctx)
-	ag.rateLimitMarketCalls.Take(ctx)
+	ag.rateLimitMarketLowPriority.Take(ctx) // this is a lower priority
+	ag.rateLimitMarketCalls.Take(ctx)       // and it's a market call
+	ag.concurrentLimit.Take(ctx)            // and we limit concurrent requests
 	resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
+	ag.concurrentLimit.Return()
 	if err != nil {
 		return []*core.OptionSymbolType{}, fmt.Errorf("GetStockOptionSymbols: client error: %v", err)
 	}
