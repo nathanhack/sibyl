@@ -34,6 +34,10 @@ func NewStockValidator(db *database.SibylDatabase, optionSymbolGrabber *OptionSy
 	}
 }
 
+func tomorrowAt6AM() time.Time {
+	return time.Now().Truncate(24*time.Hour).AddDate(0, 0, 1).Add(6 * time.Hour)
+}
+
 func (sv *StockValidator) Run() error {
 	if sv.running {
 		return fmt.Errorf("StockValidator is already running")
@@ -42,11 +46,19 @@ func (sv *StockValidator) Run() error {
 	sv.running = true
 	go func(sqg *StockValidator) {
 		ticker := time.NewTicker(1 * time.Minute)
+		//first time we run we run all stocks
+		runnAllStocks := true
+		durationToWait := tomorrowAt6AM().Sub(time.Now())
 	mainLoop:
 		for {
 			select {
 			case <-sv.killCtx.Done():
 				break mainLoop
+			case <-time.After(durationToWait):
+				//we make this re-validate all stocks every 24 hours
+				// this is needed when stocks are removed stock exchanges
+				runnAllStocks = true
+				durationToWait = tomorrowAt6AM().Sub(time.Now())
 			case <-ticker.C:
 				agent, err := sv.db.GetAgent(sv.killCtx)
 				if err != nil {
@@ -58,46 +70,78 @@ func (sv *StockValidator) Run() error {
 					logrus.Errorf("StockValidator: had a problem executing GetAllStocks: %v", err)
 				} else {
 					stocksWereUpdated := false
+					updatedChan := make(chan bool, len(stocks))
+					runningCount := 0
 					for _, stock := range stocks {
-						if stock.ValidationStatus == core.ValidationPending {
-							good, hasOptions, exchange, exchangeName, name, err := agent.VerifyStockSymbol(sv.killCtx, stock.Symbol)
-							if err != nil {
-								logrus.Errorf("StockValidator: had the following error: %v", err)
-								continue
-							}
-							if good {
-								if err := sv.db.StockSetExchangeInfoAndName(sv.killCtx, stock.Symbol, hasOptions, exchange, exchangeName, name); err != nil {
-									logrus.Errorf("StockValidator: had the following error while updating stock: %v: %v", stock.Symbol, err)
-								} else {
-									if err := sv.db.StockValidate(sv.killCtx, stock.Symbol); err != nil {
-										logrus.Errorf("StockValidator: had the following error while updating stock: %v to valid: %v", stock.Symbol, err)
-									} else {
-										logrus.Infof("StockValidator: the stock %v has been validated.", stock.Symbol)
-										//we'll let the cache and OptionSymbolGrabber know
-										// since the OptionSymbolGrabber will update the cache we'll
-										// just let it know and it will take care of the rest
-										stocksWereUpdated = true
-									}
-								}
-							} else {
-								if err := sv.db.StockInvalidate(sv.killCtx, stock.Symbol); err != nil {
-									logrus.Errorf("StockValidator: had the following error while updating stock:%v to invalid :%v", stock.Symbol, err)
-								} else {
-									logrus.Infof("StockValidator: the stock %v has NOT been validated.", stock.Symbol)
-								}
-							}
+						if runnAllStocks || stock.ValidationStatus == core.ValidationPending {
+							runningCount++
+							go validateStock(sv.killCtx, agent, sv.db, stock.Symbol, updatedChan)
 						}
 					}
+					// now we will issue an updated if we get a true from the updateChan
+				updateLoop:
+					for {
+						select {
+						case <-sv.killCtx.Done():
+							break updateLoop
+						case update := <-updatedChan:
+							stocksWereUpdated = stocksWereUpdated || update
+							runningCount--
+							if runningCount == 0 {
+								break updateLoop
+							}
+						case <-time.After(6 * time.Hour):
+							//a fail safe this should take 6 hours to complete
+							logrus.Errorf("StockValidator: had an issue getting all the result for stock validation in a timely manor")
+							break updateLoop
+						}
+					}
+
 					if stocksWereUpdated {
 						//TODO consider moving this action into the SymbolsCache
 						sv.optionSymbolGrabber.RequestUpdate <- true
 					}
 				}
+
+				runnAllStocks = false //we reset this as we've finished a round updating everything
 			}
 		}
 		sqg.done() //signal this is finished
 	}(sv)
 	return nil
+}
+
+func validateStock(ctx context.Context, agent core.SibylAgent, db *database.SibylDatabase, stock core.StockSymbolType, updated chan bool) {
+	good, hasOptions, exchange, exchangeName, name, err := agent.VerifyStockSymbol(ctx, stock)
+	if err != nil {
+		logrus.Errorf("StockValidator: had the following error: %v", err)
+	} else if good {
+		if err := db.StockSetExchangeInfoAndName(ctx, stock, hasOptions, exchange, exchangeName, name); err != nil {
+			logrus.Errorf("StockValidator: had the following error while updating stock: %v: %v", stock, err)
+		} else {
+			if err := db.StockValidate(ctx, stock); err != nil {
+				logrus.Errorf("StockValidator: had the following error while updating stock: %v to valid: %v", stock, err)
+			} else {
+				logrus.Infof("StockValidator: the stock %v has been validated.", stock)
+				//we'll let the cache and OptionSymbolGrabber know
+				// since the OptionSymbolGrabber will update the cache we'll
+				// just let it know and it will take care of the rest
+				updated <- true
+				return
+			}
+		}
+	} else {
+		if err := db.StockInvalidate(ctx, stock); err != nil {
+			logrus.Errorf("StockValidator: had the following error while updating stock:%v to invalid :%v", stock, err)
+			updated <- true
+			return
+		} else {
+			logrus.Infof("StockValidator: the stock %v has NOT been validated.", stock)
+		}
+	}
+
+	//if we made it here we didn't update anything
+	updated <- false
 }
 
 func (sv *StockValidator) Stop(waitUpTo time.Duration) {
