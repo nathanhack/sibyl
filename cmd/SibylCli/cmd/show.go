@@ -91,6 +91,7 @@ var showStocksCmd = &cobra.Command{
 				stockRow = append(stockRow, v.StableQuotesStatus)
 				stockRow = append(stockRow, v.HistoryStatus)
 				stockRow = append(stockRow, v.IntradayHistoryStatus)
+				stockRow = append(stockRow, v.IntradayHistoryState)
 			} else {
 				stockRow = append(stockRow, v.Symbol)
 				stockRow = append(stockRow, v.Name)
@@ -99,7 +100,7 @@ var showStocksCmd = &cobra.Command{
 			data = append(data, stockRow)
 		}
 
-		detailsHeaders := []string{"Symbol", "Name", "Exchange", "Exchange Description", "Has Options", "Validation", "Download Status", "Quote Status", "Stable Quotes Status", "History Status", "Intraday Status"}
+		detailsHeaders := []string{"Symbol", "Name", "Exchange", "Exchange Description", "Has Options", "Validation", "Download Status", "Quote Status", "Stable Quotes Status", "History Status", "Intraday Status", "Intraday State"}
 		normalHeaders := []string{"Symbol", "Name"}
 		if useCSV {
 			w := csv.NewWriter(os.Stdout)

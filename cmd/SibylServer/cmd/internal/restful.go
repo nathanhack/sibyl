@@ -410,6 +410,7 @@ func (sc *ServerContext) StocksGetAll(writer http.ResponseWriter, request *http.
 			HasOptions:            dbStock.HasOptions,
 			HistoryStatus:         string(dbStock.HistoryStatus),
 			IntradayHistoryStatus: string(dbStock.IntradayHistoryStatus),
+			IntradayHistoryState:  string(dbStock.IntradayHistoryState),
 			Name:                  string(dbStock.Name),
 			QuotesStatus:          string(dbStock.QuotesStatus),
 			StableQuotesStatus:    string(dbStock.StableQuotesStatus),

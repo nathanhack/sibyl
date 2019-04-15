@@ -62,6 +62,7 @@ const (
 	HistoryTableName             = "history"
 	OptionsTableName             = "options"
 	IntradayTableName            = "intraday"
+	TableVersionsTableName       = "tableVersions"
 
 	credsTableCreate = "CREATE TABLE IF NOT EXISTS `" + SibylDatabaseName + "`.`" + CredsTableName + "` (" +
 		"`id` ENUM('1') NOT NULL, " +
@@ -206,6 +207,7 @@ const (
 		"`hasOptions` ENUM('yes','no') NOT NULL DEFAULT 'no'," +
 		"`historyStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
 		"`intradayHistoryStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
+		"`intradayHistoryState` ENUM('unknown','scanning','scanned') NOT NULL DEFAULT 'unknown'," +
 		"`name` VARCHAR(100) NOT NULL DEFAULT '\"\"'," +
 		"`quotesStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
 		"`stableQuotesStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
@@ -220,6 +222,19 @@ const (
 		"`strikePrice` DECIMAL(36,18) NOT NULL," +
 		"`symbol` VARCHAR(45) NOT NULL," +
 		"PRIMARY KEY (`id`), INDEX `index0` (`symbol` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
+
+	tableVersionCreate = "CREATE TABLE IF NOT EXISTS `" + SibylDatabaseName + "`.`" + TableVersionsTableName + "` (" +
+		"`id` ENUM('one') default 'one' not null," +
+		"`creds` int default 0 not null," +
+		"`history` int default 0 not null," +
+		"`intraday` int default 0 not null," +
+		"`optionQuotes` int default 0 not null," +
+		"`options` int default 0 not null," +
+		"`stableOptionQuotes` int default 0 not null," +
+		"`stableStockQuotes` int default 0 not null," +
+		"`stockQuotes` int default 0 not null," +
+		"`stocks` int default 0 not null," +
+		"PRIMARY KEY(`id`),UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
 )
 
 type SibylDatabase struct {
@@ -300,6 +315,16 @@ func ConnectAndEnsureSibylDatabase(ctx context.Context, address string) (*SibylD
 	if !toReturn.hasTable(ctx, SibylDatabaseName, OptionsTableName) {
 		if _, err := toReturn.DBConn.ExecContext(ctx, optionsTableCreate); err != nil {
 			return nil, fmt.Errorf("ConnectAndEnsureSibylDatabase: found an error while creating %v table: %v", OptionsTableName, err)
+		}
+	}
+
+	if !toReturn.hasTable(ctx, SibylDatabaseName, TableVersionsTableName) {
+		if _, err := toReturn.DBConn.ExecContext(ctx, tableVersionCreate); err != nil {
+			return nil, fmt.Errorf("ConnectAndEnsureSibylDatabase: found an error while creating %v table: %v", TableVersionsTableName, err)
+		}
+		// and since this was just added we insert the default values
+		if _, err := toReturn.DBConn.ExecContext(ctx, "insert into `"+SibylDatabaseName+"`.`"+TableVersionsTableName+"` () VALUES ();"); err != nil {
+			return nil, fmt.Errorf("ConnectAndEnsureSibylDatabase: found an error while adding the default record %v table: %v", TableVersionsTableName, err)
 		}
 	}
 
@@ -2062,6 +2087,18 @@ func (sd *SibylDatabase) StockDisableIntradayHistory(ctx context.Context, symbol
 	return sd.stockOneElementChange(ctx, symbol, "intradayHistoryStatus", string(core.ActivityDisabled))
 }
 
+func (sd *SibylDatabase) StockIntradayHistorySetUnknown(ctx context.Context, symbol core.StockSymbolType) error {
+	return sd.stockOneElementChange(ctx, symbol, "intradayHistoryState", "unknown")
+}
+
+func (sd *SibylDatabase) StockIntradayHistorySetScanning(ctx context.Context, symbol core.StockSymbolType) error {
+	return sd.stockOneElementChange(ctx, symbol, "intradayHistoryState", "scanning")
+}
+
+func (sd *SibylDatabase) StockIntradayHistorySetScanned(ctx context.Context, symbol core.StockSymbolType) error {
+	return sd.stockOneElementChange(ctx, symbol, "intradayHistoryState", "scanned")
+}
+
 func (sd *SibylDatabase) StockRevalidate(ctx context.Context, symbol core.StockSymbolType) error {
 	return sd.stockOneElementChange(ctx, symbol, "downloadStatus", string(core.ValidationPending))
 }
@@ -2133,6 +2170,27 @@ func (sd *SibylDatabase) LastIntradayHistoryDate(ctx context.Context, symbol cor
 	return core.NewTimestampTypeFromUnix(0), nil
 
 }
+
+func (sd *SibylDatabase) FirstIntradayHistoryDate(ctx context.Context, symbol core.StockSymbolType) (core.TimestampType, error) {
+	queryStr := fmt.Sprintf("SELECT * FROM `%v`.`%v` WHERE `symbol` = '%v' ORDER by `timestamp` asc LIMIT 1;", SibylDatabaseName, IntradayTableName, symbol)
+
+	rows, err := sd.DBConn.QueryContext(ctx, queryStr)
+	if err != nil {
+		return core.NewTimestampTypeFromUnix(0), fmt.Errorf("LastIntradayHistoryDate: failed to execute query %v, had error: %v", queryStr, err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		if _, history, err := scanners.ScanSibylIntradayRecordRow(rows); err != nil {
+			return core.NewTimestampTypeFromUnix(0), fmt.Errorf("LastIntradayHistoryDate: failed with error: %v", err)
+		} else {
+			return history.Timestamp, nil
+		}
+	}
+	return core.NewTimestampTypeFromUnix(0), nil
+
+}
+
 func (sd *SibylDatabase) SetOptionsForStock(ctx context.Context, symbol core.StockSymbolType, optionsSymbols []*core.OptionSymbolType) error {
 	deleteStr := fmt.Sprintf("DELETE FROM `%v`.`%v` WHERE (`symbol` = '%v');", SibylDatabaseName, OptionsTableName, symbol)
 

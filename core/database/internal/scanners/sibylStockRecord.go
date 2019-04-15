@@ -11,6 +11,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 	var downloadStatus core.ActivityStatusType
 	var historyStatus core.ActivityStatusType
 	var intradayHistoryStatus core.ActivityStatusType
+	var intradayHistoryState core.ScanStateType
 	var exchange string
 	var exchangeName string
 	var hasOptions string
@@ -27,6 +28,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		&hasOptions,
 		&historyStatus,
 		&intradayHistoryStatus,
+		&intradayHistoryState,
 		&name,
 		&quotesStatus,
 		&stableQuotesStatus,
@@ -45,6 +47,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		DownloadStatus:        downloadStatus,
 		HistoryStatus:         historyStatus,
 		IntradayHistoryStatus: intradayHistoryStatus,
+		IntradayHistoryState:  intradayHistoryState,
 		Exchange:              exchange,
 		ExchangeDescription:   exchangeName,
 		HasOptions:            options,

@@ -7,6 +7,7 @@ type Stock struct {
 	HasOptions            bool   `json:"HasOptions"`
 	HistoryStatus         string `json:"HistoryStatus"`
 	IntradayHistoryStatus string `json:"IntradayHistoryStatus"`
+	IntradayHistoryState  string `json:"IntradayHistoryState"`
 	Name                  string `json:"Name"`
 	QuotesStatus          string `json:"QuotesStatus"`
 	StableQuotesStatus    string `json:"StableQuotesStatus"`

@@ -11,6 +11,7 @@ type SibylStockRecord struct {
 	HasOptions            bool
 	HistoryStatus         ActivityStatusType
 	IntradayHistoryStatus ActivityStatusType
+	IntradayHistoryState  ScanStateType
 	Name                  string
 	QuotesStatus          ActivityStatusType
 	StableQuotesStatus    ActivityStatusType
@@ -31,7 +32,7 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 	if ss.HasOptions {
 		hasOptions = "yes"
 	}
-	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v",
+	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
 		esc,
 		ss.DownloadStatus,
 		esc,
@@ -54,6 +55,10 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 		delimiter,
 		esc,
 		ss.IntradayHistoryStatus,
+		esc,
+		delimiter,
+		esc,
+		ss.IntradayHistoryState,
 		esc,
 		delimiter,
 		esc,
