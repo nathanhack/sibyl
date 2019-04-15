@@ -47,7 +47,7 @@ func (sv *StockValidator) Run() error {
 	go func(sqg *StockValidator) {
 		ticker := time.NewTicker(1 * time.Minute)
 		//first time we run we run all stocks
-		runnAllStocks := true
+		runAllStocks := true
 		durationToWait := tomorrowAt6AM().Sub(time.Now())
 	mainLoop:
 		for {
@@ -57,9 +57,10 @@ func (sv *StockValidator) Run() error {
 			case <-time.After(durationToWait):
 				//we make this re-validate all stocks every 24 hours
 				// this is needed when stocks are removed stock exchanges
-				runnAllStocks = true
+				runAllStocks = true
 				durationToWait = tomorrowAt6AM().Sub(time.Now())
 			case <-ticker.C:
+				startTime := time.Now()
 				agent, err := sv.db.GetAgent(sv.killCtx)
 				if err != nil {
 					logrus.Errorf("StockValidator: could not retrieve agent: %v", err)
@@ -73,7 +74,7 @@ func (sv *StockValidator) Run() error {
 					updatedChan := make(chan bool, len(stocks))
 					runningCount := 0
 					for _, stock := range stocks {
-						if runnAllStocks || stock.ValidationStatus == core.ValidationPending {
+						if runAllStocks || stock.ValidationStatus == core.ValidationPending {
 							runningCount++
 							go validateStock(sv.killCtx, agent, sv.db, stock.Symbol, updatedChan)
 						}
@@ -103,7 +104,8 @@ func (sv *StockValidator) Run() error {
 					}
 				}
 
-				runnAllStocks = false //we reset this as we've finished a round updating everything
+				runAllStocks = false //we reset this as we've finished a round updating everything
+				logrus.Infof("StockValidator: finished a round in %v", time.Since(startTime))
 			}
 		}
 		sqg.done() //signal this is finished

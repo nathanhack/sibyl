@@ -211,7 +211,6 @@ func (isr *intradayStockRange) ResetRetry() {
 }
 
 func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAgent, db *database.SibylDatabase) {
-
 	//for each isr we try and to take a
 	// chunk of time starting at the EndDate-Delta
 	// each failed attempt will reduce retry
@@ -243,7 +242,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 		}
 		intradayRecords, err := agent.GetIntraday(ctx, isr.Stock, core.MinuteTicks, core.NewTimestampTypeFromTime(startDate), core.NewTimestampTypeFromTime(isr.EndDate))
 		if err != nil {
-			logrus.Errorf("IntradayGrabber: had a problem getting Intraday data on stock %v: %v", isr.Stock, err)
+			logrus.Errorf("IntradayGrabber: had a problem getting Intraday data on stock %v for range (%v-%v): %v", isr.Stock, startDate, isr.EndDate, err)
 			isr.Retry--
 			if isr.Retry == 0 {
 				isr.ResetRetry()
@@ -254,6 +253,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 						logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v", isr.Stock, err)
 					}
 					isr.Finished <- false
+					logrus.Infof("IntradayGrabber: unable to reduce delta (%v-%v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
 					return
 				}
 			}
@@ -264,7 +264,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 				//we either had an error or there wasn't anything to download
 				// either way we're done no need to go any further back in time
 				// there be another random chance to try again later
-				logrus.Debugf("IntradayGrabber: received zero records, assuming the last of the history for %v is found at: %v - %v", isr.Stock, isr.StartDate, isr.EndDate)
+				logrus.Debugf("IntradayGrabber: received zero records, assuming the last of the history for %v is found at: %v - %v", isr.Stock, startDate, isr.EndDate)
 				break
 			}
 
@@ -280,6 +280,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 							logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v", isr.Stock, err)
 						}
 						isr.Finished <- false
+						logrus.Infof("IntradayGrabber: loading data failed on dates(%v-%v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
 						return
 					}
 				}
@@ -290,6 +291,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 	}
 
 	isr.Finished <- true
+	logrus.Infof("IntradayGrabber: finished getting Intraday history for %v", isr.Stock)
 }
 
 func (ig *IntradayGrabber) Stop(waitUpTo time.Duration) {
