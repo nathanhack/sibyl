@@ -23,7 +23,7 @@ var rateLimitOthers = ratelimiter.New((180.0) * (1.0 / 60.0))
 var quoteLimits = flowLimiter.New(5)
 
 // for everything that isn't quotes or stable quotes will additionally be rate limited
-var rateLimitMarketLowPriority = ratelimiter.New(1.0)
+var rateLimitMarketLowPriority = ratelimiter.New(3.0)
 
 type AllyAgent struct {
 	consumerKey                string

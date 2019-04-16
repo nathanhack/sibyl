@@ -228,7 +228,7 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 		logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanning\": %v", isr.Stock, err)
 	}
 
-	for isr.StartDate.Before(isr.EndDate) || isr.StartDate.Equal(isr.EndDate) {
+	for isr.StartDate.Before(isr.EndDate) {
 		//there is the chance we're in this loop and the program is wanting to exit
 		// so we need to check the ctx in case it's done
 		select {
@@ -253,8 +253,8 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 				if !isr.ReduceDelta() {
 					//well we can't reduce any more
 					// set the stock value to scanned
-					if err := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err != nil {
-						logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v", isr.Stock, err)
+					if err1 := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err1 != nil {
+						logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v : after this error: %v", isr.Stock, err1, err)
 					}
 					isr.Finished <- false
 					logrus.Infof("IntradayGrabber: unable to reduce delta (%v-%v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
@@ -280,8 +280,8 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 					if !isr.ReduceDelta() {
 						//well we can't reduce any more
 						// set the stock value to scanned
-						if err := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err != nil {
-							logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v", isr.Stock, err)
+						if err1 := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err1 != nil {
+							logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v : after this error: %v", isr.Stock, err1, err)
 						}
 						isr.Finished <- false
 						logrus.Infof("IntradayGrabber: loading data failed on dates(%v-%v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
@@ -294,6 +294,9 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 		isr.EndDate = startDate
 	}
 
+	if err := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err != nil {
+		logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v", isr.Stock, err)
+	}
 	isr.Finished <- true
 	logrus.Infof("IntradayGrabber: finished getting Intraday history for %v", isr.Stock)
 }
