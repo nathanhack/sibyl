@@ -152,7 +152,7 @@ func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolTyp
 		return toReturn, fmt.Errorf("GetIntraday: had errors while parsing quotes: %v", strings.Join(errStrings, ";"))
 	}
 
-	logrus.Debugf("GetIntraday: finished getting intraday history (%v - %v) for %v in %s", startDate.Time().Format("2006-01-02"), endDate.Time().Format("2006-01-02"), symbol, time.Since(startTime))
+	logrus.Infof("GetIntraday: finished getting intraday history (%v - %v) for %v in %s", startDate.Time().Format("2006-01-02"), endDate.Time().Format("2006-01-02"), symbol, time.Since(startTime))
 	return toReturn, nil
 }
 func allyJsonIntradayToSibylIntraday(symbol core.StockSymbolType, intraday jsonIntraday) (*core.SibylIntradayRecord, error) {
