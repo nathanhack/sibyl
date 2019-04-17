@@ -13,6 +13,7 @@ type Stock struct {
 	StableQuotesStatus    string `json:"StableQuotesStatus"`
 	Symbol                string `json:"Symbol"`
 	Validation            string `json:"Validation"`
+	ValidationTimestamp   int64  `json:"ValidationTimestamp"`
 }
 
 type StocksResponse struct {

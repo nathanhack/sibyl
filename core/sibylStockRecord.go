@@ -17,6 +17,7 @@ type SibylStockRecord struct {
 	StableQuotesStatus    ActivityStatusType
 	Symbol                StockSymbolType
 	ValidationStatus      ValidationStatusType
+	ValidationTimestamp   DateType
 }
 
 func (ss *SibylStockRecord) String() string {
@@ -32,7 +33,7 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 	if ss.HasOptions {
 		hasOptions = "yes"
 	}
-	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
+	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
 		esc,
 		ss.DownloadStatus,
 		esc,
@@ -79,6 +80,10 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 		delimiter,
 		esc,
 		ss.ValidationStatus,
+		esc,
+		delimiter,
+		esc,
+		ss.ValidationTimestamp,
 		esc,
 	)
 }

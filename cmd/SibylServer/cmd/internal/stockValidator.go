@@ -34,10 +34,6 @@ func NewStockValidator(db *database.SibylDatabase, optionSymbolGrabber *OptionSy
 	}
 }
 
-func tomorrowAt6AM() time.Time {
-	return time.Now().Truncate(24*time.Hour).AddDate(0, 0, 1).Add(6 * time.Hour)
-}
-
 func (sv *StockValidator) Run() error {
 	if sv.running {
 		return fmt.Errorf("StockValidator is already running")
@@ -46,19 +42,11 @@ func (sv *StockValidator) Run() error {
 	sv.running = true
 	go func(sqg *StockValidator) {
 		ticker := time.NewTicker(1 * time.Minute)
-		//first time we run we run all stocks
-		runAllStocks := true
-		durationToWait := tomorrowAt6AM().Sub(time.Now())
 	mainLoop:
 		for {
 			select {
 			case <-sv.killCtx.Done():
 				break mainLoop
-			case <-time.After(durationToWait):
-				//we make this re-validate all stocks every 24 hours
-				// this is needed when stocks are removed stock exchanges
-				runAllStocks = true
-				durationToWait = tomorrowAt6AM().Sub(time.Now())
 			case <-ticker.C:
 				startTime := time.Now()
 				agent, err := sv.db.GetAgent(sv.killCtx)
@@ -73,27 +61,28 @@ func (sv *StockValidator) Run() error {
 					stocksWereUpdated := false
 					updatedChan := make(chan bool, len(stocks))
 					runningCount := 0
+					ctx, cancel := context.WithCancel(sv.killCtx)
 					for _, stock := range stocks {
-						if runAllStocks || stock.ValidationStatus == core.ValidationPending {
+						if stock.ValidationStatus == core.ValidationPending ||
+							(stock.ValidationStatus != core.ValidationInvalid && stock.ValidationTimestamp.IsZero()) ||
+							(stock.ValidationStatus == core.ValidationValid && stock.ValidationTimestamp.Before(core.NewDateTypeFromTime(time.Now()))) {
 							runningCount++
-							go validateStock(sv.killCtx, agent, sv.db, stock.Symbol, updatedChan)
+							go validateStock(ctx, agent, sv.db, stock.Symbol, updatedChan)
 						}
 					}
 					// now we will issue an updated if we get a true from the updateChan
 				updateLoop:
-					for {
+					for runningCount > 0 {
 						select {
 						case <-sv.killCtx.Done():
 							break updateLoop
 						case update := <-updatedChan:
 							stocksWereUpdated = stocksWereUpdated || update
 							runningCount--
-							if runningCount == 0 {
-								break updateLoop
-							}
 						case <-time.After(6 * time.Hour):
 							//a fail safe this should take 6 hours to complete
 							logrus.Errorf("StockValidator: had an issue getting all the result for stock validation in a timely manor")
+							cancel()
 							break updateLoop
 						}
 					}
@@ -104,7 +93,6 @@ func (sv *StockValidator) Run() error {
 					}
 				}
 
-				runAllStocks = false //we reset this as we've finished a round updating everything
 				logrus.Infof("StockValidator: finished a round in %v", time.Since(startTime))
 			}
 		}
@@ -129,6 +117,7 @@ func validateStock(ctx context.Context, agent core.SibylAgent, db *database.Siby
 				// since the OptionSymbolGrabber will update the cache we'll
 				// just let it know and it will take care of the rest
 				updated <- true
+				db.StockSetValidateTimestamp(ctx, stock, core.NewDateTypeFromTime(time.Now()))
 				return
 			}
 		}
@@ -136,6 +125,7 @@ func validateStock(ctx context.Context, agent core.SibylAgent, db *database.Siby
 		if err := db.StockInvalidate(ctx, stock); err != nil {
 			logrus.Errorf("StockValidator: had the following error while updating stock:%v to invalid :%v", stock, err)
 			updated <- true
+			db.StockSetValidateTimestamp(ctx, stock, core.NewDateTypeFromTime(time.Now()))
 			return
 		} else {
 			logrus.Infof("StockValidator: the stock %v has NOT been validated.", stock)

@@ -67,8 +67,7 @@ func (hg *HistoryGrabber) Run() error {
 				}
 
 				//schedule the next update to be tomorrow morning at 6am
-				year, month, day := currentTime.Date()
-				durationToWait = time.Date(year, month, day+1, 6, 0, 0, 0, time.Local).Sub(currentTime)
+				durationToWait = tomorrowAt6AM().Sub(currentTime)
 
 				//we want all the stock history up to yesterdayOrLastWeekday(or the last weekday)
 				zeroDate := core.NewDateTypeFromUnix(0)

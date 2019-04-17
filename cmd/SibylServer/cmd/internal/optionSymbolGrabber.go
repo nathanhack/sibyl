@@ -100,8 +100,7 @@ func (osg *OptionSymbolGrabber) Run() error {
 				}
 
 				//schedule the next update to be tomorrow morning at 6am
-				year, month, day := startTime.Date()
-				durationToWait = time.Date(year, month, day+1, 6, 0, 0, 0, time.Local).Sub(startTime)
+				durationToWait = tomorrowAt6AM().Sub(startTime)
 
 				symbols := make([]core.StockSymbolType, 0)
 

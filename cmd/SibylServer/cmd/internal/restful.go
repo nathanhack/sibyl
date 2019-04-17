@@ -416,6 +416,7 @@ func (sc *ServerContext) StocksGetAll(writer http.ResponseWriter, request *http.
 			StableQuotesStatus:    string(dbStock.StableQuotesStatus),
 			Symbol:                string(dbStock.Symbol),
 			Validation:            string(dbStock.ValidationStatus),
+			ValidationTimestamp:   dbStock.ValidationTimestamp.Unix(),
 		})
 	}
 

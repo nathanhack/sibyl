@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/nathanhack/sibyl/core"
 	"github.com/nathanhack/sibyl/rest"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -80,12 +81,17 @@ var showStocksCmd = &cobra.Command{
 				if v.HasOptions {
 					hasOptions = "yes"
 				}
+				validationTimestamp := "never"
+				if v.ValidationTimestamp > 0 {
+					validationTimestamp = core.NewTimestampTypeFromUnix(v.ValidationTimestamp).String()
+				}
 				stockRow = append(stockRow, v.Symbol)
 				stockRow = append(stockRow, v.Name)
 				stockRow = append(stockRow, v.Exchange)
 				stockRow = append(stockRow, v.ExchangeDescription)
 				stockRow = append(stockRow, hasOptions)
 				stockRow = append(stockRow, v.Validation)
+				stockRow = append(stockRow, validationTimestamp)
 				stockRow = append(stockRow, v.DownloadStatus)
 				stockRow = append(stockRow, v.QuotesStatus)
 				stockRow = append(stockRow, v.StableQuotesStatus)
@@ -100,7 +106,21 @@ var showStocksCmd = &cobra.Command{
 			data = append(data, stockRow)
 		}
 
-		detailsHeaders := []string{"Symbol", "Name", "Exchange", "Exchange Description", "Has Options", "Validation", "Download Status", "Quote Status", "Stable Quotes Status", "History Status", "Intraday Status", "Intraday State"}
+		detailsHeaders := []string{
+			"Symbol",
+			"Name",
+			"Exchange",
+			"Exchange Description",
+			"Has Options",
+			"Validation",
+			"Validated On",
+			"Download Status",
+			"Quote Status",
+			"Stable Quotes Status",
+			"History Status",
+			"Intraday Status",
+			"Intraday State",
+		}
 		normalHeaders := []string{"Symbol", "Name"}
 		if useCSV {
 			w := csv.NewWriter(os.Stdout)

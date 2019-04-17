@@ -20,6 +20,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 	var stableQuotesStatus core.ActivityStatusType
 	var stockSymbol core.StockSymbolType
 	var validationStatus core.ValidationStatusType
+	var validationTimestamp core.DateType
 
 	err := rows.Scan(&id,
 		&downloadStatus,
@@ -34,6 +35,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		&stableQuotesStatus,
 		&stockSymbol,
 		&validationStatus,
+		&validationTimestamp,
 	)
 
 	if err != nil {
@@ -56,6 +58,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		StableQuotesStatus:    stableQuotesStatus,
 		Symbol:                stockSymbol,
 		ValidationStatus:      validationStatus,
+		ValidationTimestamp:   validationTimestamp,
 	}
 	return toReturn, nil
 }

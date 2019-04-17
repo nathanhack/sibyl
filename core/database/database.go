@@ -37,6 +37,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -199,7 +200,7 @@ const (
 		"INDEX `index0` (`symbol` ASC) VISIBLE,INDEX " +
 		"`index1` (`symbol` ASC, `timestamp` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
 
-	stockOfInterestCreate = "CREATE TABLE IF NOT EXISTS `" + SibylDatabaseName + "`.`" + StocksTableName + "` (" +
+	stocksOfInterestCreate = "CREATE TABLE IF NOT EXISTS `" + SibylDatabaseName + "`.`" + StocksTableName + "` (" +
 		"`id` INT(18) NOT NULL AUTO_INCREMENT, " +
 		"`downloadStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
 		"`exchange` VARCHAR(15) NOT NULL DEFAULT '\"\"'," +
@@ -213,6 +214,7 @@ const (
 		"`stableQuotesStatus` ENUM('enabled','disabled') NOT NULL DEFAULT 'disabled'," +
 		"`symbol` VARCHAR(45) NOT NULL," +
 		"`validationStatus` ENUM('pending','valid','invalid') NOT NULL DEFAULT 'pending'," +
+		"`validationTimestamp` INT(18) NOT NULL DEFAULT 0," +
 		"PRIMARY KEY(`id`),UNIQUE INDEX `symbol_UNIQUE` (`symbol` ASC) VISIBLE) ROW_FORMAT = COMPRESSED;"
 
 	optionsTableCreate = "CREATE TABLE IF NOT EXISTS `" + SibylDatabaseName + "`.`" + OptionsTableName + "` (" +
@@ -271,7 +273,7 @@ func ConnectAndEnsureSibylDatabase(ctx context.Context, address string) (*SibylD
 	}
 
 	if !toReturn.hasTable(ctx, SibylDatabaseName, StocksTableName) {
-		if _, err := toReturn.DBConn.ExecContext(ctx, stockOfInterestCreate); err != nil {
+		if _, err := toReturn.DBConn.ExecContext(ctx, stocksOfInterestCreate); err != nil {
 			return nil, fmt.Errorf("ConnectAndEnsureSibylDatabase: found an error while creating %v table: %v", StocksTableName, err)
 		}
 	}
@@ -2100,14 +2102,19 @@ func (sd *SibylDatabase) StockIntradayHistorySetScanned(ctx context.Context, sym
 }
 
 func (sd *SibylDatabase) StockRevalidate(ctx context.Context, symbol core.StockSymbolType) error {
-	return sd.stockOneElementChange(ctx, symbol, "downloadStatus", string(core.ValidationPending))
+	return sd.stockOneElementChange(ctx, symbol, "validationStatus", string(core.ValidationPending))
 }
 
 func (sd *SibylDatabase) StockValidate(ctx context.Context, symbol core.StockSymbolType) error {
 	return sd.stockOneElementChange(ctx, symbol, "validationStatus", string(core.ValidationValid))
 }
+
 func (sd *SibylDatabase) StockInvalidate(ctx context.Context, symbol core.StockSymbolType) error {
 	return sd.stockOneElementChange(ctx, symbol, "validationStatus", string(core.ValidationInvalid))
+}
+
+func (sd *SibylDatabase) StockSetValidateTimestamp(ctx context.Context, symbol core.StockSymbolType, date core.DateType) error {
+	return sd.stockOneElementChange(ctx, symbol, "validationTimestamp", strconv.FormatInt(date.Unix(), 10))
 }
 
 func (sd *SibylDatabase) GetAgent(ctx context.Context) (core.SibylAgent, error) {

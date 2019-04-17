@@ -83,8 +83,7 @@ func (ig *IntradayGrabber) Run() error {
 				// if there isn't any history then we try and get all available history
 
 				//schedule the next update to be tomorrow morning at 6am
-				year, month, day := currentTime.Date()
-				durationToWait = time.Date(year, month, day+1, 6, 0, 0, 0, time.Local).Sub(currentTime)
+				durationToWait = tomorrowAt6AM().Sub(currentTime)
 
 				//get the current list of stocks that have intraday history enabled
 				ig.symbolCache.IntradaySymbolsMu.RLock()

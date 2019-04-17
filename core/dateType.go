@@ -91,12 +91,19 @@ func (tt DateType) Value() (driver.Value, error) {
 	//which for this type is int64
 	return int64(tt.int64), nil
 }
+
+func (tt DateType) IsZero() bool {
+	return tt.int64 == 0
+}
+
 func (tt DateType) AddDate(years int, months int, days int) DateType {
 	return NewDateTypeFromTime(tt.Time().AddDate(years, months, days))
 }
+
 func (tt DateType) Before(date DateType) bool {
 	return tt.int64 < date.int64
 }
+
 func (tt DateType) IsWeekDay() bool {
 	t := time.Unix(tt.int64, 0).Weekday()
 	return time.Sunday < t && t < time.Saturday
