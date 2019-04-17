@@ -115,7 +115,7 @@ func (ig *IntradayGrabber) Run() error {
 						isr := intradayStockRange{
 							Stock:     stock,
 							Delta:     defaultISRStartingDelta,
-							StartDate: time.Now().Truncate(24 * time.Hour).Add(-defaultIntradyStart),
+							StartDate: emptyTime.Time(),
 							EndDate:   time.Now().Truncate(24 * time.Hour),
 							Retry:     maxISRRetry,
 							Finished:  finishedChan,
@@ -124,7 +124,20 @@ func (ig *IntradayGrabber) Run() error {
 						go processISR(ctx, &isr, agent, ig.db)
 
 					} else if rand.Intn(25) == 0 {
-						//if we randomly picked it we'll try and get all the data
+						//if we randomly picked it we'll try and get ALL the data
+
+						isr := intradayStockRange{
+							Stock:     stock,
+							Delta:     defaultISRStartingDelta,
+							StartDate: emptyTime.Time(),
+							EndDate:   time.Now().Truncate(24 * time.Hour),
+							Retry:     maxISRRetry,
+							Finished:  finishedChan,
+						}
+						runningCount++
+						go processISR(ctx, &isr, agent, ig.db)
+
+					} else {
 						// we assume what ever data is already there is contiguous
 						// there we find the first and last days
 						// we take the last day and today and search that
@@ -146,18 +159,6 @@ func (ig *IntradayGrabber) Run() error {
 							runningCount++
 							go processISR(ctx, &isr, agent, ig.db)
 						}
-						isr := intradayStockRange{
-							Stock:     stock,
-							Delta:     defaultISRStartingDelta,
-							StartDate: startTime.Time().Truncate(24 * time.Hour),
-							EndDate:   time.Now().Truncate(24 * time.Hour),
-							Retry:     maxISRRetry,
-							Finished:  finishedChan,
-						}
-						runningCount++
-						go processISR(ctx, &isr, agent, ig.db)
-
-					} else {
 						isr := intradayStockRange{
 							Stock:     stock,
 							Delta:     defaultISRStartingDelta,
