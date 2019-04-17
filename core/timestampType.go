@@ -77,8 +77,16 @@ func (tt TimestampType) Value() (driver.Value, error) {
 	return int64(tt.int64), nil
 }
 
+func (tt TimestampType) IsZero() bool {
+	return tt.int64 == 0
+}
+
 func (tt TimestampType) AddDate(years int, months int, days int) TimestampType {
 	return NewTimestampTypeFromTime(tt.Time().AddDate(years, months, days))
+}
+
+func (tt TimestampType) Add(duration time.Duration) TimestampType {
+	return NewTimestampTypeFromTime(tt.Time().Add(duration))
 }
 
 func (tt TimestampType) Time() time.Time {
@@ -92,6 +100,19 @@ func (tt TimestampType) Unix() int64 {
 func (tt TimestampType) Before(date TimestampType) bool {
 	return tt.int64 < date.int64
 }
+
+func (tt TimestampType) Equal(date TimestampType) bool {
+	return tt.int64 == date.int64
+}
+
+func (tt TimestampType) After(date TimestampType) bool {
+	return tt.int64 > date.int64
+}
+
+func (tt TimestampType) Truncate(d time.Duration) TimestampType {
+	return NewTimestampTypeFromTime(tt.Time().Truncate(d))
+}
+
 func (tt TimestampType) IsWeekDay() bool {
 	t := time.Unix(tt.int64, 0).Weekday()
 	return time.Sunday < t && t < time.Saturday

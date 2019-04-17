@@ -96,8 +96,6 @@ func (ig *IntradayGrabber) Run() error {
 					// we just skip this round
 				}
 
-				emptyTime := core.NewTimestampTypeFromUnix(0)
-
 				//for each stock send out an process to get the intraday values
 				finishedChan := make(chan bool, 10)
 				runningCount := 0
@@ -109,33 +107,16 @@ func (ig *IntradayGrabber) Run() error {
 						break
 					default:
 					}
-					startTime, err := ig.db.LastIntradayHistoryDate(ig.killCtx, stock)
-					if err != nil || startTime == emptyTime {
+
+					r := make([]stockRange, 0, 2)
+					now := core.NewTimestampTypeFromTime(time.Now().Truncate(24 * time.Hour))
+					postStartTime, err := ig.db.LastIntradayHistoryDate(ig.killCtx, stock)
+					if err != nil || postStartTime.IsZero() || rand.Intn(25) == 0 {
 						// if there was an error or we couldn't find the last date
-						isr := intradayStockRange{
-							Stock:     stock,
-							Delta:     defaultISRStartingDelta,
-							StartDate: emptyTime.Time(),
-							EndDate:   time.Now().Truncate(24 * time.Hour),
-							Retry:     maxISRRetry,
-							Finished:  finishedChan,
-						}
-						runningCount++
-						go processISR(ctx, &isr, agent, ig.db)
-
-					} else if rand.Intn(25) == 0 {
-						//if we randomly picked it we'll try and get ALL the data
-
-						isr := intradayStockRange{
-							Stock:     stock,
-							Delta:     defaultISRStartingDelta,
-							StartDate: emptyTime.Time(),
-							EndDate:   time.Now().Truncate(24 * time.Hour),
-							Retry:     maxISRRetry,
-							Finished:  finishedChan,
-						}
-						runningCount++
-						go processISR(ctx, &isr, agent, ig.db)
+						r = append(r, stockRange{
+							StartDate: core.TimestampType{},
+							EndDate:   now,
+						})
 
 					} else {
 						// we assume what ever data is already there is contiguous
@@ -146,30 +127,31 @@ func (ig *IntradayGrabber) Run() error {
 
 						precededStartTime, _ := ig.db.FirstIntradayHistoryDate(ig.killCtx, stock)
 
-						//here the error doesn't matter startTime will be zero it happened
-						if time.Now().Truncate(24 * time.Hour).Add(-defaultIntradyStart).Before(precededStartTime.Time()) {
-							isr := intradayStockRange{
-								Stock:     stock,
-								Delta:     defaultISRStartingDelta,
-								StartDate: time.Now().Truncate(24 * time.Hour).Add(-defaultIntradyStart),
-								EndDate:   precededStartTime.Time().Truncate(24*time.Hour).AddDate(0, 0, 7), //plus one weeks
-								Retry:     maxISRRetry,
-								Finished:  finishedChan,
-							}
-							runningCount++
-							go processISR(ctx, &isr, agent, ig.db)
+						//we want to check the range before the first intraday info we have in the DB it
+						// it's after the default intraday history goal
+						if now.Add(-defaultIntradyStart).Before(precededStartTime) {
+							//we make the range from way back to the start of the data(plus a week for good measure)
+							r = append(r, stockRange{
+								StartDate: now.Add(-defaultIntradyStart),
+								EndDate:   precededStartTime.Truncate(24*time.Hour).AddDate(0, 0, 7),
+							})
 						}
-						isr := intradayStockRange{
-							Stock:     stock,
-							Delta:     defaultISRStartingDelta,
-							StartDate: startTime.Time().Truncate(24 * time.Hour),
-							EndDate:   time.Now().Truncate(24 * time.Hour),
-							Retry:     maxISRRetry,
-							Finished:  finishedChan,
-						}
-						runningCount++
-						go processISR(ctx, &isr, agent, ig.db)
+						// and we still want to check from the
+						r = append(r, stockRange{
+							StartDate: postStartTime.Truncate(24 * time.Hour),
+							EndDate:   now,
+						})
 					}
+
+					isr := intradayStockRange{
+						Stock:    stock,
+						Delta:    defaultISRStartingDelta,
+						Ranges:   r,
+						Retry:    maxISRRetry,
+						Finished: finishedChan,
+					}
+					runningCount++
+					go processISR(ctx, &isr, agent, ig.db)
 				}
 
 				//now we loop through finishedChan and break once we have all the results
@@ -197,12 +179,16 @@ func (ig *IntradayGrabber) Run() error {
 }
 
 type intradayStockRange struct {
-	Stock     core.StockSymbolType
-	StartDate time.Time
-	EndDate   time.Time
-	Delta     time.Duration
-	Retry     int
-	Finished  chan bool
+	Stock    core.StockSymbolType
+	Ranges   []stockRange
+	Delta    time.Duration
+	Retry    int
+	Finished chan bool
+}
+
+type stockRange struct {
+	StartDate core.TimestampType
+	EndDate   core.TimestampType
 }
 
 func (isr *intradayStockRange) ReduceDelta() bool {
@@ -233,52 +219,26 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 		logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanning\": %v", isr.Stock, err)
 	}
 
-	for isr.StartDate.Before(isr.EndDate) {
-		//there is the chance we're in this loop and the program is wanting to exit
-		// so we need to check the ctx in case it's done
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		startDate := isr.EndDate.Add(-isr.Delta)
-
-		//we asked for everything between startDate and endDate
-		// let's make sure we stay in inside those bounds
-		if startDate.Before(isr.StartDate) {
-			startDate = isr.StartDate
-		}
-		intradayRecords, err := agent.GetIntraday(ctx, isr.Stock, core.MinuteTicks, core.NewTimestampTypeFromTime(startDate), core.NewTimestampTypeFromTime(isr.EndDate))
-		if err != nil {
-			logrus.Errorf("IntradayGrabber: had a problem getting Intraday data on stock %v for range (%v-%v): %v", isr.Stock, startDate, isr.EndDate, err)
-			isr.Retry--
-			if isr.Retry == 0 {
-				isr.ResetRetry()
-				if !isr.ReduceDelta() {
-					//well we can't reduce any more
-					// set the stock value to scanned
-					if err1 := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err1 != nil {
-						logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v : after this error: %v", isr.Stock, err1, err)
-					}
-					isr.Finished <- false
-					logrus.Infof("IntradayGrabber: unable to reduce delta (%v-%v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
-					return
-				}
-			}
-			continue
-		} else {
-
-			if len(intradayRecords) == 0 {
-				//we either had an error or there wasn't anything to download
-				// either way we're done no need to go any further back in time
-				// there be another random chance to try again later
-				logrus.Debugf("IntradayGrabber: received zero records, assuming the last of the history for %v is found at: %v - %v", isr.Stock, startDate, isr.EndDate)
-				break
+	for _, r := range isr.Ranges {
+		for r.StartDate.Before(r.EndDate) {
+			//there is the chance we're in this loop and the program is wanting to exit
+			// so we need to check the ctx in case it's done
+			select {
+			case <-ctx.Done():
+				return
+			default:
 			}
 
-			if err = db.LoadIntradayRecords(ctx, intradayRecords); err != nil {
-				logrus.Errorf("IntradayGrabber: had a problem saving Intraday Record data: %v", err)
+			startDate := r.EndDate.Add(-isr.Delta)
+
+			//we asked for everything between startDate and endDate
+			// let's make sure we stay in inside those bounds
+			if startDate.Before(r.StartDate) {
+				startDate = r.StartDate
+			}
+			intradayRecords, err := agent.GetIntraday(ctx, isr.Stock, core.MinuteTicks, startDate, r.EndDate)
+			if err != nil {
+				logrus.Errorf("IntradayGrabber: had a problem getting Intraday data on stock %v for range (%v - %v): %v", isr.Stock, startDate, r.EndDate, err)
 				isr.Retry--
 				if isr.Retry == 0 {
 					isr.ResetRetry()
@@ -289,14 +249,42 @@ func processISR(ctx context.Context, isr *intradayStockRange, agent core.SibylAg
 							logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v : after this error: %v", isr.Stock, err1, err)
 						}
 						isr.Finished <- false
-						logrus.Infof("IntradayGrabber: loading data failed on dates(%v - %v) finished getting Intraday history for %v, after error: %v", startDate, isr.EndDate, isr.Stock, err)
+						logrus.Infof("IntradayGrabber: unable to reduce delta (%v-%v) finished getting Intraday history for %v, after error: %v", startDate, r.EndDate, isr.Stock, err)
 						return
 					}
 				}
 				continue
+			} else {
+
+				if len(intradayRecords) == 0 {
+					//we either had an error or there wasn't anything to download
+					// either way we're done no need to go any further back in time
+					// there be another random chance to try again later
+					logrus.Debugf("IntradayGrabber: received zero records, assuming the last of the history for %v is found at: %v - %v", isr.Stock, startDate, r.EndDate)
+					break
+				}
+
+				if err = db.LoadIntradayRecords(ctx, intradayRecords); err != nil {
+					logrus.Errorf("IntradayGrabber: had a problem saving Intraday Record data: %v", err)
+					isr.Retry--
+					if isr.Retry == 0 {
+						isr.ResetRetry()
+						if !isr.ReduceDelta() {
+							//well we can't reduce any more
+							// set the stock value to scanned
+							if err1 := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err1 != nil {
+								logrus.Errorf("IntradayGrabber: had a problem setting stock %v to \"scanned\": %v : after this error: %v", isr.Stock, err1, err)
+							}
+							isr.Finished <- false
+							logrus.Infof("IntradayGrabber: loading data failed on dates(%v - %v) finished getting Intraday history for %v, after error: %v", startDate, r.EndDate, isr.Stock, err)
+							return
+						}
+					}
+					continue
+				}
 			}
+			r.EndDate = startDate
 		}
-		isr.EndDate = startDate
 	}
 
 	if err := db.StockIntradayHistorySetScanned(ctx, isr.Stock); err != nil {
