@@ -17,7 +17,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 	var intradayTimestampTick core.TimestampType
 	var exchange string
 	var exchangeName string
-	var hasOptions core.OptionStatusType
+	var optionStatus core.OptionStatusType
 	var name string
 	var optionListTimestamp core.DateType
 	var quotesStatus core.ActivityStatusType
@@ -30,7 +30,6 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		&downloadStatus,
 		&exchange,
 		&exchangeName,
-		&hasOptions,
 		&historyStatus,
 		&historyTimestamp,
 		&intradayState,
@@ -40,6 +39,7 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		&intradayTimestampTick,
 		&name,
 		&optionListTimestamp,
+		&optionStatus,
 		&quotesStatus,
 		&stableQuotesStatus,
 		&stockSymbol,
@@ -53,6 +53,8 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 
 	toReturn := &core.SibylStockRecord{
 		DownloadStatus:        downloadStatus,
+		Exchange:              exchange,
+		ExchangeDescription:   exchangeName,
 		HistoryStatus:         historyStatus,
 		HistoryTimestamp:      historyTimestamp,
 		IntradayState:         intradayState,
@@ -60,11 +62,9 @@ func ScanSibylStockRecordRow(rows *sql.Rows) (*core.SibylStockRecord, error) {
 		IntradayTimestamp1Min: intradayTimestamp1Min,
 		IntradayTimestamp5Min: intradayTimestamp5Min,
 		IntradayTimestampTick: intradayTimestampTick,
-		Exchange:              exchange,
-		ExchangeDescription:   exchangeName,
-		OptionStatus:          hasOptions,
 		Name:                  name,
 		OptionListTimestamp:   optionListTimestamp,
+		OptionStatus:          optionStatus,
 		QuotesStatus:          quotesStatus,
 		StableQuotesStatus:    stableQuotesStatus,
 		Symbol:                stockSymbol,
