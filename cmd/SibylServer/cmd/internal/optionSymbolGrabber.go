@@ -15,12 +15,12 @@ type OptionSymbolGrabber struct {
 	doneCtx       context.Context
 	done          context.CancelFunc
 	db            *database.SibylDatabase
-	symbolCache   *SymbolCache
+	stockCache    *StockCache
 	running       bool
-	RequestUpdate chan bool
+	RequestUpdate chan core.StockSymbolType //TODO consider moving this action into the SymbolsCache
 }
 
-func NewOptionSymbolGrabber(db *database.SibylDatabase, symbolCache *SymbolCache) *OptionSymbolGrabber {
+func NewOptionSymbolGrabber(db *database.SibylDatabase, symbolCache *StockCache) *OptionSymbolGrabber {
 	killCtx, kill := context.WithCancel(context.Background())
 	doneCtx, done := context.WithCancel(context.Background())
 	return &OptionSymbolGrabber{
@@ -29,8 +29,8 @@ func NewOptionSymbolGrabber(db *database.SibylDatabase, symbolCache *SymbolCache
 		doneCtx:       doneCtx,
 		done:          done,
 		db:            db,
-		symbolCache:   symbolCache,
-		RequestUpdate: make(chan bool, 100),
+		stockCache:    symbolCache,
+		RequestUpdate: make(chan core.StockSymbolType, 100),
 	}
 }
 
@@ -42,55 +42,23 @@ func (osg *OptionSymbolGrabber) Run() error {
 	osg.running = true
 	go func(osg *OptionSymbolGrabber) {
 		// initially we wait a few seconds then start up
-		durationToWait := 5 * time.Second
+		cache := make(map[core.StockSymbolType]bool)
+		nextCheckDuration := 15 * time.Second
 
-		///we create a retry timeout for when we need to retry
-		waitForForever := 1000 * time.Hour
-		wait1Min := 1 * time.Minute
-		tryAgainIn := waitForForever
-		failedSymbols := make(map[core.StockSymbolType]int)
-		runGrabber := make(chan bool, 1)
 	mainLoop:
 		for {
 			select {
 			case <-osg.killCtx.Done():
 				break mainLoop
-			case <-time.After(durationToWait):
-				//clean out any failed ones
-				failedSymbols = make(map[core.StockSymbolType]int)
-				tryAgainIn = waitForForever
-				select {
-				//non-blocking add
-				case runGrabber <- true:
-				default:
+			case stockSymbol := <-osg.RequestUpdate:
+				record := osg.stockCache.GetStock(stockSymbol)
+
+				if record.ValidationStatus == core.ValidationValid &&
+					record.DownloadStatus == core.ActivityEnabled &&
+					record.OptionStatus == core.OptionsEnabled {
+					cache[record.Symbol] = true
 				}
-			case <-time.After(tryAgainIn):
-				tryAgainIn = waitForForever
-				select {
-				//non-blocking add
-				case runGrabber <- true:
-				default:
-				}
-			case <-osg.RequestUpdate:
-				//first we drain the chan
-			drainRequestUpdateLoop:
-				for {
-					select {
-					case <-osg.RequestUpdate:
-						continue
-					default:
-						break drainRequestUpdateLoop
-					}
-				}
-				//clear all history
-				failedSymbols = make(map[core.StockSymbolType]int)
-				tryAgainIn = waitForForever
-				select {
-				//non-blocking add
-				case runGrabber <- true:
-				default:
-				}
-			case <-runGrabber:
+			case <-time.After(nextCheckDuration):
 				//now we start the actual task
 				startTime := time.Now()
 				agent, err := osg.db.GetAgent(osg.killCtx)
@@ -99,78 +67,122 @@ func (osg *OptionSymbolGrabber) Run() error {
 					continue
 				}
 
-				//schedule the next update to be tomorrow morning at 6am
-				durationToWait = tomorrowAt6AM().Sub(startTime)
-
-				symbols := make([]core.StockSymbolType, 0)
-
-				if len(failedSymbols) == 0 {
-					stocks, err := osg.db.GetAllStockRecords(osg.killCtx)
-					if err != nil {
-						logrus.Errorf("OptionSymbolGrabber: had a problem getting list of stocks: %v", err)
-						continue
-					}
-					for _, stock := range stocks {
-						if stock.ValidationStatus == core.ValidationValid &&
-							stock.DownloadStatus == core.ActivityEnabled &&
-							stock.HasOptions {
-							symbols = append(symbols, stock.Symbol)
-						}
-					}
-				} else {
-					for stock, count := range failedSymbols {
-						if count < 4 {
-							symbols = append(symbols, stock)
-						}
+				//we every time we run we check all the stocks for those that should be checked
+				today := core.NewDateTypeFromTime(time.Now())
+				for _, stock := range osg.stockCache.GetAllStocks() {
+					if stock.ValidationStatus == core.ValidationValid &&
+						stock.DownloadStatus == core.ActivityEnabled &&
+						stock.OptionStatus == core.OptionsEnabled &&
+						stock.OptionListTimestamp.Before(today) {
+						cache[stock.Symbol] = true
 					}
 				}
 
-				//for each stock in the list get updated options and put them in the database
+				//now we do a cursor check if there's any work to do
+				// if not we bail this round
+				if len(cache) == 0 {
+					continue
+				}
+
+				//for each stock in the local cache get updated options and put them in the database
 				// we update the database so the quotes can use them (which may o
-				for _, symbol := range symbols {
+				ctx, cancel := context.WithCancel(osg.killCtx)
+				runningCount := 0
+				finishedChan := make(chan bool, len(cache))
+				for symbol := range cache {
 					select {
 					case <-osg.killCtx.Done():
 						logrus.Errorf("OptionSymbolGrabber: context canceled")
 						break mainLoop
 					default:
 					}
+					runningCount++
+					go processOS(ctx, symbol, agent, osg.db, osg.stockCache, finishedChan)
+				}
 
-					logrus.Infof("OptionSymbolGrabber: getting option symbols for %v", symbol)
-					options, err := agent.GetStockOptionSymbols(osg.killCtx, symbol)
-					if err != nil {
-						//here we only log the error because there is a case of a weird options that are invalid
-						logrus.Errorf("OptionSymbolGrabber: had an error while gather options for stock symbol:%v the error: %v", symbol, err)
-					}
-					if len(options) > 0 {
-						if err := osg.db.SetOptionsForStock(osg.killCtx, symbol, options); err != nil {
-							logrus.Errorf("OptionSymbolGrabber: failed during adding options to data, submitting to retry, error found: %v", err)
-							//request an another update until we get a clean run
-							if _, has := failedSymbols[symbol]; has {
-								failedSymbols[symbol]++
-							} else {
-								failedSymbols[symbol] = 0
-							}
-							tryAgainIn = wait1Min
-						}
-					} else if len(options) == 0 {
-						//there should have been something so we should do another request
-						logrus.Errorf("OptionSymbolGrabber: found 0 option symbols for %v, submitting to retry", symbol)
-						if _, has := failedSymbols[symbol]; has {
-							failedSymbols[symbol]++
-						} else {
-							failedSymbols[symbol] = 0
-						}
-						tryAgainIn = wait1Min
+				//clear the cache
+				cache = make(map[core.StockSymbolType]bool)
+
+				//next wait for results
+			finishedLoop:
+				for runningCount > 0 {
+					select {
+					case <-osg.killCtx.Done():
+						break finishedLoop
+					case <-finishedChan:
+						runningCount--
+					case <-time.After(30 * time.Minute):
+						//a fail safe this should take 30 mins to complete
+						logrus.Errorf("OptionSymbolGrabber: had an issue getting all the result in a timely manor")
+						break finishedLoop
 					}
 				}
-				//now that we're done let the cache know
-				osg.symbolCache.RequestUpdate <- true
+				cancel()
+
 				logrus.Infof("OptionSymbolGrabber: finished a round in %v", time.Since(startTime))
 			}
 		}
 		osg.done() //signal this is finished
 	}(osg)
 	return nil
+}
+
+const maxOSRetries = 3
+
+func processOS(ctx context.Context, stock core.StockSymbolType, agent core.SibylAgent, db *database.SibylDatabase, stockCache *StockCache, finishedChan chan bool) {
+	logrus.Infof("OptionSymbolGrabber: getting option symbols for %v", stock)
+
+	retries := maxOSRetries
+	var options []*core.OptionSymbolType
+	var err error
+
+	for retries > 0 {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		options, err = agent.GetStockOptionSymbols(ctx, stock)
+		//this guy can return errors due to problem with some of the options but still return the valid ones
+		if err != nil && len(options) == 0 {
+			//here we have a full error, there were an error and zero options were returned
+			logrus.Errorf("OptionSymbolGrabber: had an error while gather options for stock symbol:%v the error: %v", stock, err)
+			retries--
+			if retries == 0 {
+				break
+			}
+			continue
+		}
+
+		if len(options) == 0 {
+			logrus.Errorf("OptionSymbolGrabber: found 0 option symbols for %v, submitting to retry", stock)
+			retries--
+			if retries == 0 {
+				break
+			}
+			continue
+		}
+
+		//this was that weird case where it can send back a partial error (aka the len(options) != 0)
+		if err != nil {
+			logrus.Errorf("OptionSymbolGrabber: had an error while gather options for stock symbol:%v the error: %v", stock, err)
+		}
+
+		if err := db.SetOptionsForStock(ctx, stock, options); err != nil {
+			logrus.Errorf("OptionSymbolGrabber: failed during adding options to data, submitting to retry, error found: %v", err)
+			//request an another update until we get a clean run
+			retries--
+			continue
+		}
+
+		//if we're here then we're as good as it gets so update the timestamp for the optionlist
+		// we don't really care if this fails so we ignore the error if there is one
+		stockCache.UpdateOptionListTimestamp(stock, core.NewDateTypeFromTime(time.Now()))
+
+		break
+	}
+	finishedChan <- true
 }
 
 func (osg *OptionSymbolGrabber) Stop(waitUpTo time.Duration) {

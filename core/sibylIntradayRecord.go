@@ -8,6 +8,7 @@ import (
 
 type SibylIntradayRecord struct {
 	HighPrice sql.NullFloat64
+	Interval  IntradayStatusType //this is used to identify which type: ticks, 1min, 5min
 	LastPrice sql.NullFloat64
 	LowPrice  sql.NullFloat64
 	OpenPrice sql.NullFloat64
@@ -27,6 +28,8 @@ func (si *SibylIntradayRecord) StringBlindWithDelimiter(delimiter string, nullSt
 	}
 	builder := strings.Builder{}
 	builder.WriteString(nullFloat64ToString(si.HighPrice, nullString))
+	builder.WriteString(delimiter)
+	builder.WriteString(fmt.Sprintf("%v", int(si.Interval)))
 	builder.WriteString(delimiter)
 	builder.WriteString(nullFloat64ToString(si.LastPrice, nullString))
 	builder.WriteString(delimiter)

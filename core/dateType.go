@@ -22,7 +22,14 @@ func NewDateType(year, month, day int) DateType {
 }
 
 func NewDateTypeFromTime(toConvert time.Time) DateType {
-	year, month, day := toConvert.Date()
+	var year, day int
+	var month time.Month
+	location, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		year, month, day = toConvert.Date()
+	} else {
+		year, month, day = toConvert.In(location).Date()
+	}
 	return NewDateType(year, int(month), day)
 
 }
@@ -96,12 +103,20 @@ func (tt DateType) IsZero() bool {
 	return tt.int64 == 0
 }
 
+func (tt DateType) Add(duration time.Duration) TimestampType {
+	return NewTimestampTypeFromTime(tt.Time().Add(duration))
+}
+
 func (tt DateType) AddDate(years int, months int, days int) DateType {
 	return NewDateTypeFromTime(tt.Time().AddDate(years, months, days))
 }
 
 func (tt DateType) Before(date DateType) bool {
 	return tt.int64 < date.int64
+}
+
+func (tt DateType) Equal(date DateType) bool {
+	return tt.int64 == date.int64
 }
 
 func (tt DateType) IsWeekDay() bool {

@@ -8,11 +8,16 @@ type SibylStockRecord struct {
 	DownloadStatus        ActivityStatusType
 	Exchange              string
 	ExchangeDescription   string
-	HasOptions            bool
-	HistoryStatus         ActivityStatusType
-	IntradayHistoryStatus ActivityStatusType
-	IntradayHistoryState  ScanStateType
+	HistoryStatus         HistoryStatusType
+	HistoryTimestamp      DateType
+	IntradayState         IntradayStateType
+	IntradayStatus        IntradayStatusType
+	IntradayTimestamp1Min TimestampType
+	IntradayTimestamp5Min TimestampType
+	IntradayTimestampTick TimestampType
 	Name                  string
+	OptionListTimestamp   DateType
+	OptionStatus          OptionStatusType
 	QuotesStatus          ActivityStatusType
 	StableQuotesStatus    ActivityStatusType
 	Symbol                StockSymbolType
@@ -29,11 +34,7 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 	if stringEscapes {
 		esc = "'"
 	}
-	hasOptions := "no"
-	if ss.HasOptions {
-		hasOptions = "yes"
-	}
-	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
+	return fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%%v%v%v%v%v%v%v%v%v%v%vv%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
 		esc,
 		ss.DownloadStatus,
 		esc,
@@ -47,23 +48,43 @@ func (ss *SibylStockRecord) StringBlindWithDelimiter(delimiter string, nullStrin
 		esc,
 		delimiter,
 		esc,
-		hasOptions,
-		esc,
-		delimiter,
-		esc,
 		ss.HistoryStatus,
 		esc,
 		delimiter,
 		esc,
-		ss.IntradayHistoryStatus,
+		ss.HistoryTimestamp,
 		esc,
 		delimiter,
 		esc,
-		ss.IntradayHistoryState,
+		ss.IntradayState,
+		esc,
+		delimiter,
+		esc,
+		ss.IntradayStatus,
+		esc,
+		delimiter,
+		esc,
+		ss.IntradayTimestamp1Min,
+		esc,
+		delimiter,
+		esc,
+		ss.IntradayTimestamp5Min,
+		esc,
+		delimiter,
+		esc,
+		ss.IntradayTimestampTick,
 		esc,
 		delimiter,
 		esc,
 		ss.Name,
+		esc,
+		delimiter,
+		esc,
+		ss.OptionListTimestamp,
+		esc,
+		delimiter,
+		esc,
+		ss.OptionStatus,
 		esc,
 		delimiter,
 		esc,

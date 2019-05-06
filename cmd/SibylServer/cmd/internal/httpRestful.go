@@ -20,13 +20,14 @@ type HttpRestServer struct {
 	serverContext *ServerContext
 }
 
-func NewHttpRestServer(db *database.SibylDatabase, serverAddress string, stockValidator *StockValidator, serverDied context.CancelFunc) *HttpRestServer {
+func NewHttpRestServer(db *database.SibylDatabase, stockCache *StockCache, serverAddress string, stockValidator *StockValidator, serverDied context.CancelFunc) *HttpRestServer {
 	killCtx, kill := context.WithCancel(context.Background())
 	doneCtx, done := context.WithCancel(context.Background())
 	sc := ServerContext{
 		Ctx:            killCtx,
 		db:             db,
 		stockValidator: stockValidator,
+		stockCache:     stockCache,
 	}
 
 	return &HttpRestServer{

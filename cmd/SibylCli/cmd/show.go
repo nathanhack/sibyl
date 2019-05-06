@@ -69,16 +69,16 @@ var showStocksCmd = &cobra.Command{
 
 		for _, v := range stocksResponse.Stocks {
 			stockRow := make([]string, 0)
-			if validOnly && v.Validation != "validOnly" {
+			if validOnly && v.Validation != int(core.ValidationValid) {
 				continue
 			}
-			if invalidOnly && v.Validation != "invalid" {
+			if invalidOnly && v.Validation != int(core.ValidationInvalid) {
 				continue
 			}
 
 			if details {
 				hasOptions := "no"
-				if v.HasOptions {
+				if v.OptionStatus == int(core.OptionsEnabled) {
 					hasOptions = "yes"
 				}
 				validationTimestamp := "never"
@@ -90,14 +90,15 @@ var showStocksCmd = &cobra.Command{
 				stockRow = append(stockRow, v.Exchange)
 				stockRow = append(stockRow, v.ExchangeDescription)
 				stockRow = append(stockRow, hasOptions)
-				stockRow = append(stockRow, v.Validation)
+				stockRow = append(stockRow, fmt.Sprint(v.Validation))
 				stockRow = append(stockRow, validationTimestamp)
-				stockRow = append(stockRow, v.DownloadStatus)
-				stockRow = append(stockRow, v.QuotesStatus)
-				stockRow = append(stockRow, v.StableQuotesStatus)
-				stockRow = append(stockRow, v.HistoryStatus)
-				stockRow = append(stockRow, v.IntradayHistoryStatus)
-				stockRow = append(stockRow, v.IntradayHistoryState)
+				stockRow = append(stockRow, fmt.Sprint(v.DownloadStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.QuotesStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.StableQuotesStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.HistoryStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.HistoryStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.IntradayStatus))
+				stockRow = append(stockRow, fmt.Sprint(v.IntradayState))
 			} else {
 				stockRow = append(stockRow, v.Symbol)
 				stockRow = append(stockRow, v.Name)
@@ -113,7 +114,7 @@ var showStocksCmd = &cobra.Command{
 			"Exchange Description",
 			"Has Options",
 			"Validation",
-			"Validated On",
+			"Validated Timestamp",
 			"Download Status",
 			"Quote Status",
 			"Stable Quotes Status",

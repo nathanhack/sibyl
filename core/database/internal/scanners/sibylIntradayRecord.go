@@ -9,6 +9,7 @@ import (
 func ScanSibylIntradayRecordRow(rows *sql.Rows) (string, *core.SibylIntradayRecord, error) {
 	var id string
 	var HighPrice sql.NullFloat64
+	var Interval core.IntradayStatusType
 	var LastPrice sql.NullFloat64
 	var LowPrice sql.NullFloat64
 	var OpenPrice sql.NullFloat64
@@ -19,6 +20,7 @@ func ScanSibylIntradayRecordRow(rows *sql.Rows) (string, *core.SibylIntradayReco
 	err := rows.Scan(
 		&id,
 		&HighPrice,
+		&Interval,
 		&LastPrice,
 		&LowPrice,
 		&OpenPrice,
@@ -33,6 +35,7 @@ func ScanSibylIntradayRecordRow(rows *sql.Rows) (string, *core.SibylIntradayReco
 
 	return id, &core.SibylIntradayRecord{
 		HighPrice: HighPrice,
+		Interval:  Interval,
 		LastPrice: LastPrice,
 		LowPrice:  LowPrice,
 		OpenPrice: OpenPrice,

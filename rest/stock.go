@@ -1,22 +1,34 @@
 package rest
 
+import "github.com/go-humble/rest"
+
 type Stock struct {
 	Exchange              string `json:"Exchange"`
 	ExchangeDescription   string `json:"ExchangeDescription"`
-	DownloadStatus        string `json:"DownloadStatus"`
-	HasOptions            bool   `json:"HasOptions"`
-	HistoryStatus         string `json:"HistoryStatus"`
-	IntradayHistoryStatus string `json:"IntradayHistoryStatus"`
-	IntradayHistoryState  string `json:"IntradayHistoryState"`
+	DownloadStatus        int    `json:"DownloadStatus"`
+	HistoryStatus         int    `json:"HistoryStatus"`
+	HistoryTimestamp      int64  `json:"HistoryTimstamp"`
+	IntradayStatus        int    `json:"IntradayStatus"`
+	IntradayState         int    `json:"IntradayState"`
+	IntradayTimestamp1Min int64  `json:"IntradayTimestamp1Min"`
+	IntradayTimestamp5Min int64  `json:"IntradayTimestamp5Min"`
+	IntradayTimestampTick int64  `json:"IntradayTimestampTick"`
 	Name                  string `json:"Name"`
-	QuotesStatus          string `json:"QuotesStatus"`
-	StableQuotesStatus    string `json:"StableQuotesStatus"`
+	OptionListTimestamp   int64  `json:"OptionListTimestamp"`
+	OptionStatus          int    `json:"OptionStatus"`
+	QuotesStatus          int    `json:"QuotesStatus"`
+	StableQuotesStatus    int    `json:"StableQuotesStatus"`
 	Symbol                string `json:"Symbol"`
-	Validation            string `json:"Validation"`
+	Validation            int    `json:"Validation"`
 	ValidationTimestamp   int64  `json:"ValidationTimestamp"`
 }
 
 type StocksResponse struct {
+	rest.DefaultId
 	Stocks     []Stock    `json:"Stocks"`
 	ErrorState ErrorState `json:"ErrorState"`
+}
+
+func (sr *StocksResponse) RootURL() string {
+	return "/stocks/get"
 }

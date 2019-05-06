@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -22,6 +23,7 @@ type ServerContext struct {
 	Ctx            context.Context
 	db             *database.SibylDatabase
 	stockValidator *StockValidator
+	stockCache     *StockCache
 }
 
 func makeServer(serverContext *ServerContext, serverAddress string) (*http.Server, error) {
@@ -33,10 +35,10 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 
 	router.HandleFunc("/stocks/enable/downloading/{stockSymbol}", serverContext.StockEnableDownloading).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/downloading/{stockSymbol}", serverContext.StockDisableDownloading).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/enable/history/{stockSymbol}", serverContext.StockEnableHistory).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/disable/history/{stockSymbol}", serverContext.StockDisableHistory).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/enable/intraday/{stockSymbol}", serverContext.StockEnableIntraday).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/disable/intraday/{stockSymbol}", serverContext.StockDisableIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/history/{stockSymbol}/{interval}", serverContext.StockEnableHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/history/{stockSymbol}/{interval}", serverContext.StockDisableHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/intraday/{stockSymbol}/{interval}", serverContext.StockEnableIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/intraday/{stockSymbol}/{interval}", serverContext.StockDisableIntraday).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/quotes/{stockSymbol}", serverContext.StockEnableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/quotes/{stockSymbol}", serverContext.StockDisableQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/stableQuotes/{stockSymbol}", serverContext.StockEnableStableQuotes).Methods(http.MethodPut)
@@ -44,10 +46,10 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 
 	router.HandleFunc("/stocks/enable/all/downloading", serverContext.StockEnableAllDownloading).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all/downloading", serverContext.StockDisableAllDownloading).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/enable/all/history", serverContext.StockEnableAllHistory).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/disable/all/history", serverContext.StockDisableAllHistory).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/enable/all/intraday", serverContext.StockEnableAllIntraday).Methods(http.MethodPut)
-	router.HandleFunc("/stocks/disable/all/intraday", serverContext.StockDisableAllIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/history/{interval}", serverContext.StockEnableAllHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/history/{interval}", serverContext.StockDisableAllHistory).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/enable/all/intraday/{interval}", serverContext.StockEnableAllIntraday).Methods(http.MethodPut)
+	router.HandleFunc("/stocks/disable/all/intraday/{interval}", serverContext.StockDisableAllIntraday).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/all/quotes", serverContext.StockEnableAllQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/disable/all/quotes", serverContext.StockDisableAllQuotes).Methods(http.MethodPut)
 	router.HandleFunc("/stocks/enable/all/stableQuotes", serverContext.StockEnableAllStableQuotes).Methods(http.MethodPut)
@@ -100,52 +102,61 @@ func makeServer(serverContext *ServerContext, serverAddress string) (*http.Serve
 	return server, nil
 }
 func (sc *ServerContext) StockDisableAll(writer http.ResponseWriter, request *http.Request) {
-	err := sc.db.StockDisableAll(sc.Ctx)
+	errs := make([]string, 0)
 
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		for _, err := range []error{
+			sc.stockCache.UpdateDownloadStatus(stock.Symbol, core.ActivityDisabled),
+			sc.stockCache.UpdateHistoryStatus(stock.Symbol, core.HistoryStatusDisabled),
+			sc.stockCache.UpdateIntradayStatus(stock.Symbol, core.IntradaystatusDisabled),
+			sc.stockCache.UpdateQuoteStatus(stock.Symbol, core.ActivityDisabled),
+			sc.stockCache.UpdateStableQuoteStatus(stock.Symbol, core.ActivityDisabled),
+		} {
+			if err != nil {
+				errs = append(errs, err.Error())
+			}
+		}
 	}
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 func (sc *ServerContext) StockEnableAll(writer http.ResponseWriter, request *http.Request) {
-	err := sc.db.StockEnableAll(sc.Ctx)
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	errs := make([]string, 0)
+
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		for _, err := range []error{
+			sc.stockCache.UpdateDownloadStatus(stock.Symbol, core.ActivityEnabled),
+			sc.stockCache.UpdateHistoryStatus(stock.Symbol, core.HistoryStatusDaily|core.HistoryStatusWeekly|core.HistoryStatusMonthly|core.HistoryStatusYearly),
+			sc.stockCache.UpdateIntradayStatus(stock.Symbol, core.IntradayStatusTicks|core.IntradayStatus1Min|core.IntradayStatus5Min),
+			sc.stockCache.UpdateQuoteStatus(stock.Symbol, core.ActivityEnabled),
+			sc.stockCache.UpdateStableQuoteStatus(stock.Symbol, core.ActivityEnabled),
+		} {
+			if err != nil {
+				errs = append(errs, err.Error())
+			}
+		}
 	}
 
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }
 
 func (sc *ServerContext) StockDisableStableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockDisableStableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateStableQuoteStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityDisabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockDisableAllStableQuotes(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockDisableStableQuotes(sc.Ctx, record.Symbol)
-		if err != nil {
+
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateStableQuoteStatus(stock.Symbol, core.ActivityDisabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -153,31 +164,19 @@ func (sc *ServerContext) StockDisableAllStableQuotes(writer http.ResponseWriter,
 
 func (sc *ServerContext) StockEnableStableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockEnableStableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateStableQuoteStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityEnabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockEnableAllStableQuotes(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockEnableStableQuotes(sc.Ctx, record.Symbol)
-		if err != nil {
+
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateStableQuoteStatus(stock.Symbol, core.ActivityEnabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -185,32 +184,19 @@ func (sc *ServerContext) StockEnableAllStableQuotes(writer http.ResponseWriter, 
 
 func (sc *ServerContext) StockDisableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockDisableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateQuoteStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityDisabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockDisableAllQuotes(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockDisableQuotes(sc.Ctx, record.Symbol)
-		if err != nil {
+
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateQuoteStatus(stock.Symbol, core.ActivityDisabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -218,31 +204,19 @@ func (sc *ServerContext) StockDisableAllQuotes(writer http.ResponseWriter, reque
 
 func (sc *ServerContext) StockEnableQuotes(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockEnableQuotes(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateQuoteStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityEnabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockEnableAllQuotes(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockEnableQuotes(sc.Ctx, record.Symbol)
-		if err != nil {
+
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateQuoteStatus(stock.Symbol, core.ActivityEnabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -250,9 +224,29 @@ func (sc *ServerContext) StockEnableAllQuotes(writer http.ResponseWriter, reques
 
 func (sc *ServerContext) StockDisableIntraday(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockDisableIntradayHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	var err error
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "tick" &&
+		interval != "1min" &&
+		interval != "5min" {
+		err = fmt.Errorf("Invalid interval")
+	} else {
+		stockSymbol := core.StockSymbolType(params["stockSymbol"])
+		stock := sc.stockCache.GetStock(stockSymbol)
+		var newStatus core.IntradayStatusType
+		switch interval {
+		case "all":
+			newStatus = core.IntradaystatusDisabled
+		case "tick":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatusTicks)))
+		case "1min":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatus1Min)))
+		case "5min":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatus5Min)))
+		}
+
+		err = sc.stockCache.UpdateIntradayStatus(stockSymbol, newStatus)
 	}
 
 	//now write it out as the response
@@ -260,21 +254,33 @@ func (sc *ServerContext) StockDisableIntraday(writer http.ResponseWriter, reques
 }
 
 func (sc *ServerContext) StockDisableAllIntraday(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockDisableIntradayHistory(sc.Ctx, record.Symbol)
-		if err != nil {
-			errs = append(errs, err.Error())
+	params := mux.Vars(request)
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "tick" &&
+		interval != "1min" &&
+		interval != "5min" {
+		errs = append(errs, fmt.Errorf("Invalid interval").Error())
+	} else {
+		for _, stock := range sc.stockCache.GetAllStocks() {
+			var newStatus core.IntradayStatusType
+			switch interval {
+			case "all":
+				newStatus = core.IntradaystatusDisabled
+			case "tick":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatusTicks)))
+			case "1min":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatus1Min)))
+			case "5min":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) - (int(stock.IntradayStatus) & int(core.IntradayStatus5Min)))
+			}
+
+			if err := sc.stockCache.UpdateIntradayStatus(stock.Symbol, newStatus); err != nil {
+				errs = append(errs, err.Error())
+			}
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -282,9 +288,28 @@ func (sc *ServerContext) StockDisableAllIntraday(writer http.ResponseWriter, req
 
 func (sc *ServerContext) StockEnableIntraday(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockEnableIntradayHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	var err error
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "tick" &&
+		interval != "1min" &&
+		interval != "5min" {
+		err = fmt.Errorf("Invalid interval")
+	} else {
+		stockSymbol := core.StockSymbolType(params["stockSymbol"])
+		stock := sc.stockCache.GetStock(stockSymbol)
+		var newStatus core.IntradayStatusType
+		switch interval {
+		case "all":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatusTicks) | int(core.IntradayStatus1Min) | int(core.IntradayStatus5Min))
+		case "tick":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatusTicks))
+		case "1min":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatus1Min))
+		case "5min":
+			newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatus5Min))
+		}
+		err = sc.stockCache.UpdateIntradayStatus(stockSymbol, newStatus)
 	}
 
 	//now write it out as the response
@@ -292,21 +317,35 @@ func (sc *ServerContext) StockEnableIntraday(writer http.ResponseWriter, request
 }
 
 func (sc *ServerContext) StockEnableAllIntraday(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockEnableIntradayHistory(sc.Ctx, record.Symbol)
-		if err != nil {
-			errs = append(errs, err.Error())
+	params := mux.Vars(request)
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "tick" &&
+		interval != "1min" &&
+		interval != "5min" {
+		errs = append(errs, fmt.Errorf("Invalid interval").Error())
+	} else {
+		for _, stock := range sc.stockCache.GetAllStocks() {
+			stock := sc.stockCache.GetStock(stock.Symbol)
+			var newStatus core.IntradayStatusType
+			switch interval {
+			case "all":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) |
+					int(core.IntradayStatusTicks) | int(core.IntradayStatus1Min) | int(core.IntradayStatus5Min))
+			case "tick":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatusTicks))
+			case "1min":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatus1Min))
+			case "5min":
+				newStatus = core.IntradayStatusType(int(stock.IntradayStatus) | int(core.IntradayStatus5Min))
+			}
+
+			if err := sc.stockCache.UpdateIntradayStatus(stock.Symbol, newStatus); err != nil {
+				errs = append(errs, err.Error())
+			}
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -314,9 +353,31 @@ func (sc *ServerContext) StockEnableAllIntraday(writer http.ResponseWriter, requ
 
 func (sc *ServerContext) StockDisableHistory(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockDisableHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	var err error
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "daily" &&
+		interval != "weekly" &&
+		interval != "monthly" &&
+		interval != "yearly" {
+		err = fmt.Errorf("Invalid interval")
+	} else {
+		stockSymbol := core.StockSymbolType(params["stockSymbol"])
+		stock := sc.stockCache.GetStock(stockSymbol)
+		var newStatus core.HistoryStatusType
+		switch interval {
+		case "all":
+			newStatus = core.HistoryStatusDisabled
+		case "daily":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusDaily))
+		case "weekly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusWeekly))
+		case "monthly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusMonthly))
+		case "yearly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusYearly))
+		}
+		err = sc.stockCache.UpdateHistoryStatus(stockSymbol, newStatus)
 	}
 
 	//now write it out as the response
@@ -324,21 +385,35 @@ func (sc *ServerContext) StockDisableHistory(writer http.ResponseWriter, request
 }
 
 func (sc *ServerContext) StockDisableAllHistory(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockDisableHistory(sc.Ctx, record.Symbol)
-		if err != nil {
-			errs = append(errs, err.Error())
+	params := mux.Vars(request)
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "daily" &&
+		interval != "weekly" &&
+		interval != "monthly" &&
+		interval != "yearly" {
+		errs = append(errs, fmt.Errorf("Invalid interval").Error())
+	} else {
+		for _, stock := range sc.stockCache.GetAllStocks() {
+			var newStatus core.HistoryStatusType
+			switch interval {
+			case "all":
+				newStatus = core.HistoryStatusDisabled
+			case "daily":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusDaily))
+			case "weekly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusWeekly))
+			case "monthly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusMonthly))
+			case "yearly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) - int(stock.HistoryStatus)&int(core.HistoryStatusYearly))
+			}
+			if err := sc.stockCache.UpdateHistoryStatus(stock.Symbol, newStatus); err != nil {
+				errs = append(errs, err.Error())
+			}
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -346,9 +421,34 @@ func (sc *ServerContext) StockDisableAllHistory(writer http.ResponseWriter, requ
 
 func (sc *ServerContext) StockEnableHistory(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockEnableHistory(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
+	var err error
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "daily" &&
+		interval != "weekly" &&
+		interval != "monthly" &&
+		interval != "yearly" {
+		err = fmt.Errorf("Invalid interval")
+	} else {
+		stockSymbol := core.StockSymbolType(params["stockSymbol"])
+		stock := sc.stockCache.GetStock(stockSymbol)
+		var newStatus core.HistoryStatusType
+
+		switch interval {
+		case "all":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) |
+				int(core.HistoryStatusDaily) | int(core.HistoryStatusWeekly) | int(core.HistoryStatusMonthly) | int(core.HistoryStatusYearly))
+		case "daily":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusDaily))
+		case "weekly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusWeekly))
+		case "monthly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusMonthly))
+		case "yearly":
+			newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusYearly))
+		}
+
+		err = sc.stockCache.UpdateHistoryStatus(stockSymbol, newStatus)
 	}
 
 	//now write it out as the response
@@ -356,21 +456,37 @@ func (sc *ServerContext) StockEnableHistory(writer http.ResponseWriter, request 
 }
 
 func (sc *ServerContext) StockEnableAllHistory(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, stockRecord := range records {
-		err := sc.db.StockEnableHistory(sc.Ctx, stockRecord.Symbol)
-		errs := make([]string, 0)
-		if err != nil {
-			errs = append(errs, err.Error())
+	params := mux.Vars(request)
+	interval := strings.ToLower(params["interval"])
+	if interval != "all" &&
+		interval != "daily" &&
+		interval != "weekly" &&
+		interval != "monthly" &&
+		interval != "yearly" {
+		errs = append(errs, fmt.Errorf("Invalid interval").Error())
+	} else {
+		for _, stock := range sc.stockCache.GetAllStocks() {
+			var newStatus core.HistoryStatusType
+			switch interval {
+			case "all":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) |
+					int(core.HistoryStatusDaily) | int(core.HistoryStatusWeekly) | int(core.HistoryStatusMonthly) | int(core.HistoryStatusYearly))
+			case "daily":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusDaily))
+			case "weekly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusWeekly))
+			case "monthly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusMonthly))
+			case "yearly":
+				newStatus = core.HistoryStatusType(int(stock.HistoryStatus) | int(core.HistoryStatusYearly))
+			}
+
+			if err := sc.stockCache.UpdateHistoryStatus(stock.Symbol, newStatus); err != nil {
+				errs = append(errs, err.Error())
+			}
 		}
 	}
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -378,58 +494,50 @@ func (sc *ServerContext) StockEnableAllHistory(writer http.ResponseWriter, reque
 
 func (sc *ServerContext) StockDelete(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	stockSymbol := params["stockSymbol"]
-	err := sc.db.StockDelete(sc.Ctx, core.StockSymbolType(stockSymbol))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	sc.stockCache.RemoveStockSymbol(core.StockSymbolType(params["stockSymbol"]))
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errToRestErrorState(nil))
 }
 func (sc *ServerContext) StockRevalidate(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockRevalidate(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
+	err := sc.stockCache.UpdateValidationStatus(core.StockSymbolType(params["stockSymbol"]), core.ValidationPending)
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StocksGetAll(writer http.ResponseWriter, request *http.Request) {
-	dbStocks, err := sc.db.GetAllStockRecords(sc.Ctx)
+	dbStocks := sc.stockCache.GetAllStocks()
 
 	stocks := make([]rest.Stock, 0, len(dbStocks))
 	for _, dbStock := range dbStocks {
 		stocks = append(stocks, rest.Stock{
+			DownloadStatus:        int(dbStock.DownloadStatus),
 			Exchange:              string(dbStock.Exchange),
 			ExchangeDescription:   string(dbStock.ExchangeDescription),
-			DownloadStatus:        string(dbStock.DownloadStatus),
-			HasOptions:            dbStock.HasOptions,
-			HistoryStatus:         string(dbStock.HistoryStatus),
-			IntradayHistoryStatus: string(dbStock.IntradayHistoryStatus),
-			IntradayHistoryState:  string(dbStock.IntradayHistoryState),
+			HistoryStatus:         int(dbStock.HistoryStatus),
+			HistoryTimestamp:      dbStock.HistoryTimestamp.Unix(),
+			IntradayStatus:        int(dbStock.IntradayStatus),
+			IntradayState:         int(dbStock.IntradayState),
+			IntradayTimestamp1Min: dbStock.IntradayTimestamp1Min.Unix(),
+			IntradayTimestamp5Min: dbStock.IntradayTimestamp5Min.Unix(),
+			IntradayTimestampTick: dbStock.IntradayTimestampTick.Unix(),
 			Name:                  string(dbStock.Name),
-			QuotesStatus:          string(dbStock.QuotesStatus),
-			StableQuotesStatus:    string(dbStock.StableQuotesStatus),
+			OptionStatus:          int(dbStock.OptionStatus),
+			OptionListTimestamp:   dbStock.OptionListTimestamp.Unix(),
+			QuotesStatus:          int(dbStock.QuotesStatus),
+			StableQuotesStatus:    int(dbStock.StableQuotesStatus),
 			Symbol:                string(dbStock.Symbol),
-			Validation:            string(dbStock.ValidationStatus),
+			Validation:            int(dbStock.ValidationStatus),
 			ValidationTimestamp:   dbStock.ValidationTimestamp.Unix(),
 		})
 	}
 
-	toReturn := rest.StocksResponse{
-		Stocks:     stocks,
-		ErrorState: errToRestErrorState(err),
-	}
-	if err != nil {
-		logrus.Errorf("StockGetAll: had an error: %v", err)
-	}
-
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(toReturn)
+	json.NewEncoder(writer).Encode(rest.StocksResponse{
+		Stocks:     stocks,
+		ErrorState: errToRestErrorState(nil),
+	})
 }
 
 func errToRestErrorState(err error) rest.ErrorState {
@@ -448,43 +556,24 @@ func errsToRestErrorState(errs []string) rest.ErrorState {
 
 func (sc *ServerContext) StockAdd(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	stockSymbol := params["stockSymbol"]
-	err := sc.db.StockAdd(sc.Ctx, core.StockSymbolType(stockSymbol))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	sc.stockCache.AddStockSymbol(core.StockSymbolType(params["stockSymbol"]))
 	//now write it out as the response
-	json.NewEncoder(writer).Encode(errToRestErrorState(err))
+	json.NewEncoder(writer).Encode(errToRestErrorState(nil))
 }
 func (sc *ServerContext) StockEnableDownloading(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockEnableDownloading(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateDownloadStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityEnabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockEnableAllDownloading(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, stockRecord := range records {
-		err := sc.db.StockEnableDownloading(sc.Ctx, stockRecord.Symbol)
-
-		if err != nil {
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateDownloadStatus(stock.Symbol, core.ActivityEnabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
-
-	sc.stockValidator.RequestUpdate <- true
 
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
@@ -492,31 +581,19 @@ func (sc *ServerContext) StockEnableAllDownloading(writer http.ResponseWriter, r
 
 func (sc *ServerContext) StockDisableDownloading(writer http.ResponseWriter, request *http.Request) {
 	params := mux.Vars(request)
-	err := sc.db.StockDisableDownloading(sc.Ctx, core.StockSymbolType(params["stockSymbol"]))
-	if err == nil {
-		sc.stockValidator.RequestUpdate <- true
-	}
-
+	err := sc.stockCache.UpdateDownloadStatus(core.StockSymbolType(params["stockSymbol"]), core.ActivityDisabled)
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errToRestErrorState(err))
 }
 
 func (sc *ServerContext) StockDisableAllDownloading(writer http.ResponseWriter, request *http.Request) {
-	records, err := sc.db.GetAllStockRecords(sc.Ctx)
-	if err != nil {
-		json.NewEncoder(writer).Encode(errToRestErrorState(err))
-		return
-	}
-
 	errs := make([]string, 0)
-	for _, record := range records {
-		err := sc.db.StockDisableDownloading(sc.Ctx, record.Symbol)
-		if err != nil {
+	for _, stock := range sc.stockCache.GetAllStocks() {
+		if err := sc.stockCache.UpdateDownloadStatus(stock.Symbol, core.ActivityDisabled); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
 
-	sc.stockValidator.RequestUpdate <- true
 	//now write it out as the response
 	json.NewEncoder(writer).Encode(errsToRestErrorState(errs))
 }

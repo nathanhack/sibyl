@@ -23,7 +23,7 @@ const (
 	authToken        = "ADD_HERE_FOR_TESTING"
 	authTokenSecrete = "ADD_HERE_FOR_TESTING"
 
-	stockSymbol0                          = "MSFT"
+	stockSymbol0                          = "AMZN"
 	stockOptionSymbol0                    = "MSFT181130C00115000"
 	stockOptionSymbol0StrikePrice         = 115.0
 	stockOptionSymbol0ExpirationDateYear  = 2018
@@ -128,7 +128,9 @@ func TestAllyAgent_GetStockQuotes(t *testing.T) {
 
 func TestAllyAgent_GetStableOptionQuote(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
-	symbol, err := toOptionSymbol(stockOptionSymbol0)
+	//symbol, err := toOptionSymbol(stockOptionSymbol0)
+	symbol, err := toOptionSymbol("NBR190201P00000500") //bad
+	//symbol, err := toOptionSymbol("NBR190201P00001000")
 
 	if err != nil {
 		t.Errorf("had an error while parsing a valid Option string: %v", err)
@@ -175,19 +177,18 @@ func TestAllyAgent_GetHistory(t *testing.T) {
 
 	endDate := core.NewDateTypeFromTime(time.Now())
 	startDate := endDate.AddDate(-20, 0, 0)
-	quotes, err := ac.GetHistory(ctx, core.StockSymbolType(stockSymbol0), core.DailyTicks, startDate, endDate)
+	quotes, err := ac.GetHistory(ctx, core.StockSymbolType(stockSymbol0), core.DailyInterval, startDate, endDate)
 
 	if err != nil {
-		t.Errorf("had an error while executing GetHistory():%v", err)
+		t.Errorf("had an error while executing GetHistory(): %v", err)
 		return
 	}
 
 	if len(quotes) != 2 {
-		t.Errorf("had an error while executing GetHistory() expected 1 result found %v : %+v", len(quotes), quotes)
+		t.Errorf("had an error while executing GetHistory() expected 1 result found %v: %+v", len(quotes), quotes)
 		return
 	}
 	for _, quote := range quotes {
-		t.Logf("%+v", *quote)
 		t.Logf("%+v", quote)
 	}
 }
@@ -195,7 +196,10 @@ func TestAllyAgent_GetHistory(t *testing.T) {
 func TestAllyAgent_GetIntraday(t *testing.T) {
 	ac := NewAllyAgent(consumerKey, consumerSecret, authToken, authTokenSecrete)
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
-	quotes, err := ac.GetIntraday(ctx, core.StockSymbolType(stockSymbol0), core.MinuteTicks, core.NewTimestampTypeFromTime(time.Now()).AddDate(0, 0, -58), core.NewTimestampTypeFromTime(time.Now()))
+	startDate := core.NewTimestampTypeFromTime(time.Now()).AddDate(0, 0, -4)
+	endDate := core.NewTimestampTypeFromTime(time.Now())
+	//endDate := startDate.AddDate(0, 0, 5)
+	quotes, err := ac.GetIntraday(ctx, core.StockSymbolType(stockSymbol0), core.FiveMinInterval, startDate, endDate)
 
 	if err != nil {
 		t.Errorf("had an error while executing GetStableQuote(): %v", err)
@@ -205,6 +209,8 @@ func TestAllyAgent_GetIntraday(t *testing.T) {
 	if len(quotes) == 0 {
 		t.Errorf("had an error while executing GetStableQuote() expected results but found %v : %+v", len(quotes), quotes)
 		return
+	} else {
+		t.Logf("found %v quotes:", len(quotes))
 	}
 }
 
@@ -212,7 +218,9 @@ func TestAllyAgent_GetStockOptionSymbols(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	ac := NewAllyAgent(consumerKey, consumerSecret, authToken, authTokenSecrete)
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Minute)
-	options, err := ac.GetStockOptionSymbols(ctx, core.StockSymbolType(stockSymbol0))
+	//options, err := ac.GetStockOptionSymbols(ctx, core.StockSymbolType(stockSymbol0))
+	options, err := ac.GetStockOptionSymbols(ctx, core.StockSymbolType("CAT"))
+
 	if err != nil {
 		t.Errorf("had an error while executing GetStableQuote():%v", err)
 		return
@@ -227,8 +235,10 @@ func TestAllyAgent_GetStockOptionSymbols(t *testing.T) {
 func TestAllyAgent_VerifyStockSymbol(t *testing.T) {
 	ac := NewAllyAgent(consumerKey, consumerSecret, authToken, authTokenSecrete)
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Minute)
-	good, hasOptions, _, _, _, err := ac.VerifyStockSymbol(ctx, stockSymbol0)
+	//good, hasOptions, _, _, _, err := ac.VerifyStockSymbol(ctx, stockSymbol0)
+	good, hasOptions, _, _, _, err := ac.VerifyStockSymbol(ctx, "EBR")
 	if err != nil {
+
 		t.Errorf("had an error while executing GetAllyQuotes(): %v", err)
 		return
 	}
@@ -240,6 +250,57 @@ func TestAllyAgent_VerifyStockSymbol(t *testing.T) {
 		t.Errorf("expected the return to have options")
 	}
 }
+
+//func TestAllyAgent_GetIntraday2(t *testing.T) {
+//	startTime := time.Now()
+//
+//	allyHistoryUrl, _ := url.ParseRequestURI("https://api.tradeking.com/v1/market/timesales.json")
+//	data := allyHistoryUrl.Query()
+//	data.Add("symbols", string(stockSymbol0))
+//
+//	if tickSize == core.MinuteTicks {
+//		data.Add("interval", "1min") // can be  "5min", "1min", "tick" (5min is the default)
+//	} else if tickSize == core.FiveMinuteTicks {
+//		data.Add("interval", "5min")
+//	}
+//
+//	data.Add("startdate", startDate.Time().Format("2006-01-02"))
+//	data.Add("enddate", endDate.Time().Format("2006-01-02"))
+//
+//	allyHistoryUrl.RawQuery = data.Encode()
+//
+//	request, err := http.NewRequest(http.MethodGet, allyHistoryUrl.String(), strings.NewReader(data.Encode()))
+//	if logrus.GetLevel() == logrus.DebugLevel {
+//		if dump, err := httputil.DumpRequest(request, true); err != nil {
+//			logrus.Errorf("GetIntraday: there was a problem with dumping the request: %v", err)
+//		} else {
+//			logrus.Debugf("GetIntraday: the request:%v", string(dump))
+//		}
+//	}
+//
+//	if err != nil {
+//		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: request creation error: %v", err)
+//	}
+//
+//	ag.rateLimitMarketLowPriority.Take(ctx) // this is a lower priority
+//	ag.rateLimitMarketCalls.Take(ctx)       // and it's a market call
+//	ag.concurrentLimit.Take(ctx)            // and we limit concurrent requests
+//	resp, err := ctxhttp.Do(ctx, ag.httpClient, request)
+//	ag.concurrentLimit.Return()
+//	if err != nil {
+//		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: client error: %v", err)
+//	}
+//
+//	if resp.StatusCode != http.StatusOK {
+//		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: client error for %v with status code %v: %v", symbol, resp.StatusCode, resp.Status)
+//	}
+//
+//	body, _ := ioutil.ReadAll(resp.Body)
+//	defer resp.Body.Close()
+//
+//	logrus.Debugf("GetIntraday: response body: %v", string(body))
+//
+//}
 
 func experiment_FindQuoteRate(t *testing.T) {
 	ag := NewAllyAgent(consumerKey, consumerSecret, authToken, authTokenSecrete)

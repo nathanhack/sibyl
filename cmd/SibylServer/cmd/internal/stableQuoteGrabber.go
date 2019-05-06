@@ -11,25 +11,25 @@ import (
 //TODO Change stablequote to allow for multiple updates taking the newest data but deal with NULLs from the agents in a smart way
 
 type StableQuoteGrabber struct {
-	killCtx     context.Context
-	kill        context.CancelFunc
-	doneCtx     context.Context
-	done        context.CancelFunc
-	db          *database.SibylDatabase
-	symbolCache *SymbolCache
-	running     bool
+	killCtx    context.Context
+	kill       context.CancelFunc
+	doneCtx    context.Context
+	done       context.CancelFunc
+	db         *database.SibylDatabase
+	stockCache *StockCache
+	running    bool
 }
 
-func NewStableQuoteGrabber(db *database.SibylDatabase, symbolCache *SymbolCache) *StableQuoteGrabber {
+func NewStableQuoteGrabber(db *database.SibylDatabase, symbolCache *StockCache) *StableQuoteGrabber {
 	killCtx, kill := context.WithCancel(context.Background())
 	doneCtx, done := context.WithCancel(context.Background())
 	return &StableQuoteGrabber{
-		killCtx:     killCtx,
-		kill:        kill,
-		doneCtx:     doneCtx,
-		done:        done,
-		db:          db,
-		symbolCache: symbolCache,
+		killCtx:    killCtx,
+		kill:       kill,
+		doneCtx:    doneCtx,
+		done:       done,
+		db:         db,
+		stockCache: symbolCache,
 	}
 }
 
@@ -53,14 +53,14 @@ func (sqg *StableQuoteGrabber) Run() error {
 				case runGrabber <- true:
 				default:
 				}
-			case <-sqg.symbolCache.StableQuoteStockSymbolsChanged:
+			case <-sqg.stockCache.StableQuoteStockSymbolsChanged:
 				//this is a signal from the cache that we've had an update
 				select {
 				//non-blocking add
 				case runGrabber <- true:
 				default:
 				}
-			case <-sqg.symbolCache.StableQuoteOptionSymbolsChanged:
+			case <-sqg.stockCache.StableQuoteOptionSymbolsChanged:
 				select {
 				//non-blocking add
 				case runGrabber <- true:
@@ -80,13 +80,13 @@ func (sqg *StableQuoteGrabber) Run() error {
 					}
 
 					//get the current list of symbols from the cache
-					sqg.symbolCache.StableQuoteStockSymbolsMu.RLock()
-					stableStockQuoteSymbolsToDownLoad := sqg.symbolCache.StableQuoteStockSymbols
-					sqg.symbolCache.StableQuoteStockSymbolsMu.RUnlock()
+					sqg.stockCache.StableQuoteStockSymbolsMu.RLock()
+					stableStockQuoteSymbolsToDownLoad := sqg.stockCache.StableQuoteStockSymbols
+					sqg.stockCache.StableQuoteStockSymbolsMu.RUnlock()
 
-					sqg.symbolCache.StableQuoteOptionSymbolsMu.RLock()
-					stableOptionQuoteSymbolsToDownLoad := sqg.symbolCache.StableQuoteOptionSymbols
-					sqg.symbolCache.StableQuoteOptionSymbolsMu.RUnlock()
+					sqg.stockCache.StableQuoteOptionSymbolsMu.RLock()
+					stableOptionQuoteSymbolsToDownLoad := sqg.stockCache.StableQuoteOptionSymbols
+					sqg.stockCache.StableQuoteOptionSymbolsMu.RUnlock()
 
 					if len(stableStockQuoteSymbolsToDownLoad) > 0 || len(stableOptionQuoteSymbolsToDownLoad) > 0 {
 						stocks, options, err := agent.GetStableQuotes(sqg.killCtx, stableStockQuoteSymbolsToDownLoad, stableOptionQuoteSymbolsToDownLoad)

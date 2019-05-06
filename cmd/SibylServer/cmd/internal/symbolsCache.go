@@ -6,22 +6,25 @@ import (
 	"github.com/nathanhack/sibyl/core"
 	"github.com/nathanhack/sibyl/core/database"
 	"github.com/sirupsen/logrus"
+	"strings"
 	"sync"
 	"time"
 )
 
-type SymbolCache struct {
-	killCtx                         context.Context
-	kill                            context.CancelFunc
-	doneCtx                         context.Context
-	done                            context.CancelFunc
+//StockCache is meant to be a database backed in memory cache.  Upon startup it loads from the database.
+// Then it will periodical update the database based on what is in the cache.  Methods to get a copy of the
+// current list of stocks will be available and methods to update specific fields based
+// on topic (history, intraday, etc).
+type StockCache struct {
 	db                              *database.SibylDatabase
-	HistorySymbols                  map[core.StockSymbolType]bool
-	HistorySymbolsMu                sync.RWMutex
-	HistorySymbolsChanged           chan bool
-	IntradaySymbols                 map[core.StockSymbolType]bool
-	IntradaySymbolsMu               sync.RWMutex
-	IntradaySymbolsChanged          chan bool
+	done                            context.CancelFunc
+	doneCtx                         context.Context
+	kill                            context.CancelFunc
+	killCtx                         context.Context
+	running                         bool
+	stateChange                     bool
+	stocks                          map[core.StockSymbolType]core.SibylStockRecord
+	stocksMu                        sync.RWMutex
 	QuoteOptionsSymbols             map[core.OptionSymbolType]bool
 	QuoteOptionsSymbolsMu           sync.RWMutex
 	QuoteStockSymbols               map[core.StockSymbolType]bool
@@ -32,26 +35,19 @@ type SymbolCache struct {
 	StableQuoteStockSymbols         map[core.StockSymbolType]bool
 	StableQuoteStockSymbolsMu       sync.RWMutex
 	StableQuoteStockSymbolsChanged  chan bool
-
-	RequestUpdate chan bool
-	running       bool
 }
 
-func NewSymbolsCache(db *database.SibylDatabase) *SymbolCache {
+func NewStockCache(db *database.SibylDatabase) *StockCache {
 	killCtx, kill := context.WithCancel(context.Background())
 	doneCtx, done := context.WithCancel(context.Background())
-	return &SymbolCache{
-		killCtx:                         killCtx,
-		kill:                            kill,
-		doneCtx:                         doneCtx,
-		done:                            done,
+	return &StockCache{
 		db:                              db,
-		HistorySymbols:                  make(map[core.StockSymbolType]bool),
-		HistorySymbolsMu:                sync.RWMutex{},
-		HistorySymbolsChanged:           make(chan bool, 1),
-		IntradaySymbols:                 make(map[core.StockSymbolType]bool),
-		IntradaySymbolsMu:               sync.RWMutex{},
-		IntradaySymbolsChanged:          make(chan bool, 1),
+		done:                            done,
+		doneCtx:                         doneCtx,
+		kill:                            kill,
+		killCtx:                         killCtx,
+		stocks:                          make(map[core.StockSymbolType]core.SibylStockRecord),
+		stocksMu:                        sync.RWMutex{},
 		QuoteOptionsSymbols:             make(map[core.OptionSymbolType]bool),
 		QuoteOptionsSymbolsMu:           sync.RWMutex{},
 		QuoteStockSymbols:               make(map[core.StockSymbolType]bool),
@@ -60,57 +56,71 @@ func NewSymbolsCache(db *database.SibylDatabase) *SymbolCache {
 		StableQuoteStockSymbols:         make(map[core.StockSymbolType]bool),
 		StableQuoteStockSymbolsMu:       sync.RWMutex{},
 		StableQuoteStockSymbolsChanged:  make(chan bool, 1),
-		RequestUpdate:                   make(chan bool, 100),
 	}
 }
 
 //RunUpdater: creates and runs a go routine that will periodically (and if requested) update the symbols in the struct
-func (sc *SymbolCache) Run() error {
+func (sc *StockCache) Run() error {
 	//we want to prime the update requester becuase we want to update the cache as soon as we start running
 	if sc.running {
-		return fmt.Errorf("SymbolCache is already running")
+		return fmt.Errorf("StockCache is already running")
 	}
-
 	sc.running = true
-	sc.RequestUpdate <- true
 
-	go func(sc *SymbolCache) {
-		updateTicker := time.NewTicker(30 * time.Minute)
-		regulateTicker := time.NewTicker(10 * time.Second)
+	go func(sc *StockCache) {
+		//on startup the cache is empty so we need to get data from the DB
+		// then update the DB ever so often
+	getData:
+		for {
+			select {
+			case <-sc.killCtx.Done():
+				break getData
+			case <-time.After(5 * time.Second):
+				if err := sc.updatedSymbolsList(); err != nil {
+					logrus.Errorf("StockCache: had an error while getting data from DB: %v", err)
+				} else {
+					break getData
+				}
+			}
+		}
+		logrus.Infof("StockCache: loaded Data from Database")
+		// now the only thing left to do is update the DB every so often
+		updateDBTicker := time.NewTicker(1 * time.Second)
 	mainLoop:
 		for {
 			select {
 			case <-sc.killCtx.Done():
 				break mainLoop
-			case <-updateTicker.C:
-				//every 30 mins we want to update the state of the cache
-				sc.RequestUpdate <- true
-			case <-regulateTicker.C:
-				//so every 10 seconds we check if there are any requests to update the cache
-				select {
-				case <-sc.RequestUpdate:
-				default:
+			case <-updateDBTicker.C:
+				startTime := time.Now()
+				if !sc.stateChange {
 					continue
 				}
-				startTime := time.Now()
-				//we start by draining the channel dry
-			dryLoop:
-				for {
-					select {
-					case <-sc.RequestUpdate:
-						break
-					default:
-						break dryLoop
+				sc.stateChange = false
+
+				stocks, err := sc.db.GetAllStockRecords(sc.killCtx)
+				if err != nil {
+					logrus.Infof("StockCache: unable to retrieve stocks for update")
+					continue
+				}
+
+				sc.stocksMu.RLock()
+				//first we remove anything that's no longer in the cache
+				for _, stock := range stocks {
+					if _, has := sc.stocks[stock.Symbol]; !has {
+						sc.db.StockDelete(sc.killCtx, stock.Symbol)
 					}
 				}
 
-				if err := sc.updatedSymbolsList(); err != nil {
-					logrus.Errorf("SymbolCache: had an error while gathering new symbols: %v", err)
-					//since we had a failure we'll keep trying to update the cache
-					sc.RequestUpdate <- true
+				//finally we take what's in the cache and update the DB
+				for _, stock := range sc.stocks {
+					err := sc.db.InsertOrUpdateStock(sc.killCtx, &stock)
+					if err != nil {
+						logrus.Errorf("StockCache:  %v", err)
+					}
 				}
-
-				logrus.Infof("SymbolCache: updated symbols from database in %v", time.Since(startTime))
+				sc.stocksMu.RUnlock()
+				logrus.Infof("StockCache: updated Database in %v", time.Since(startTime))
 			}
 		}
 		sc.done()
@@ -118,9 +128,7 @@ func (sc *SymbolCache) Run() error {
 	return nil
 }
 
-func (sc *SymbolCache) updatedSymbolsList() error {
-	historySymbols := make(map[core.StockSymbolType]bool)
-	intradaySymbols := make(map[core.StockSymbolType]bool)
+func (sc *StockCache) updatedSymbolsList() error {
 	quoteOptionSymbols := make(map[core.OptionSymbolType]bool)
 	stableQuoteOptionSymbols := make(map[core.OptionSymbolType]bool)
 	quoteStockSymbols := make(map[core.StockSymbolType]bool)
@@ -131,17 +139,13 @@ func (sc *SymbolCache) updatedSymbolsList() error {
 		return fmt.Errorf("getUpdatedSymbolsList: had a problem getting list of stocks: %v", err)
 	}
 
+	sc.stocksMu.Lock()
 	//now we have all the stocks so pick on the ones that are good with downloading
 	for _, stock := range allStocks {
+		sc.stocks[stock.Symbol] = *stock
 		if stock.ValidationStatus == core.ValidationValid &&
 			stock.DownloadStatus == core.ActivityEnabled {
 
-			if stock.HistoryStatus == core.ActivityEnabled {
-				historySymbols[stock.Symbol] = true
-			}
-			if stock.IntradayHistoryStatus == core.ActivityEnabled {
-				intradaySymbols[stock.Symbol] = true
-			}
 			if stock.QuotesStatus == core.ActivityEnabled {
 				quoteStockSymbols[stock.Symbol] = true
 			}
@@ -155,8 +159,8 @@ func (sc *SymbolCache) updatedSymbolsList() error {
 			return fmt.Errorf("getUpdatedSymbolsList: error :context canceled")
 		default:
 		}
-
 	}
+	sc.stocksMu.Unlock()
 
 	//now time for all the options
 	errString := []string{}
@@ -184,67 +188,12 @@ func (sc *SymbolCache) updatedSymbolsList() error {
 	default:
 	}
 
-	//TODO consider adding some smarts for the case the update was bad aka results in missing symbols
-	sc.HistorySymbolsMu.Lock()
-	//we compare teh lists and if the new is different
-	// we swap it and send notification of a change
-	if len(sc.HistorySymbols) != len(historySymbols) {
-		sc.HistorySymbols = historySymbols
-		//now nonblock add to channel
-		select {
-		case sc.HistorySymbolsChanged <- true:
-		default:
-			//only here if it was full and didn't need this added
-		}
-	} else {
-		for symbol := range historySymbols {
-			if _, has := sc.HistorySymbols[symbol]; !has {
-				sc.HistorySymbols = historySymbols
-				//now nonblock add to channel
-				select {
-				case sc.HistorySymbolsChanged <- true:
-				default:
-					//only here if it was full and didn't need this added
-				}
-				break
-			}
-		}
-	}
-	sc.HistorySymbolsMu.Unlock()
-
 	//we do a quick context check
 	select {
 	case <-sc.killCtx.Done():
 		return fmt.Errorf("getUpdatedSymbolsList: error :context canceled")
 	default:
 	}
-
-	sc.IntradaySymbolsMu.Lock()
-	//we compare teh lists and if the new is different
-	// we swap it and send notification of a change
-	if len(sc.IntradaySymbols) != len(intradaySymbols) {
-		sc.IntradaySymbols = intradaySymbols
-		//now nonblock add to channel
-		select {
-		case sc.IntradaySymbolsChanged <- true:
-		default:
-			//only here if it was full and didn't need this added
-		}
-	} else {
-		for symbol := range intradaySymbols {
-			if _, has := sc.IntradaySymbols[symbol]; !has {
-				sc.IntradaySymbols = intradaySymbols
-				//now nonblock add to channel
-				select {
-				case sc.IntradaySymbolsChanged <- true:
-				default:
-					//only here if it was full and didn't need this added
-				}
-				break
-			}
-		}
-	}
-	sc.IntradaySymbolsMu.Unlock()
 
 	sc.QuoteOptionsSymbolsMu.Lock()
 	sc.QuoteOptionsSymbols = quoteOptionSymbols
@@ -330,15 +279,327 @@ func (sc *SymbolCache) updatedSymbolsList() error {
 	return nil
 }
 
-func (sc *SymbolCache) Stop(waitUpTo time.Duration) {
-	//next stop the quoter
-	logrus.Infof("Waiting for SymbolCache to finish")
+func (sc *StockCache) AddStockSymbol(symbol core.StockSymbolType) {
+	sc.stocksMu.RLock()
+	if _, has := sc.stocks[symbol]; !has {
+		sc.stocks[symbol] = core.SibylStockRecord{
+			Symbol: core.StockSymbolType(strings.ToUpper(string(symbol))),
+		}
+		sc.stateChange = true
+	}
+	sc.stocksMu.RUnlock()
+}
+
+func (sc *StockCache) GetStock(symbol core.StockSymbolType) *core.SibylStockRecord {
+	sc.stocksMu.RLock()
+	defer sc.stocksMu.RUnlock()
+	if s, has := sc.stocks[symbol]; has {
+		return &s
+	}
+	return nil
+}
+
+func (sc *StockCache) RemoveStockSymbol(symbol core.StockSymbolType) {
+
+	sc.stocksMu.RLock()
+	if _, has := sc.stocks[symbol]; has {
+		sc.stocks[symbol] = core.SibylStockRecord{
+			Symbol: symbol,
+		}
+		sc.stateChange = true
+	}
+	sc.stocksMu.RUnlock()
+}
+
+func (sc *StockCache) GetAllStocks() []core.SibylStockRecord {
+	toReturn := make([]core.SibylStockRecord, 0, len(sc.stocks))
+	sc.stocksMu.RLock()
+	for _, stock := range sc.stocks {
+		toReturn = append(toReturn, stock)
+	}
+	sc.stocksMu.RUnlock()
+	return toReturn
+}
+
+//GetValidationStatus returns a slice containing the stock records with a validationStatus equal to status
+func (sc *StockCache) GetValidationStatus(status core.ValidationStatusType) []core.SibylStockRecord {
+	toReturn := make([]core.SibylStockRecord, 0, len(sc.stocks))
+	sc.stocksMu.RLock()
+	for _, stock := range sc.stocks {
+		if stock.ValidationStatus == status {
+			toReturn = append(toReturn, stock)
+		}
+	}
+	sc.stocksMu.RUnlock()
+	return toReturn
+}
+
+func (sc *StockCache) HistoryStocks(hasDaily, hasWeekly, hasMonthly, hasYearly bool) []core.SibylStockRecord {
+	toReturn := make([]core.SibylStockRecord, 0, len(sc.stocks))
+	sc.stocksMu.RLock()
+	for _, stock := range sc.stocks {
+		if stock.DownloadStatus == core.ActivityEnabled &&
+			stock.ValidationStatus == core.ValidationValid &&
+			((hasDaily && hasDaily == stock.HistoryStatus.HasDaily()) ||
+				(hasWeekly && hasWeekly == stock.HistoryStatus.HasWeekly()) ||
+				(hasMonthly && hasMonthly == stock.HistoryStatus.HasMonthly()) ||
+				(hasYearly && hasYearly == stock.HistoryStatus.HasYearly())) {
+			toReturn = append(toReturn, stock)
+		}
+	}
+	sc.stocksMu.RUnlock()
+	return toReturn
+}
+
+func (sc *StockCache) IntradayStocks(hasTick, has1Min, has5Min, mustBeActive bool) []core.SibylStockRecord {
+	toReturn := make([]core.SibylStockRecord, 0, len(sc.stocks))
+	sc.stocksMu.RLock()
+	for _, stock := range sc.stocks {
+		if stock.DownloadStatus == core.ActivityEnabled &&
+			stock.ValidationStatus == core.ValidationValid &&
+			((hasTick && hasTick == stock.IntradayStatus.HasTicks()) ||
+				(has1Min && has1Min == stock.IntradayStatus.Has1Min()) ||
+				(has5Min && has5Min == stock.IntradayStatus.Has5Min())) &&
+			((mustBeActive && mustBeActive == stock.IntradayState.IsActive()) ||
+				mustBeActive == false) {
+			tmp := stock
+			toReturn = append(toReturn, tmp)
+		}
+	}
+	sc.stocksMu.RUnlock()
+	return toReturn
+}
+
+func (sc *StockCache) UpdateDownloadStatus(symbol core.StockSymbolType, status core.ActivityStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update DownloadStatus", symbol)
+	}
+	x.DownloadStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateExchange(symbol core.StockSymbolType, exchange string) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update Exchange", symbol)
+	}
+	x.Exchange = exchange
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateExchangeDescription(symbol core.StockSymbolType, exchangeDescription string) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update ExchangeDescription", symbol)
+	}
+	x.ExchangeDescription = exchangeDescription
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateOptionStatus(symbol core.StockSymbolType, status core.OptionStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update OptionStatus", symbol)
+	}
+	x.OptionStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateHistoryStatus(symbol core.StockSymbolType, status core.HistoryStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update HistoryStatus", symbol)
+	}
+	x.HistoryStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateHistoryTimestamp(symbol core.StockSymbolType, date core.DateType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update HistoryTimestamp", symbol)
+	}
+	x.HistoryTimestamp = date
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateIntradayState(symbol core.StockSymbolType, state core.IntradayStateType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update IntradayState", symbol)
+	}
+	x.IntradayState = state
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateIntradayStatus(symbol core.StockSymbolType, status core.IntradayStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update IntradayStatus", symbol)
+	}
+	x.IntradayStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateIntradayTimestamp1Min(symbol core.StockSymbolType, timestamp core.TimestampType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update IntradayTimestamp1Min", symbol)
+	}
+	x.IntradayTimestamp1Min = timestamp
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateIntradayTimestamp5Min(symbol core.StockSymbolType, timestamp core.TimestampType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update IntradayTimestamp5Min", symbol)
+	}
+	x.IntradayTimestamp5Min = timestamp
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateIntradayTimestampTick(symbol core.StockSymbolType, timestamp core.TimestampType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update IntradayTimestampTick", symbol)
+	}
+	x.IntradayTimestampTick = timestamp
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateName(symbol core.StockSymbolType, name string) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update Name", symbol)
+	}
+	x.Name = name
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateOptionListTimestamp(symbol core.StockSymbolType, date core.DateType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update OptionListTimestamp", symbol)
+	}
+	x.OptionListTimestamp = date
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateQuoteStatus(symbol core.StockSymbolType, status core.ActivityStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update QuotesStatus", symbol)
+	}
+	x.QuotesStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateStableQuoteStatus(symbol core.StockSymbolType, status core.ActivityStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update StableQuotesStatus", symbol)
+	}
+	x.StableQuotesStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateValidationStatus(symbol core.StockSymbolType, status core.ValidationStatusType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update ValidationStatus", symbol)
+	}
+	x.ValidationStatus = status
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) UpdateValidationTimestamp(symbol core.StockSymbolType, date core.DateType) error {
+	sc.stocksMu.Lock()
+	x, has := sc.stocks[symbol]
+	if !has {
+		return fmt.Errorf("StockCache could not find %v to update ValidationTimestamp", symbol)
+	}
+	x.ValidationTimestamp = date
+	sc.stocks[symbol] = x
+	sc.stateChange = true
+	sc.stocksMu.Unlock()
+	return nil
+}
+
+func (sc *StockCache) Stop(waitUpTo time.Duration) {
+	//next stop the StockCache
+	logrus.Infof("Waiting for StockCache to finish")
 	startTime := time.Now()
 	sc.kill()
 	select {
 	case <-sc.doneCtx.Done():
-		logrus.Infof("SymbolCache finished in %v", time.Since(startTime))
+		logrus.Infof("StockCache finished in %v", time.Since(startTime))
 	case <-time.After(waitUpTo):
-		logrus.Errorf("SymbolCache failed to gracefully finish in %v", time.Since(startTime))
+		logrus.Errorf("StockCache failed to gracefully finish in %v", time.Since(startTime))
 	}
 }

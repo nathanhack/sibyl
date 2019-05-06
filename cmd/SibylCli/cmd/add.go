@@ -8,6 +8,7 @@ import (
 	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // addCmd represents the add command
@@ -52,6 +53,7 @@ var addCmd = &cobra.Command{
 					}
 				}
 			}
+			time.Sleep(100 * time.Millisecond)
 		}
 		return nil
 	},

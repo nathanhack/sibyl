@@ -9,6 +9,7 @@ import (
 type SibylHistoryRecord struct {
 	ClosePrice sql.NullFloat64
 	HighPrice  sql.NullFloat64
+	Interval   HistoryStatusType
 	LowPrice   sql.NullFloat64
 	OpenPrice  sql.NullFloat64
 	Symbol     StockSymbolType // this is (and must be) guaranteed to be a NON - Null value
@@ -30,6 +31,8 @@ func (shr *SibylHistoryRecord) StringBlindWithDelimiter(delimiter string, nullSt
 	builder.WriteString(nullFloat64ToString(shr.ClosePrice, nullString))
 	builder.WriteString(delimiter)
 	builder.WriteString(nullFloat64ToString(shr.HighPrice, nullString))
+	builder.WriteString(delimiter)
+	builder.WriteString(fmt.Sprintf("%v", int(shr.Interval)))
 	builder.WriteString(delimiter)
 	builder.WriteString(nullFloat64ToString(shr.LowPrice, nullString))
 	builder.WriteString(delimiter)

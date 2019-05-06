@@ -21,7 +21,6 @@ func (ast *AgentSelectionType) Scan(value interface{}) error {
 
 	sv, err := driver.String.ConvertValue(value)
 	if err == nil {
-
 		if v, ok := sv.(string); ok {
 			switch AgentSelectionType(v) {
 			case AgentSelectionAlly:
@@ -51,7 +50,7 @@ func (ast *AgentSelectionType) Scan(value interface{}) error {
 		}
 	}
 	// otherwise, return an error
-	return fmt.Errorf("failed to scan AgentSelectionType with value:%v", value)
+	return fmt.Errorf("failed to scan AgentSelectionType with value: %v", value)
 }
 
 func (ast AgentSelectionType) Value() (driver.Value, error) {

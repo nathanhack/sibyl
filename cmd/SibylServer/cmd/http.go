@@ -52,50 +52,50 @@ var httpCmd = &cobra.Command{
 		}
 
 		//
-		symbolCache := internal.NewSymbolsCache(db)
-		if err := symbolCache.Run(); err != nil {
-			logrus.Errorf("Starting SymbolCache had an issue: %v", err)
+		stockCache := internal.NewStockCache(db)
+		if err := stockCache.Run(); err != nil {
+			logrus.Errorf("Starting StockCache had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		historyGrabber := internal.NewHistoryGrabber(db, symbolCache)
+		historyGrabber := internal.NewHistoryGrabber(db, stockCache)
 		if err := historyGrabber.Run(); err != nil {
 			logrus.Errorf("Starting HistoryGrabber had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		intradayGrabber := internal.NewIntradayGrabber(db, symbolCache)
+		intradayGrabber := internal.NewIntradayGrabber(db, stockCache)
 		if err := intradayGrabber.Run(); err != nil {
 			logrus.Errorf("Starting IntradayGrabber had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		optionSymbolGrabber := internal.NewOptionSymbolGrabber(db, symbolCache)
+		optionSymbolGrabber := internal.NewOptionSymbolGrabber(db, stockCache)
 		if err := optionSymbolGrabber.Run(); err != nil {
 			logrus.Errorf("Starting OptionSymbolGrabber had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		quoteGrabber := internal.NewQuoteGrabber(db, symbolCache)
+		quoteGrabber := internal.NewQuoteGrabber(db, stockCache)
 		if err := quoteGrabber.Run(); err != nil {
 			logrus.Errorf("Starting QuoteGrabber had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		stableQuoteGrabber := internal.NewStableQuoteGrabber(db, symbolCache)
+		stableQuoteGrabber := internal.NewStableQuoteGrabber(db, stockCache)
 		if err := stableQuoteGrabber.Run(); err != nil {
 			logrus.Errorf("Starting StableQuoteGrabber had an issue: %v", err)
 			os.Exit(-1)
 		}
 
-		stockValidator := internal.NewStockValidator(db, optionSymbolGrabber)
+		stockValidator := internal.NewStockValidator(db, stockCache, optionSymbolGrabber)
 		if err := stockValidator.Run(); err != nil {
 			logrus.Errorf("Starting StockValidator had an issue: %v", err)
 			os.Exit(-1)
 		}
 
 		serverDiedCtx, serverDied := context.WithCancel(context.Background())
-		httpServer := internal.NewHttpRestServer(db, cmd.Flag("address").Value.String(), stockValidator, serverDied)
+		httpServer := internal.NewHttpRestServer(db, stockCache, cmd.Flag("address").Value.String(), stockValidator, serverDied)
 		if err := httpServer.Run(); err != nil {
 			logrus.Errorf("Starting HttpServer failed: %v", err)
 			os.Exit(-1)
@@ -129,7 +129,7 @@ var httpCmd = &cobra.Command{
 		optionSymbolGrabber.Stop(1 * time.Minute)
 		intradayGrabber.Stop(1 * time.Minute)
 		historyGrabber.Stop(1 * time.Minute)
-		symbolCache.Stop(1 * time.Minute)
+		stockCache.Stop(1 * time.Minute)
 		httpServer.Stop(1 * time.Minute)
 		db.Close()
 

@@ -10,25 +10,25 @@ import (
 )
 
 type QuoteGrabber struct {
-	killCtx     context.Context
-	kill        context.CancelFunc
-	doneCtx     context.Context
-	done        context.CancelFunc
-	db          *database.SibylDatabase
-	symbolCache *SymbolCache
-	running     bool
+	killCtx    context.Context
+	kill       context.CancelFunc
+	doneCtx    context.Context
+	done       context.CancelFunc
+	db         *database.SibylDatabase
+	stockCache *StockCache
+	running    bool
 }
 
-func NewQuoteGrabber(db *database.SibylDatabase, symbolCache *SymbolCache) *QuoteGrabber {
+func NewQuoteGrabber(db *database.SibylDatabase, symbolCache *StockCache) *QuoteGrabber {
 	killCtx, kill := context.WithCancel(context.Background())
 	doneCtx, done := context.WithCancel(context.Background())
 	return &QuoteGrabber{
-		killCtx:     killCtx,
-		kill:        kill,
-		doneCtx:     doneCtx,
-		done:        done,
-		db:          db,
-		symbolCache: symbolCache,
+		killCtx:    killCtx,
+		kill:       kill,
+		doneCtx:    doneCtx,
+		done:       done,
+		db:         db,
+		stockCache: symbolCache,
 	}
 }
 
@@ -134,13 +134,13 @@ func (qg *QuoteGrabber) Run() error {
 }
 
 func (qg *QuoteGrabber) executeOneRound(stockQuotesChannel chan []*core.SibylStockQuoteRecord, optionQuotesChannel chan []*core.SibylOptionQuoteRecord) {
-	qg.symbolCache.QuoteStockSymbolsMu.RLock()
-	quoteStockSymbolsToDownLoad := qg.symbolCache.QuoteStockSymbols
-	qg.symbolCache.QuoteStockSymbolsMu.RUnlock()
+	qg.stockCache.QuoteStockSymbolsMu.RLock()
+	quoteStockSymbolsToDownLoad := qg.stockCache.QuoteStockSymbols
+	qg.stockCache.QuoteStockSymbolsMu.RUnlock()
 
-	qg.symbolCache.QuoteOptionsSymbolsMu.RLock()
-	quoteOptionSymbolsToDownLoad := qg.symbolCache.QuoteOptionsSymbols
-	qg.symbolCache.QuoteOptionsSymbolsMu.RUnlock()
+	qg.stockCache.QuoteOptionsSymbolsMu.RLock()
+	quoteOptionSymbolsToDownLoad := qg.stockCache.QuoteOptionsSymbols
+	qg.stockCache.QuoteOptionsSymbolsMu.RUnlock()
 
 	t := time.Now()
 	year, month, day := t.Date()

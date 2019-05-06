@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"github.com/nathanhack/sibyl/core"
 	"github.com/sirupsen/logrus"
@@ -41,62 +40,60 @@ type allyJsonIntradayResponse struct {
 	} `json:"response"`
 }
 
-type xmlIntraday struct {
-	Date          string `xml:"date"`
-	DateTimestamp string `xml:"datetime"`
-	HighPrice     string `xml:"hi"`
-	IncrVl        string `xml:"incr_vl"`
-	LastPrice     string `xml:"last"`
-	LowPrice      string `xml:"lo"`
-	OpenPrice     string `xml:"opn"`
-	Timestamp     string `xml:"timestamp"`
-	Volume        string `xml:"vl"`
-}
-
-type allXMLIntradayResponse struct {
-	XMLName     xml.Name `xml:"response"`
-	Text        string   `xml:",chardata"`
-	ID          string   `xml:"id,attr"`
-	Elapsedtime string   `xml:"elapsedtime"`
-	Quotes      struct {
-		Text  string        `xml:",chardata"`
-		Quote []xmlIntraday `xml:"quote"`
-	} `xml:"quotes"`
-	Error string `xml:"error"`
+type allyJsonIntradayResponseSingle struct {
+	Response struct {
+		ID          string `json:"@id"`
+		Elapsedtime string `json:"elapsedtime"`
+		Quotes      struct {
+			Quote jsonIntraday `json:"quote"`
+		} `json:"quotes"`
+		Error string `json:"error"`
+	} `json:"response"`
 }
 
 func createAllyJsonIntradayResponse(response string) (*allyJsonIntradayResponse, error) {
 	var allyJsonResponse allyJsonIntradayResponse
 	if err := json.Unmarshal([]byte(response), &allyJsonResponse); err != nil {
-		return &allyJsonResponse, fmt.Errorf("createAllyJsonIntradayResponse: unmarshal failure: %v\n on response: %v", err, response)
+		return nil, fmt.Errorf("createAllyJsonIntradayResponse: unmarshal failure: %v\n on response: %v", err, response)
 	}
 
 	if allyJsonResponse.Response.Error != "Success" {
-		return &allyJsonResponse, fmt.Errorf("createAllyJsonIntradayResponse: error: %v : %v", allyJsonResponse.Response.Error, string(response))
+		return nil, fmt.Errorf("createAllyJsonIntradayResponse: error: %v : %v", allyJsonResponse.Response.Error, string(response))
 	}
 	return &allyJsonResponse, nil
 }
 
-func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolType, tickSize core.HistoryTick, startDate, endDate core.TimestampType) ([]*core.SibylIntradayRecord, error) {
+func createAllyJsonIntradayResponseSingle(response string) (*allyJsonIntradayResponse, error) {
+	var allyJsonResponse allyJsonIntradayResponseSingle
+	if err := json.Unmarshal([]byte(response), &allyJsonResponse); err != nil {
+		return nil, fmt.Errorf("createAllyJsonIntradayResponse: unmarshal failure: %v\n on response: %v", err, response)
+	}
+
+	if allyJsonResponse.Response.Error != "Success" {
+		return nil, fmt.Errorf("createAllyJsonIntradayResponse: error: %v : %v", allyJsonResponse.Response.Error, string(response))
+	}
+
+	var v allyJsonIntradayResponse
+	v.Response.ID = allyJsonResponse.Response.ID
+	v.Response.Elapsedtime = allyJsonResponse.Response.Elapsedtime
+	v.Response.Quotes.Quote = []jsonIntraday{allyJsonResponse.Response.Quotes.Quote}
+	v.Response.Error = allyJsonResponse.Response.Error
+	return &v, nil
+
+}
+
+func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolType, interval core.IntradayInterval, startDate, endDate core.TimestampType) ([]*core.SibylIntradayRecord, error) {
 	//this only works for Stocks
 	startTime := time.Now()
-	if tickSize != core.MinuteTicks && tickSize != core.FiveMinuteTicks {
-		return nil, fmt.Errorf("GetIntraday: tickSize must be 1 or 5 minutes")
-	}
 
 	allyHistoryUrl, _ := url.ParseRequestURI("https://api.tradeking.com/v1/market/timesales.json")
 	data := allyHistoryUrl.Query()
 	data.Add("symbols", string(symbol))
 
-	if tickSize == core.MinuteTicks {
-		data.Add("interval", "1min") // can be  "5min", "1min", "tick" (5min is the default)
-	} else if tickSize == core.FiveMinuteTicks {
-		data.Add("interval", "5min")
-	}
-
+	// can be  "5min", "1min", "tick" (5min is the Ally default)
+	data.Add("interval", string(interval))
 	data.Add("startdate", startDate.Time().Format("2006-01-02"))
 	data.Add("enddate", endDate.Time().Format("2006-01-02"))
-
 	allyHistoryUrl.RawQuery = data.Encode()
 
 	request, err := http.NewRequest(http.MethodGet, allyHistoryUrl.String(), strings.NewReader(data.Encode()))
@@ -132,13 +129,17 @@ func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolTyp
 
 	response, err := createAllyJsonIntradayResponse(string(body))
 	if err != nil {
-		return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: %v", err)
+		//if we failed we'll try an run it against the singleton version
+		var err1 error
+		if response, err1 = createAllyJsonIntradayResponseSingle(string(body)); err1 != nil {
+			return []*core.SibylIntradayRecord{}, fmt.Errorf("GetIntraday: %v", err)
+		}
 	}
 
 	errStrings := []string{}
 	toReturn := []*core.SibylIntradayRecord{}
 	for _, quote := range response.Response.Quotes.Quote {
-		if sq, err := allyJsonIntradayToSibylIntraday(symbol, quote); err != nil {
+		if sq, err := allyJsonIntradayToSibylIntraday(symbol, interval, quote); err != nil {
 			//if the feed is sending a bunch of bad data this can explode with errors
 			// so we limit it to 10
 			if len(errStrings) < 10 {
@@ -152,10 +153,10 @@ func (ag *AllyAgent) GetIntraday(ctx context.Context, symbol core.StockSymbolTyp
 		return toReturn, fmt.Errorf("GetIntraday: had errors while parsing quotes: %v", strings.Join(errStrings, ";"))
 	}
 
-	logrus.Infof("GetIntraday: finished getting intraday history (%v - %v) for %v in %s", startDate.Time().Format("2006-01-02"), endDate.Time().Format("2006-01-02"), symbol, time.Since(startTime))
+	logrus.Debugf("GetIntraday: finished getting %v Intraday history (%v - %v) for %v in %s", interval, startDate.Time().Format("2006-01-02"), endDate.Time().Format("2006-01-02"), symbol, time.Since(startTime))
 	return toReturn, nil
 }
-func allyJsonIntradayToSibylIntraday(symbol core.StockSymbolType, intraday jsonIntraday) (*core.SibylIntradayRecord, error) {
+func allyJsonIntradayToSibylIntraday(symbol core.StockSymbolType, interval core.IntradayInterval, intraday jsonIntraday) (*core.SibylIntradayRecord, error) {
 	var err error
 
 	///////////////////////
@@ -185,9 +186,19 @@ func allyJsonIntradayToSibylIntraday(symbol core.StockSymbolType, intraday jsonI
 	}
 	///////////////////////
 
+	i := core.IntradayStatusTicks
+	switch interval {
+	//case core.TickInterval:
+	case core.OneMinInterval:
+		i = core.IntradayStatus1Min
+	case core.FiveMinInterval:
+		i = core.IntradayStatus5Min
+	}
+
 	return &core.SibylIntradayRecord{
 		HighPrice: HighPrice,
 		LastPrice: LastPrice,
+		Interval:  i,
 		LowPrice:  LowPrice,
 		OpenPrice: OpenPrice,
 		Symbol:    symbol,

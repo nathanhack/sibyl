@@ -18,7 +18,7 @@ func Experiement_QuoteGrabberRates(t *testing.T) {
 		return
 	}
 
-	symbolCache := NewSymbolsCache(db)
+	symbolCache := NewStockCache(db)
 	if err := symbolCache.updatedSymbolsList(); err != nil {
 		t.Errorf("expected no error for symbol updated: %v", err)
 		return
