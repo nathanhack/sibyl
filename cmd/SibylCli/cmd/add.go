@@ -8,12 +8,11 @@ import (
 	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
-	Use:   "add stock [stock] ...",
+	Use:   "add STOCK [STOCK] ...",
 	Short: "Adds a stock to analyze and trade with",
 	Long:  `The add command adds a one or more stocks`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -38,22 +37,22 @@ var addCmd = &cobra.Command{
 			resp, err := resty.R().Post(fmt.Sprintf("%v/stocks/add/%v", address, s))
 			if err != nil {
 				return fmt.Errorf("There was an error while adding stock %v, error: %v\n", s, err)
-			} else if resp.StatusCode() != http.StatusOK {
-				return fmt.Errorf("There was an error while adding stock %v, statusCode: %v  response: %v\n", s, resp.StatusCode(), resp)
-			} else {
-				var respErrors rest.ErrorState
-				err := json.Unmarshal(resp.Body(), &respErrors)
-				if err != nil {
-					return fmt.Errorf("There was a problem parsing the server response while adding stock %v : %v  had error:%v\n", s, string(resp.Body()), err)
-				} else {
-					if respErrors.ErrorReturned {
-						return fmt.Errorf("There was a problem server side while adding stock %s: %v\n", s, respErrors.ErrorReturned)
-					} else {
-						fmt.Printf("Successfullly added stock: %v\n", s)
-					}
-				}
 			}
-			time.Sleep(100 * time.Millisecond)
+			if resp.StatusCode() != http.StatusOK {
+				return fmt.Errorf("There was an error while adding stock %v, statusCode: %v  response: %v\n", s, resp.StatusCode(), resp)
+			}
+
+			var respErrors rest.ErrorState
+			err = json.Unmarshal(resp.Body(), &respErrors)
+			if err != nil {
+				return fmt.Errorf("There was a problem parsing the server response while adding stock %v : %v  had error:%v\n", s, string(resp.Body()), err)
+			}
+
+			if respErrors.ErrorReturned {
+				return fmt.Errorf("There was a problem server side while adding stock %s: %v\n", s, respErrors.ErrorReturned)
+			}
+
+			fmt.Printf("Successfullly added stock: %v\n", s)
 		}
 		return nil
 	},

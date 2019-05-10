@@ -96,7 +96,6 @@ var showStocksCmd = &cobra.Command{
 				stockRow = append(stockRow, fmt.Sprint(v.QuotesStatus))
 				stockRow = append(stockRow, fmt.Sprint(v.StableQuotesStatus))
 				stockRow = append(stockRow, fmt.Sprint(v.HistoryStatus))
-				stockRow = append(stockRow, fmt.Sprint(v.HistoryStatus))
 				stockRow = append(stockRow, fmt.Sprint(v.IntradayStatus))
 				stockRow = append(stockRow, fmt.Sprint(v.IntradayState))
 			} else {
