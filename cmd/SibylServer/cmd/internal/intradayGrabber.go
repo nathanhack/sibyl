@@ -85,17 +85,17 @@ func (ig *IntradayGrabber) Run() error {
 				deadlineTickCancel() // (REQUIRED) we call the cancel func to release resources associated with the context
 				deadlineTick, deadlineTickCancel = nextValid(core.TickInterval)
 				updateActiveTickCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateActiveTickCache, core.TickInterval, true, false, false)
-				logrus.Infof("IntradayGrabber: deadlineTick.Done() Active count(%v)", len(updateActiveTickCache))
+				logrus.Debugf("IntradayGrabber: deadlineTick.Done() Active count(%v)", len(updateActiveTickCache))
 			case <-deadline1Min.Done():
 				deadline1MinCancel() // (REQUIRED) we call the cancel func to release resources associated with the context
 				deadline1Min, deadline1MinCancel = nextValid(core.OneMinInterval)
 				updateActive1MinCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateActive1MinCache, core.OneMinInterval, true, false, false)
-				logrus.Infof("IntradayGrabber: deadline1Min.Done() Active count(%v)", len(updateActive1MinCache))
+				logrus.Debugf("IntradayGrabber: deadline1Min.Done() Active count(%v)", len(updateActive1MinCache))
 			case <-deadline5Min.Done():
 				deadline5MinCancel() // (REQUIRED) we call the cancel func to release resources associated with the context
 				deadline5Min, deadline5MinCancel = nextValid(core.FiveMinInterval)
 				updateActive5MinCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateActive5MinCache, core.FiveMinInterval, true, false, false)
-				logrus.Infof("IntradayGrabber: deadline5Min.Done() Active count(%v)", len(updateActive5MinCache))
+				logrus.Debugf("IntradayGrabber: deadline5Min.Done() Active count(%v)", len(updateActive5MinCache))
 			case <-onceDailyDeadline.Done():
 				onceDailyDeadlineCancel() // (REQUIRED) we call the cancel func to release resources associated with the context
 				onceDailyDeadline, onceDailyDeadlineCancel = context.WithDeadline(context.Background(), tomorrowAt6AM())
@@ -105,11 +105,11 @@ func (ig *IntradayGrabber) Run() error {
 				updateFullTickCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateFullTickCache, core.TickInterval, false, false, true)
 				updateFull1MinCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateFull1MinCache, core.OneMinInterval, false, false, true)
 				updateFull5MinCache = addToIntradayCache(ig.killCtx, ig.db, ig.stockCache, finishedChan, updateFull5MinCache, core.FiveMinInterval, false, false, true)
-				logrus.Infof("IntradayGrabber: onceDailyDeadline.Done() Ticks(%v) 1Min(%v) 5min(%v)", len(updateFullTickCache), len(updateFull1MinCache), len(updateFull5MinCache))
+				logrus.Debugf("IntradayGrabber: onceDailyDeadline.Done() Ticks(%v) 1Min(%v) 5min(%v)", len(updateFullTickCache), len(updateFull1MinCache), len(updateFull5MinCache))
 			case <-processDeadline.Done():
 				processDeadlineCancel() // (REQUIRED) we call the cancel func to release resources associated with the context
 				processDeadline, processDeadlineCancel = context.WithDeadline(context.Background(), time.Now().Add(defaultIntradayDurationToWait))
-				logrus.Infof("IntradayGrabber: processDeadline()")
+				logrus.Debugf("IntradayGrabber: processDeadline()")
 				currentTime := time.Now()
 				agent, err := ig.db.GetAgent(ig.killCtx)
 				if err != nil {
