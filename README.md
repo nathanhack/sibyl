@@ -60,6 +60,9 @@ Information is all stored in MySQL database and is accessed via SibylServer.
 To show a list of stocks currently being tracked by SibylServer:
 
     SibylCli show stocks
+or
+    
+    SibylCli show stocks --details
 
 To show the history for a particular stock:
 
@@ -68,7 +71,7 @@ To show the history for a particular stock:
 ### Enabling
 SibylServer will take perform several actions for all the stocks that has been added to it.  The actions are determined by internal state to the server for each particular stock.  There are lots of options but the easiest one to get started is to run the following command after your done adding stocks (or after adding new ones later).
 
-    SibylCli enable all
+    SibylCli enable all all
 
 ### Deleting
 To remove a stock from SibylServer use the following command. Note that it will delete all data associated with that stock so use carefully.
