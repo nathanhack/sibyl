@@ -172,7 +172,7 @@ func (pio *Polygonio) BarRequest(ctx context.Context, ticker string, intervalVal
 				end = end.Add(-1 * time.Second) // end is meant to be noninclusive
 			}
 		}
-		params := models.dfsParams{
+		params := models.GetAggsParams{
 			Ticker:     ticker,
 			Multiplier: 1,
 			Timespan:   toTimespan(intervalValue),
