@@ -13,3 +13,5 @@
 
 .*
 !/.gitignore
+.hl/
+output*/
