@@ -27,7 +27,7 @@ func (tcd *TradeCorrectionDelete) Where(ps ...predicate.TradeCorrection) *TradeC
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (tcd *TradeCorrectionDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, TradeCorrectionMutation](ctx, tcd.sqlExec, tcd.mutation, tcd.hooks)
+	return withHooks(ctx, tcd.sqlExec, tcd.mutation, tcd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (tcd *TradeCorrectionDelete) ExecX(ctx context.Context) int {
 }
 
 func (tcd *TradeCorrectionDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: tradecorrection.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradecorrection.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(tradecorrection.Table, sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt))
 	if ps := tcd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type TradeCorrectionDeleteOne struct {
 	tcd *TradeCorrectionDelete
 }
 
+// Where appends a list predicates to the TradeCorrectionDelete builder.
+func (tcdo *TradeCorrectionDeleteOne) Where(ps ...predicate.TradeCorrection) *TradeCorrectionDeleteOne {
+	tcdo.tcd.mutation.Where(ps...)
+	return tcdo
+}
+
 // Exec executes the deletion query.
 func (tcdo *TradeCorrectionDeleteOne) Exec(ctx context.Context) error {
 	n, err := tcdo.tcd.Exec(ctx)
@@ -84,5 +82,7 @@ func (tcdo *TradeCorrectionDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (tcdo *TradeCorrectionDeleteOne) ExecX(ctx context.Context) {
-	tcdo.tcd.ExecX(ctx)
+	if err := tcdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

@@ -36,6 +36,14 @@ func (bru *BarRecordUpdate) SetClose(f float64) *BarRecordUpdate {
 	return bru
 }
 
+// SetNillableClose sets the "close" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableClose(f *float64) *BarRecordUpdate {
+	if f != nil {
+		bru.SetClose(*f)
+	}
+	return bru
+}
+
 // AddClose adds f to the "close" field.
 func (bru *BarRecordUpdate) AddClose(f float64) *BarRecordUpdate {
 	bru.mutation.AddClose(f)
@@ -46,6 +54,14 @@ func (bru *BarRecordUpdate) AddClose(f float64) *BarRecordUpdate {
 func (bru *BarRecordUpdate) SetHigh(f float64) *BarRecordUpdate {
 	bru.mutation.ResetHigh()
 	bru.mutation.SetHigh(f)
+	return bru
+}
+
+// SetNillableHigh sets the "high" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableHigh(f *float64) *BarRecordUpdate {
+	if f != nil {
+		bru.SetHigh(*f)
+	}
 	return bru
 }
 
@@ -62,6 +78,14 @@ func (bru *BarRecordUpdate) SetLow(f float64) *BarRecordUpdate {
 	return bru
 }
 
+// SetNillableLow sets the "low" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableLow(f *float64) *BarRecordUpdate {
+	if f != nil {
+		bru.SetLow(*f)
+	}
+	return bru
+}
+
 // AddLow adds f to the "low" field.
 func (bru *BarRecordUpdate) AddLow(f float64) *BarRecordUpdate {
 	bru.mutation.AddLow(f)
@@ -72,6 +96,14 @@ func (bru *BarRecordUpdate) AddLow(f float64) *BarRecordUpdate {
 func (bru *BarRecordUpdate) SetOpen(f float64) *BarRecordUpdate {
 	bru.mutation.ResetOpen()
 	bru.mutation.SetOpen(f)
+	return bru
+}
+
+// SetNillableOpen sets the "open" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableOpen(f *float64) *BarRecordUpdate {
+	if f != nil {
+		bru.SetOpen(*f)
+	}
 	return bru
 }
 
@@ -87,10 +119,26 @@ func (bru *BarRecordUpdate) SetTimestamp(t time.Time) *BarRecordUpdate {
 	return bru
 }
 
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableTimestamp(t *time.Time) *BarRecordUpdate {
+	if t != nil {
+		bru.SetTimestamp(*t)
+	}
+	return bru
+}
+
 // SetVolume sets the "volume" field.
 func (bru *BarRecordUpdate) SetVolume(f float64) *BarRecordUpdate {
 	bru.mutation.ResetVolume()
 	bru.mutation.SetVolume(f)
+	return bru
+}
+
+// SetNillableVolume sets the "volume" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableVolume(f *float64) *BarRecordUpdate {
+	if f != nil {
+		bru.SetVolume(*f)
+	}
 	return bru
 }
 
@@ -104,6 +152,14 @@ func (bru *BarRecordUpdate) AddVolume(f float64) *BarRecordUpdate {
 func (bru *BarRecordUpdate) SetTransactions(i int32) *BarRecordUpdate {
 	bru.mutation.ResetTransactions()
 	bru.mutation.SetTransactions(i)
+	return bru
+}
+
+// SetNillableTransactions sets the "transactions" field if the given value is not nil.
+func (bru *BarRecordUpdate) SetNillableTransactions(i *int32) *BarRecordUpdate {
+	if i != nil {
+		bru.SetTransactions(*i)
+	}
 	return bru
 }
 
@@ -145,7 +201,7 @@ func (bru *BarRecordUpdate) ClearGroup() *BarRecordUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (bru *BarRecordUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, BarRecordMutation](ctx, bru.sqlSave, bru.mutation, bru.hooks)
+	return withHooks(ctx, bru.sqlSave, bru.mutation, bru.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -171,16 +227,7 @@ func (bru *BarRecordUpdate) ExecX(ctx context.Context) {
 }
 
 func (bru *BarRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   barrecord.Table,
-			Columns: barrecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: barrecord.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(barrecord.Table, barrecord.Columns, sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt))
 	if ps := bru.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -235,10 +282,7 @@ func (bru *BarRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{barrecord.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -251,10 +295,7 @@ func (bru *BarRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{barrecord.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -289,6 +330,14 @@ func (bruo *BarRecordUpdateOne) SetClose(f float64) *BarRecordUpdateOne {
 	return bruo
 }
 
+// SetNillableClose sets the "close" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableClose(f *float64) *BarRecordUpdateOne {
+	if f != nil {
+		bruo.SetClose(*f)
+	}
+	return bruo
+}
+
 // AddClose adds f to the "close" field.
 func (bruo *BarRecordUpdateOne) AddClose(f float64) *BarRecordUpdateOne {
 	bruo.mutation.AddClose(f)
@@ -299,6 +348,14 @@ func (bruo *BarRecordUpdateOne) AddClose(f float64) *BarRecordUpdateOne {
 func (bruo *BarRecordUpdateOne) SetHigh(f float64) *BarRecordUpdateOne {
 	bruo.mutation.ResetHigh()
 	bruo.mutation.SetHigh(f)
+	return bruo
+}
+
+// SetNillableHigh sets the "high" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableHigh(f *float64) *BarRecordUpdateOne {
+	if f != nil {
+		bruo.SetHigh(*f)
+	}
 	return bruo
 }
 
@@ -315,6 +372,14 @@ func (bruo *BarRecordUpdateOne) SetLow(f float64) *BarRecordUpdateOne {
 	return bruo
 }
 
+// SetNillableLow sets the "low" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableLow(f *float64) *BarRecordUpdateOne {
+	if f != nil {
+		bruo.SetLow(*f)
+	}
+	return bruo
+}
+
 // AddLow adds f to the "low" field.
 func (bruo *BarRecordUpdateOne) AddLow(f float64) *BarRecordUpdateOne {
 	bruo.mutation.AddLow(f)
@@ -325,6 +390,14 @@ func (bruo *BarRecordUpdateOne) AddLow(f float64) *BarRecordUpdateOne {
 func (bruo *BarRecordUpdateOne) SetOpen(f float64) *BarRecordUpdateOne {
 	bruo.mutation.ResetOpen()
 	bruo.mutation.SetOpen(f)
+	return bruo
+}
+
+// SetNillableOpen sets the "open" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableOpen(f *float64) *BarRecordUpdateOne {
+	if f != nil {
+		bruo.SetOpen(*f)
+	}
 	return bruo
 }
 
@@ -340,10 +413,26 @@ func (bruo *BarRecordUpdateOne) SetTimestamp(t time.Time) *BarRecordUpdateOne {
 	return bruo
 }
 
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableTimestamp(t *time.Time) *BarRecordUpdateOne {
+	if t != nil {
+		bruo.SetTimestamp(*t)
+	}
+	return bruo
+}
+
 // SetVolume sets the "volume" field.
 func (bruo *BarRecordUpdateOne) SetVolume(f float64) *BarRecordUpdateOne {
 	bruo.mutation.ResetVolume()
 	bruo.mutation.SetVolume(f)
+	return bruo
+}
+
+// SetNillableVolume sets the "volume" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableVolume(f *float64) *BarRecordUpdateOne {
+	if f != nil {
+		bruo.SetVolume(*f)
+	}
 	return bruo
 }
 
@@ -357,6 +446,14 @@ func (bruo *BarRecordUpdateOne) AddVolume(f float64) *BarRecordUpdateOne {
 func (bruo *BarRecordUpdateOne) SetTransactions(i int32) *BarRecordUpdateOne {
 	bruo.mutation.ResetTransactions()
 	bruo.mutation.SetTransactions(i)
+	return bruo
+}
+
+// SetNillableTransactions sets the "transactions" field if the given value is not nil.
+func (bruo *BarRecordUpdateOne) SetNillableTransactions(i *int32) *BarRecordUpdateOne {
+	if i != nil {
+		bruo.SetTransactions(*i)
+	}
 	return bruo
 }
 
@@ -396,6 +493,12 @@ func (bruo *BarRecordUpdateOne) ClearGroup() *BarRecordUpdateOne {
 	return bruo
 }
 
+// Where appends a list predicates to the BarRecordUpdate builder.
+func (bruo *BarRecordUpdateOne) Where(ps ...predicate.BarRecord) *BarRecordUpdateOne {
+	bruo.mutation.Where(ps...)
+	return bruo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (bruo *BarRecordUpdateOne) Select(field string, fields ...string) *BarRecordUpdateOne {
@@ -405,7 +508,7 @@ func (bruo *BarRecordUpdateOne) Select(field string, fields ...string) *BarRecor
 
 // Save executes the query and returns the updated BarRecord entity.
 func (bruo *BarRecordUpdateOne) Save(ctx context.Context) (*BarRecord, error) {
-	return withHooks[*BarRecord, BarRecordMutation](ctx, bruo.sqlSave, bruo.mutation, bruo.hooks)
+	return withHooks(ctx, bruo.sqlSave, bruo.mutation, bruo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -431,16 +534,7 @@ func (bruo *BarRecordUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (bruo *BarRecordUpdateOne) sqlSave(ctx context.Context) (_node *BarRecord, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   barrecord.Table,
-			Columns: barrecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: barrecord.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(barrecord.Table, barrecord.Columns, sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt))
 	id, ok := bruo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "BarRecord.id" for update`)}
@@ -512,10 +606,7 @@ func (bruo *BarRecordUpdateOne) sqlSave(ctx context.Context) (_node *BarRecord, 
 			Columns: []string{barrecord.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -528,10 +619,7 @@ func (bruo *BarRecordUpdateOne) sqlSave(ctx context.Context) (_node *BarRecord, 
 			Columns: []string{barrecord.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

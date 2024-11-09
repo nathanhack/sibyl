@@ -63,7 +63,7 @@ func (dsc *DataSourceCreate) Mutation() *DataSourceMutation {
 // Save creates the DataSource in the database.
 func (dsc *DataSourceCreate) Save(ctx context.Context) (*DataSource, error) {
 	dsc.defaults()
-	return withHooks[*DataSource, DataSourceMutation](ctx, dsc.sqlSave, dsc.mutation, dsc.hooks)
+	return withHooks(ctx, dsc.sqlSave, dsc.mutation, dsc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -133,13 +133,7 @@ func (dsc *DataSourceCreate) sqlSave(ctx context.Context) (*DataSource, error) {
 func (dsc *DataSourceCreate) createSpec() (*DataSource, *sqlgraph.CreateSpec) {
 	var (
 		_node = &DataSource{config: dsc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: datasource.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: datasource.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(datasource.Table, sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt))
 	)
 	if value, ok := dsc.mutation.Name(); ok {
 		_spec.SetField(datasource.FieldName, field.TypeString, value)
@@ -157,10 +151,7 @@ func (dsc *DataSourceCreate) createSpec() (*DataSource, *sqlgraph.CreateSpec) {
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -174,11 +165,15 @@ func (dsc *DataSourceCreate) createSpec() (*DataSource, *sqlgraph.CreateSpec) {
 // DataSourceCreateBulk is the builder for creating many DataSource entities in bulk.
 type DataSourceCreateBulk struct {
 	config
+	err      error
 	builders []*DataSourceCreate
 }
 
 // Save creates the DataSource entities in the database.
 func (dscb *DataSourceCreateBulk) Save(ctx context.Context) ([]*DataSource, error) {
+	if dscb.err != nil {
+		return nil, dscb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(dscb.builders))
 	nodes := make([]*DataSource, len(dscb.builders))
 	mutators := make([]Mutator, len(dscb.builders))
@@ -195,8 +190,8 @@ func (dscb *DataSourceCreateBulk) Save(ctx context.Context) ([]*DataSource, erro
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, dscb.builders[i+1].mutation)
 				} else {

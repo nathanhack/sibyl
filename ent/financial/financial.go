@@ -2,6 +2,11 @@
 
 package financial
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the financial type in the database.
 	Label = "financial"
@@ -37,4 +42,33 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the Financial queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByStockCount orders the results by stock count.
+func ByStockCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStockStep(), opts...)
+	}
+}
+
+// ByStock orders the results by stock terms.
+func ByStock(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStockStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newStockStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StockInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, StockTable, StockPrimaryKey...),
+	)
 }

@@ -67,11 +67,7 @@ func HasStock() predicate.Financial {
 // HasStockWith applies the HasEdge predicate on the "stock" edge with a given conditions (other predicates).
 func HasStockWith(preds ...predicate.Entity) predicate.Financial {
 	return predicate.Financial(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(StockInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, StockTable, StockPrimaryKey...),
-		)
+		step := newStockStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -82,32 +78,15 @@ func HasStockWith(preds ...predicate.Entity) predicate.Financial {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Financial) predicate.Financial {
-	return predicate.Financial(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Financial(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.Financial) predicate.Financial {
-	return predicate.Financial(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Financial(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.Financial) predicate.Financial {
-	return predicate.Financial(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.Financial(sql.NotPredicates(p))
 }

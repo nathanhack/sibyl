@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,11 +20,8 @@ import (
 // FinancialQuery is the builder for querying Financial entities.
 type FinancialQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []financial.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Financial
 	withStock  *EntityQuery
@@ -40,25 +38,25 @@ func (fq *FinancialQuery) Where(ps ...predicate.Financial) *FinancialQuery {
 
 // Limit the number of records to be returned by this query.
 func (fq *FinancialQuery) Limit(limit int) *FinancialQuery {
-	fq.limit = &limit
+	fq.ctx.Limit = &limit
 	return fq
 }
 
 // Offset to start from.
 func (fq *FinancialQuery) Offset(offset int) *FinancialQuery {
-	fq.offset = &offset
+	fq.ctx.Offset = &offset
 	return fq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (fq *FinancialQuery) Unique(unique bool) *FinancialQuery {
-	fq.unique = &unique
+	fq.ctx.Unique = &unique
 	return fq
 }
 
 // Order specifies how the records should be ordered.
-func (fq *FinancialQuery) Order(o ...OrderFunc) *FinancialQuery {
+func (fq *FinancialQuery) Order(o ...financial.OrderOption) *FinancialQuery {
 	fq.order = append(fq.order, o...)
 	return fq
 }
@@ -88,7 +86,7 @@ func (fq *FinancialQuery) QueryStock() *EntityQuery {
 // First returns the first Financial entity from the query.
 // Returns a *NotFoundError when no Financial was found.
 func (fq *FinancialQuery) First(ctx context.Context) (*Financial, error) {
-	nodes, err := fq.Limit(1).All(newQueryContext(ctx, TypeFinancial, "First"))
+	nodes, err := fq.Limit(1).All(setContextOp(ctx, fq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (fq *FinancialQuery) FirstX(ctx context.Context) *Financial {
 // Returns a *NotFoundError when no Financial ID was found.
 func (fq *FinancialQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = fq.Limit(1).IDs(newQueryContext(ctx, TypeFinancial, "FirstID")); err != nil {
+	if ids, err = fq.Limit(1).IDs(setContextOp(ctx, fq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (fq *FinancialQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Financial entity is found.
 // Returns a *NotFoundError when no Financial entities are found.
 func (fq *FinancialQuery) Only(ctx context.Context) (*Financial, error) {
-	nodes, err := fq.Limit(2).All(newQueryContext(ctx, TypeFinancial, "Only"))
+	nodes, err := fq.Limit(2).All(setContextOp(ctx, fq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (fq *FinancialQuery) OnlyX(ctx context.Context) *Financial {
 // Returns a *NotFoundError when no entities are found.
 func (fq *FinancialQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = fq.Limit(2).IDs(newQueryContext(ctx, TypeFinancial, "OnlyID")); err != nil {
+	if ids, err = fq.Limit(2).IDs(setContextOp(ctx, fq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (fq *FinancialQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Financials.
 func (fq *FinancialQuery) All(ctx context.Context) ([]*Financial, error) {
-	ctx = newQueryContext(ctx, TypeFinancial, "All")
+	ctx = setContextOp(ctx, fq.ctx, ent.OpQueryAll)
 	if err := fq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (fq *FinancialQuery) AllX(ctx context.Context) []*Financial {
 }
 
 // IDs executes the query and returns a list of Financial IDs.
-func (fq *FinancialQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeFinancial, "IDs")
-	if err := fq.Select(financial.FieldID).Scan(ctx, &ids); err != nil {
+func (fq *FinancialQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if fq.ctx.Unique == nil && fq.path != nil {
+		fq.Unique(true)
+	}
+	ctx = setContextOp(ctx, fq.ctx, ent.OpQueryIDs)
+	if err = fq.Select(financial.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (fq *FinancialQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (fq *FinancialQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeFinancial, "Count")
+	ctx = setContextOp(ctx, fq.ctx, ent.OpQueryCount)
 	if err := fq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (fq *FinancialQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (fq *FinancialQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeFinancial, "Exist")
+	ctx = setContextOp(ctx, fq.ctx, ent.OpQueryExist)
 	switch _, err := fq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (fq *FinancialQuery) Clone() *FinancialQuery {
 	}
 	return &FinancialQuery{
 		config:     fq.config,
-		limit:      fq.limit,
-		offset:     fq.offset,
-		order:      append([]OrderFunc{}, fq.order...),
+		ctx:        fq.ctx.Clone(),
+		order:      append([]financial.OrderOption{}, fq.order...),
 		inters:     append([]Interceptor{}, fq.inters...),
 		predicates: append([]predicate.Financial{}, fq.predicates...),
 		withStock:  fq.withStock.Clone(),
 		// clone intermediate query.
-		sql:    fq.sql.Clone(),
-		path:   fq.path,
-		unique: fq.unique,
+		sql:  fq.sql.Clone(),
+		path: fq.path,
 	}
 }
 
@@ -298,9 +296,9 @@ func (fq *FinancialQuery) WithStock(opts ...func(*EntityQuery)) *FinancialQuery 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 func (fq *FinancialQuery) GroupBy(field string, fields ...string) *FinancialGroupBy {
-	fq.fields = append([]string{field}, fields...)
+	fq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &FinancialGroupBy{build: fq}
-	grbuild.flds = &fq.fields
+	grbuild.flds = &fq.ctx.Fields
 	grbuild.label = financial.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -309,10 +307,10 @@ func (fq *FinancialQuery) GroupBy(field string, fields ...string) *FinancialGrou
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
 func (fq *FinancialQuery) Select(fields ...string) *FinancialSelect {
-	fq.fields = append(fq.fields, fields...)
+	fq.ctx.Fields = append(fq.ctx.Fields, fields...)
 	sbuild := &FinancialSelect{FinancialQuery: fq}
 	sbuild.label = financial.Label
-	sbuild.flds, sbuild.scan = &fq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &fq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -332,7 +330,7 @@ func (fq *FinancialQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range fq.fields {
+	for _, f := range fq.ctx.Fields {
 		if !financial.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -406,27 +404,30 @@ func (fq *FinancialQuery) loadStock(ctx context.Context, query *EntityQuery, nod
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Financial]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Financial]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Entity](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -444,30 +445,22 @@ func (fq *FinancialQuery) loadStock(ctx context.Context, query *EntityQuery, nod
 
 func (fq *FinancialQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := fq.querySpec()
-	_spec.Node.Columns = fq.fields
-	if len(fq.fields) > 0 {
-		_spec.Unique = fq.unique != nil && *fq.unique
+	_spec.Node.Columns = fq.ctx.Fields
+	if len(fq.ctx.Fields) > 0 {
+		_spec.Unique = fq.ctx.Unique != nil && *fq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, fq.driver, _spec)
 }
 
 func (fq *FinancialQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   financial.Table,
-			Columns: financial.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: financial.FieldID,
-			},
-		},
-		From:   fq.sql,
-		Unique: true,
-	}
-	if unique := fq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(financial.Table, financial.Columns, sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt))
+	_spec.From = fq.sql
+	if unique := fq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if fq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := fq.fields; len(fields) > 0 {
+	if fields := fq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, financial.FieldID)
 		for i := range fields {
@@ -483,10 +476,10 @@ func (fq *FinancialQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := fq.limit; limit != nil {
+	if limit := fq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := fq.offset; offset != nil {
+	if offset := fq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := fq.order; len(ps) > 0 {
@@ -502,7 +495,7 @@ func (fq *FinancialQuery) querySpec() *sqlgraph.QuerySpec {
 func (fq *FinancialQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(fq.driver.Dialect())
 	t1 := builder.Table(financial.Table)
-	columns := fq.fields
+	columns := fq.ctx.Fields
 	if len(columns) == 0 {
 		columns = financial.Columns
 	}
@@ -511,7 +504,7 @@ func (fq *FinancialQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = fq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if fq.unique != nil && *fq.unique {
+	if fq.ctx.Unique != nil && *fq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range fq.predicates {
@@ -520,12 +513,12 @@ func (fq *FinancialQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range fq.order {
 		p(selector)
 	}
-	if offset := fq.offset; offset != nil {
+	if offset := fq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := fq.limit; limit != nil {
+	if limit := fq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -545,7 +538,7 @@ func (fgb *FinancialGroupBy) Aggregate(fns ...AggregateFunc) *FinancialGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (fgb *FinancialGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeFinancial, "GroupBy")
+	ctx = setContextOp(ctx, fgb.build.ctx, ent.OpQueryGroupBy)
 	if err := fgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -593,7 +586,7 @@ func (fs *FinancialSelect) Aggregate(fns ...AggregateFunc) *FinancialSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (fs *FinancialSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeFinancial, "Select")
+	ctx = setContextOp(ctx, fs.ctx, ent.OpQuerySelect)
 	if err := fs.prepareQuery(ctx); err != nil {
 		return err
 	}

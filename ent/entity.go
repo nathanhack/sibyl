@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/entity"
 )
@@ -26,11 +27,14 @@ type Entity struct {
 	Description string `json:"description,omitempty"`
 	// ListDate holds the value of the "list_date" field.
 	ListDate time.Time `json:"list_date,omitempty"`
-	// Delisted holds the value of the "delisted" field.
-	Delisted *time.Time `json:"delisted,omitempty"`
+	// Options holds the value of the "options" field.
+	Options bool `json:"options,omitempty"`
+	// Tradable holds the value of the "tradable" field.
+	Tradable bool `json:"tradable,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EntityQuery when eager-loading is set.
-	Edges EntityEdges `json:"edges"`
+	Edges        EntityEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // EntityEdges holds the relations/edges for other nodes in the graph.
@@ -100,16 +104,16 @@ func (*Entity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case entity.FieldActive:
+		case entity.FieldActive, entity.FieldOptions, entity.FieldTradable:
 			values[i] = new(sql.NullBool)
 		case entity.FieldID:
 			values[i] = new(sql.NullInt64)
 		case entity.FieldTicker, entity.FieldName, entity.FieldDescription:
 			values[i] = new(sql.NullString)
-		case entity.FieldListDate, entity.FieldDelisted:
+		case entity.FieldListDate:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Entity", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -159,48 +163,61 @@ func (e *Entity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				e.ListDate = value.Time
 			}
-		case entity.FieldDelisted:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field delisted", values[i])
+		case entity.FieldOptions:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field options", values[i])
 			} else if value.Valid {
-				e.Delisted = new(time.Time)
-				*e.Delisted = value.Time
+				e.Options = value.Bool
 			}
+		case entity.FieldTradable:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field tradable", values[i])
+			} else if value.Valid {
+				e.Tradable = value.Bool
+			}
+		default:
+			e.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Entity.
+// This includes values selected through modifiers, order, etc.
+func (e *Entity) Value(name string) (ent.Value, error) {
+	return e.selectValues.Get(name)
+}
+
 // QueryExchanges queries the "exchanges" edge of the Entity entity.
 func (e *Entity) QueryExchanges() *ExchangeQuery {
-	return (&EntityClient{config: e.config}).QueryExchanges(e)
+	return NewEntityClient(e.config).QueryExchanges(e)
 }
 
 // QueryIntervals queries the "intervals" edge of the Entity entity.
 func (e *Entity) QueryIntervals() *IntervalQuery {
-	return (&EntityClient{config: e.config}).QueryIntervals(e)
+	return NewEntityClient(e.config).QueryIntervals(e)
 }
 
 // QueryDividends queries the "dividends" edge of the Entity entity.
 func (e *Entity) QueryDividends() *DividendQuery {
-	return (&EntityClient{config: e.config}).QueryDividends(e)
+	return NewEntityClient(e.config).QueryDividends(e)
 }
 
 // QuerySplits queries the "splits" edge of the Entity entity.
 func (e *Entity) QuerySplits() *SplitQuery {
-	return (&EntityClient{config: e.config}).QuerySplits(e)
+	return NewEntityClient(e.config).QuerySplits(e)
 }
 
 // QueryFinancials queries the "financials" edge of the Entity entity.
 func (e *Entity) QueryFinancials() *FinancialQuery {
-	return (&EntityClient{config: e.config}).QueryFinancials(e)
+	return NewEntityClient(e.config).QueryFinancials(e)
 }
 
 // Update returns a builder for updating this Entity.
 // Note that you need to call Entity.Unwrap() before calling this method if this Entity
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (e *Entity) Update() *EntityUpdateOne {
-	return (&EntityClient{config: e.config}).UpdateOne(e)
+	return NewEntityClient(e.config).UpdateOne(e)
 }
 
 // Unwrap unwraps the Entity entity that was returned from a transaction after it was closed,
@@ -234,19 +251,14 @@ func (e *Entity) String() string {
 	builder.WriteString("list_date=")
 	builder.WriteString(e.ListDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	if v := e.Delisted; v != nil {
-		builder.WriteString("delisted=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
+	builder.WriteString("options=")
+	builder.WriteString(fmt.Sprintf("%v", e.Options))
+	builder.WriteString(", ")
+	builder.WriteString("tradable=")
+	builder.WriteString(fmt.Sprintf("%v", e.Tradable))
 	builder.WriteByte(')')
 	return builder.String()
 }
 
 // Entities is a parsable slice of Entity.
 type Entities []*Entity
-
-func (e Entities) config(cfg config) {
-	for _i := range e {
-		e[_i].config = cfg
-	}
-}

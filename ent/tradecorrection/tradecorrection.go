@@ -2,6 +2,11 @@
 
 package tradecorrection
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the tradecorrection type in the database.
 	Label = "trade_correction"
@@ -40,4 +45,38 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the TradeCorrection queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCorrection orders the results by the correction field.
+func ByCorrection(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCorrection, opts...).ToFunc()
+}
+
+// ByRecordCount orders the results by record count.
+func ByRecordCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRecordStep(), opts...)
+	}
+}
+
+// ByRecord orders the results by record terms.
+func ByRecord(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRecordStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newRecordStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RecordInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, RecordTable, RecordPrimaryKey...),
+	)
 }

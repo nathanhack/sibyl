@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/financial"
 )
@@ -17,7 +18,8 @@ type Financial struct {
 	ID int `json:"id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the FinancialQuery when eager-loading is set.
-	Edges FinancialEdges `json:"edges"`
+	Edges        FinancialEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // FinancialEdges holds the relations/edges for other nodes in the graph.
@@ -46,7 +48,7 @@ func (*Financial) scanValues(columns []string) ([]any, error) {
 		case financial.FieldID:
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Financial", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -66,21 +68,29 @@ func (f *Financial) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			f.ID = int(value.Int64)
+		default:
+			f.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Financial.
+// This includes values selected through modifiers, order, etc.
+func (f *Financial) Value(name string) (ent.Value, error) {
+	return f.selectValues.Get(name)
+}
+
 // QueryStock queries the "stock" edge of the Financial entity.
 func (f *Financial) QueryStock() *EntityQuery {
-	return (&FinancialClient{config: f.config}).QueryStock(f)
+	return NewFinancialClient(f.config).QueryStock(f)
 }
 
 // Update returns a builder for updating this Financial.
 // Note that you need to call Financial.Unwrap() before calling this method if this Financial
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (f *Financial) Update() *FinancialUpdateOne {
-	return (&FinancialClient{config: f.config}).UpdateOne(f)
+	return NewFinancialClient(f.config).UpdateOne(f)
 }
 
 // Unwrap unwraps the Financial entity that was returned from a transaction after it was closed,
@@ -105,9 +115,3 @@ func (f *Financial) String() string {
 
 // Financials is a parsable slice of Financial.
 type Financials []*Financial
-
-func (f Financials) config(cfg config) {
-	for _i := range f {
-		f[_i].config = cfg
-	}
-}

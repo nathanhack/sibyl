@@ -204,11 +204,7 @@ func HasMarketInfo() predicate.MarketHours {
 // HasMarketInfoWith applies the HasEdge predicate on the "market_info" edge with a given conditions (other predicates).
 func HasMarketInfoWith(preds ...predicate.MarketInfo) predicate.MarketHours {
 	return predicate.MarketHours(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(MarketInfoInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, MarketInfoTable, MarketInfoColumn),
-		)
+		step := newMarketInfoStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -219,32 +215,15 @@ func HasMarketInfoWith(preds ...predicate.MarketInfo) predicate.MarketHours {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.MarketHours) predicate.MarketHours {
-	return predicate.MarketHours(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.MarketHours(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.MarketHours) predicate.MarketHours {
-	return predicate.MarketHours(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.MarketHours(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.MarketHours) predicate.MarketHours {
-	return predicate.MarketHours(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.MarketHours(sql.NotPredicates(p))
 }

@@ -24,6 +24,7 @@ type ConfigFileType struct {
 	Database struct {
 		Dialect string `json:"dialect"`
 		DSN     string `json:"dsn"`
+		RootDSN string `json:"root"`
 	} `json:"database"`
 	Address string `json:"address"`
 	Logging struct {

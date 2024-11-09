@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/markethours"
 	"github.com/nathanhack/sibyl/ent/marketinfo"
@@ -27,6 +28,7 @@ type MarketHours struct {
 	// The values are being populated by the MarketHoursQuery when eager-loading is set.
 	Edges             MarketHoursEdges `json:"edges"`
 	market_info_hours *int
+	selectValues      sql.SelectValues
 }
 
 // MarketHoursEdges holds the relations/edges for other nodes in the graph.
@@ -41,12 +43,10 @@ type MarketHoursEdges struct {
 // MarketInfoOrErr returns the MarketInfo value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e MarketHoursEdges) MarketInfoOrErr() (*MarketInfo, error) {
-	if e.loadedTypes[0] {
-		if e.MarketInfo == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: marketinfo.Label}
-		}
+	if e.MarketInfo != nil {
 		return e.MarketInfo, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: marketinfo.Label}
 	}
 	return nil, &NotLoadedError{edge: "market_info"}
 }
@@ -63,7 +63,7 @@ func (*MarketHours) scanValues(columns []string) ([]any, error) {
 		case markethours.ForeignKeys[0]: // market_info_hours
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type MarketHours", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -108,21 +108,29 @@ func (mh *MarketHours) assignValues(columns []string, values []any) error {
 				mh.market_info_hours = new(int)
 				*mh.market_info_hours = int(value.Int64)
 			}
+		default:
+			mh.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the MarketHours.
+// This includes values selected through modifiers, order, etc.
+func (mh *MarketHours) Value(name string) (ent.Value, error) {
+	return mh.selectValues.Get(name)
+}
+
 // QueryMarketInfo queries the "market_info" edge of the MarketHours entity.
 func (mh *MarketHours) QueryMarketInfo() *MarketInfoQuery {
-	return (&MarketHoursClient{config: mh.config}).QueryMarketInfo(mh)
+	return NewMarketHoursClient(mh.config).QueryMarketInfo(mh)
 }
 
 // Update returns a builder for updating this MarketHours.
 // Note that you need to call MarketHours.Unwrap() before calling this method if this MarketHours
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (mh *MarketHours) Update() *MarketHoursUpdateOne {
-	return (&MarketHoursClient{config: mh.config}).UpdateOne(mh)
+	return NewMarketHoursClient(mh.config).UpdateOne(mh)
 }
 
 // Unwrap unwraps the MarketHours entity that was returned from a transaction after it was closed,
@@ -155,9 +163,3 @@ func (mh *MarketHours) String() string {
 
 // MarketHoursSlice is a parsable slice of MarketHours.
 type MarketHoursSlice []*MarketHours
-
-func (mh MarketHoursSlice) config(cfg config) {
-	for _i := range mh {
-		mh[_i].config = cfg
-	}
-}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/entity"
 	"github.com/nathanhack/sibyl/ent/split"
@@ -27,6 +28,7 @@ type Split struct {
 	// The values are being populated by the SplitQuery when eager-loading is set.
 	Edges         SplitEdges `json:"edges"`
 	entity_splits *int
+	selectValues  sql.SelectValues
 }
 
 // SplitEdges holds the relations/edges for other nodes in the graph.
@@ -41,12 +43,10 @@ type SplitEdges struct {
 // StockOrErr returns the Stock value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e SplitEdges) StockOrErr() (*Entity, error) {
-	if e.loadedTypes[0] {
-		if e.Stock == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: entity.Label}
-		}
+	if e.Stock != nil {
 		return e.Stock, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: entity.Label}
 	}
 	return nil, &NotLoadedError{edge: "stock"}
 }
@@ -65,7 +65,7 @@ func (*Split) scanValues(columns []string) ([]any, error) {
 		case split.ForeignKeys[0]: // entity_splits
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Split", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -110,21 +110,29 @@ func (s *Split) assignValues(columns []string, values []any) error {
 				s.entity_splits = new(int)
 				*s.entity_splits = int(value.Int64)
 			}
+		default:
+			s.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Split.
+// This includes values selected through modifiers, order, etc.
+func (s *Split) Value(name string) (ent.Value, error) {
+	return s.selectValues.Get(name)
+}
+
 // QueryStock queries the "stock" edge of the Split entity.
 func (s *Split) QueryStock() *EntityQuery {
-	return (&SplitClient{config: s.config}).QueryStock(s)
+	return NewSplitClient(s.config).QueryStock(s)
 }
 
 // Update returns a builder for updating this Split.
 // Note that you need to call Split.Unwrap() before calling this method if this Split
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (s *Split) Update() *SplitUpdateOne {
-	return (&SplitClient{config: s.config}).UpdateOne(s)
+	return NewSplitClient(s.config).UpdateOne(s)
 }
 
 // Unwrap unwraps the Split entity that was returned from a transaction after it was closed,
@@ -157,9 +165,3 @@ func (s *Split) String() string {
 
 // Splits is a parsable slice of Split.
 type Splits []*Split
-
-func (s Splits) config(cfg config) {
-	for _i := range s {
-		s[_i].config = cfg
-	}
-}

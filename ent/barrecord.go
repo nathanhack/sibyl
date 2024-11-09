@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/bargroup"
 	"github.com/nathanhack/sibyl/ent/barrecord"
@@ -35,6 +36,7 @@ type BarRecord struct {
 	// The values are being populated by the BarRecordQuery when eager-loading is set.
 	Edges             BarRecordEdges `json:"edges"`
 	bar_group_records *int
+	selectValues      sql.SelectValues
 }
 
 // BarRecordEdges holds the relations/edges for other nodes in the graph.
@@ -49,12 +51,10 @@ type BarRecordEdges struct {
 // GroupOrErr returns the Group value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e BarRecordEdges) GroupOrErr() (*BarGroup, error) {
-	if e.loadedTypes[0] {
-		if e.Group == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: bargroup.Label}
-		}
+	if e.Group != nil {
 		return e.Group, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: bargroup.Label}
 	}
 	return nil, &NotLoadedError{edge: "group"}
 }
@@ -73,7 +73,7 @@ func (*BarRecord) scanValues(columns []string) ([]any, error) {
 		case barrecord.ForeignKeys[0]: // bar_group_records
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type BarRecord", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -142,21 +142,29 @@ func (br *BarRecord) assignValues(columns []string, values []any) error {
 				br.bar_group_records = new(int)
 				*br.bar_group_records = int(value.Int64)
 			}
+		default:
+			br.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the BarRecord.
+// This includes values selected through modifiers, order, etc.
+func (br *BarRecord) Value(name string) (ent.Value, error) {
+	return br.selectValues.Get(name)
+}
+
 // QueryGroup queries the "group" edge of the BarRecord entity.
 func (br *BarRecord) QueryGroup() *BarGroupQuery {
-	return (&BarRecordClient{config: br.config}).QueryGroup(br)
+	return NewBarRecordClient(br.config).QueryGroup(br)
 }
 
 // Update returns a builder for updating this BarRecord.
 // Note that you need to call BarRecord.Unwrap() before calling this method if this BarRecord
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (br *BarRecord) Update() *BarRecordUpdateOne {
-	return (&BarRecordClient{config: br.config}).UpdateOne(br)
+	return NewBarRecordClient(br.config).UpdateOne(br)
 }
 
 // Unwrap unwraps the BarRecord entity that was returned from a transaction after it was closed,
@@ -201,9 +209,3 @@ func (br *BarRecord) String() string {
 
 // BarRecords is a parsable slice of BarRecord.
 type BarRecords []*BarRecord
-
-func (br BarRecords) config(cfg config) {
-	for _i := range br {
-		br[_i].config = cfg
-	}
-}

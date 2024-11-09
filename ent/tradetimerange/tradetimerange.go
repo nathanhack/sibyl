@@ -2,6 +2,11 @@
 
 package tradetimerange
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the tradetimerange type in the database.
 	Label = "trade_time_range"
@@ -51,4 +56,62 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the TradeTimeRange queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByStart orders the results by the start field.
+func ByStart(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStart, opts...).ToFunc()
+}
+
+// ByEnd orders the results by the end field.
+func ByEnd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnd, opts...).ToFunc()
+}
+
+// ByIntervalID orders the results by the interval_id field.
+func ByIntervalID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIntervalID, opts...).ToFunc()
+}
+
+// ByIntervalField orders the results by interval field.
+func ByIntervalField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIntervalStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByRecordsCount orders the results by records count.
+func ByRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRecordsStep(), opts...)
+	}
+}
+
+// ByRecords orders the results by records terms.
+func ByRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newIntervalStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IntervalInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, IntervalTable, IntervalColumn),
+	)
+}
+func newRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RecordsTable, RecordsColumn),
+	)
 }

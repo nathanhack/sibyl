@@ -92,6 +92,11 @@ var (
 				Unique:  true,
 				Columns: []*schema.Column{BarTimeRangesColumns[6], BarTimeRangesColumns[1], BarTimeRangesColumns[2]},
 			},
+			{
+				Name:    "bartimerange_status",
+				Unique:  false,
+				Columns: []*schema.Column{BarTimeRangesColumns[4]},
+			},
 		},
 	}
 	// DataSourcesColumns holds the columns for the "data_sources" table.
@@ -109,11 +114,9 @@ var (
 	// DividendsColumns holds the columns for the "dividends" table.
 	DividendsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "cash_amount", Type: field.TypeFloat64},
+		{Name: "rate", Type: field.TypeFloat64},
 		{Name: "declaration_date", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
-		{Name: "dividend_type", Type: field.TypeEnum, Enums: []string{"CD", "SC", "LT", "ST"}},
 		{Name: "ex_dividend_date", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
-		{Name: "frequency", Type: field.TypeInt},
 		{Name: "record_date", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
 		{Name: "pay_date", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
 	}
@@ -129,9 +132,10 @@ var (
 		{Name: "active", Type: field.TypeBool},
 		{Name: "ticker", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Size: 1000},
+		{Name: "description", Type: field.TypeString, Size: 1000, Default: ""},
 		{Name: "list_date", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
-		{Name: "delisted", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"mysql": "datetime", "postgres": "date"}},
+		{Name: "options", Type: field.TypeBool},
+		{Name: "tradable", Type: field.TypeBool},
 	}
 	// EntitiesTable holds the schema information for the "entities" table.
 	EntitiesTable = &schema.Table{

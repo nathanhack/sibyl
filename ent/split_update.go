@@ -35,10 +35,26 @@ func (su *SplitUpdate) SetExecutionDate(t time.Time) *SplitUpdate {
 	return su
 }
 
+// SetNillableExecutionDate sets the "execution_date" field if the given value is not nil.
+func (su *SplitUpdate) SetNillableExecutionDate(t *time.Time) *SplitUpdate {
+	if t != nil {
+		su.SetExecutionDate(*t)
+	}
+	return su
+}
+
 // SetFrom sets the "from" field.
 func (su *SplitUpdate) SetFrom(f float64) *SplitUpdate {
 	su.mutation.ResetFrom()
 	su.mutation.SetFrom(f)
+	return su
+}
+
+// SetNillableFrom sets the "from" field if the given value is not nil.
+func (su *SplitUpdate) SetNillableFrom(f *float64) *SplitUpdate {
+	if f != nil {
+		su.SetFrom(*f)
+	}
 	return su
 }
 
@@ -52,6 +68,14 @@ func (su *SplitUpdate) AddFrom(f float64) *SplitUpdate {
 func (su *SplitUpdate) SetTo(f float64) *SplitUpdate {
 	su.mutation.ResetTo()
 	su.mutation.SetTo(f)
+	return su
+}
+
+// SetNillableTo sets the "to" field if the given value is not nil.
+func (su *SplitUpdate) SetNillableTo(f *float64) *SplitUpdate {
+	if f != nil {
+		su.SetTo(*f)
+	}
 	return su
 }
 
@@ -93,7 +117,7 @@ func (su *SplitUpdate) ClearStock() *SplitUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (su *SplitUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, SplitMutation](ctx, su.sqlSave, su.mutation, su.hooks)
+	return withHooks(ctx, su.sqlSave, su.mutation, su.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -119,16 +143,7 @@ func (su *SplitUpdate) ExecX(ctx context.Context) {
 }
 
 func (su *SplitUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   split.Table,
-			Columns: split.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: split.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(split.Table, split.Columns, sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt))
 	if ps := su.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -159,10 +174,7 @@ func (su *SplitUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{split.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -175,10 +187,7 @@ func (su *SplitUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{split.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -212,10 +221,26 @@ func (suo *SplitUpdateOne) SetExecutionDate(t time.Time) *SplitUpdateOne {
 	return suo
 }
 
+// SetNillableExecutionDate sets the "execution_date" field if the given value is not nil.
+func (suo *SplitUpdateOne) SetNillableExecutionDate(t *time.Time) *SplitUpdateOne {
+	if t != nil {
+		suo.SetExecutionDate(*t)
+	}
+	return suo
+}
+
 // SetFrom sets the "from" field.
 func (suo *SplitUpdateOne) SetFrom(f float64) *SplitUpdateOne {
 	suo.mutation.ResetFrom()
 	suo.mutation.SetFrom(f)
+	return suo
+}
+
+// SetNillableFrom sets the "from" field if the given value is not nil.
+func (suo *SplitUpdateOne) SetNillableFrom(f *float64) *SplitUpdateOne {
+	if f != nil {
+		suo.SetFrom(*f)
+	}
 	return suo
 }
 
@@ -229,6 +254,14 @@ func (suo *SplitUpdateOne) AddFrom(f float64) *SplitUpdateOne {
 func (suo *SplitUpdateOne) SetTo(f float64) *SplitUpdateOne {
 	suo.mutation.ResetTo()
 	suo.mutation.SetTo(f)
+	return suo
+}
+
+// SetNillableTo sets the "to" field if the given value is not nil.
+func (suo *SplitUpdateOne) SetNillableTo(f *float64) *SplitUpdateOne {
+	if f != nil {
+		suo.SetTo(*f)
+	}
 	return suo
 }
 
@@ -268,6 +301,12 @@ func (suo *SplitUpdateOne) ClearStock() *SplitUpdateOne {
 	return suo
 }
 
+// Where appends a list predicates to the SplitUpdate builder.
+func (suo *SplitUpdateOne) Where(ps ...predicate.Split) *SplitUpdateOne {
+	suo.mutation.Where(ps...)
+	return suo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (suo *SplitUpdateOne) Select(field string, fields ...string) *SplitUpdateOne {
@@ -277,7 +316,7 @@ func (suo *SplitUpdateOne) Select(field string, fields ...string) *SplitUpdateOn
 
 // Save executes the query and returns the updated Split entity.
 func (suo *SplitUpdateOne) Save(ctx context.Context) (*Split, error) {
-	return withHooks[*Split, SplitMutation](ctx, suo.sqlSave, suo.mutation, suo.hooks)
+	return withHooks(ctx, suo.sqlSave, suo.mutation, suo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -303,16 +342,7 @@ func (suo *SplitUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (suo *SplitUpdateOne) sqlSave(ctx context.Context) (_node *Split, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   split.Table,
-			Columns: split.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: split.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(split.Table, split.Columns, sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt))
 	id, ok := suo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Split.id" for update`)}
@@ -360,10 +390,7 @@ func (suo *SplitUpdateOne) sqlSave(ctx context.Context) (_node *Split, err error
 			Columns: []string{split.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -376,10 +403,7 @@ func (suo *SplitUpdateOne) sqlSave(ctx context.Context) (_node *Split, err error
 			Columns: []string{split.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

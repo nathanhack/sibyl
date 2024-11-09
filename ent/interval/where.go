@@ -152,11 +152,7 @@ func HasDataSource() predicate.Interval {
 // HasDataSourceWith applies the HasEdge predicate on the "data_source" edge with a given conditions (other predicates).
 func HasDataSourceWith(preds ...predicate.DataSource) predicate.Interval {
 	return predicate.Interval(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(DataSourceInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, DataSourceTable, DataSourceColumn),
-		)
+		step := newDataSourceStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -179,11 +175,7 @@ func HasStock() predicate.Interval {
 // HasStockWith applies the HasEdge predicate on the "stock" edge with a given conditions (other predicates).
 func HasStockWith(preds ...predicate.Entity) predicate.Interval {
 	return predicate.Interval(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(StockInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, StockTable, StockColumn),
-		)
+		step := newStockStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -206,11 +198,7 @@ func HasBars() predicate.Interval {
 // HasBarsWith applies the HasEdge predicate on the "bars" edge with a given conditions (other predicates).
 func HasBarsWith(preds ...predicate.BarTimeRange) predicate.Interval {
 	return predicate.Interval(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(BarsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, BarsTable, BarsColumn),
-		)
+		step := newBarsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -233,11 +221,7 @@ func HasTrades() predicate.Interval {
 // HasTradesWith applies the HasEdge predicate on the "trades" edge with a given conditions (other predicates).
 func HasTradesWith(preds ...predicate.TradeTimeRange) predicate.Interval {
 	return predicate.Interval(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TradesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TradesTable, TradesColumn),
-		)
+		step := newTradesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -248,32 +232,15 @@ func HasTradesWith(preds ...predicate.TradeTimeRange) predicate.Interval {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Interval) predicate.Interval {
-	return predicate.Interval(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Interval(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.Interval) predicate.Interval {
-	return predicate.Interval(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Interval(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.Interval) predicate.Interval {
-	return predicate.Interval(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.Interval(sql.NotPredicates(p))
 }

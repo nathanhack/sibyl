@@ -35,15 +35,39 @@ func (mhu *MarketHoursUpdate) SetDate(t time.Time) *MarketHoursUpdate {
 	return mhu
 }
 
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (mhu *MarketHoursUpdate) SetNillableDate(t *time.Time) *MarketHoursUpdate {
+	if t != nil {
+		mhu.SetDate(*t)
+	}
+	return mhu
+}
+
 // SetStartTime sets the "start_time" field.
 func (mhu *MarketHoursUpdate) SetStartTime(t time.Time) *MarketHoursUpdate {
 	mhu.mutation.SetStartTime(t)
 	return mhu
 }
 
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (mhu *MarketHoursUpdate) SetNillableStartTime(t *time.Time) *MarketHoursUpdate {
+	if t != nil {
+		mhu.SetStartTime(*t)
+	}
+	return mhu
+}
+
 // SetEndTime sets the "end_time" field.
 func (mhu *MarketHoursUpdate) SetEndTime(t time.Time) *MarketHoursUpdate {
 	mhu.mutation.SetEndTime(t)
+	return mhu
+}
+
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (mhu *MarketHoursUpdate) SetNillableEndTime(t *time.Time) *MarketHoursUpdate {
+	if t != nil {
+		mhu.SetEndTime(*t)
+	}
 	return mhu
 }
 
@@ -79,7 +103,7 @@ func (mhu *MarketHoursUpdate) ClearMarketInfo() *MarketHoursUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (mhu *MarketHoursUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, MarketHoursMutation](ctx, mhu.sqlSave, mhu.mutation, mhu.hooks)
+	return withHooks(ctx, mhu.sqlSave, mhu.mutation, mhu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -105,16 +129,7 @@ func (mhu *MarketHoursUpdate) ExecX(ctx context.Context) {
 }
 
 func (mhu *MarketHoursUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   markethours.Table,
-			Columns: markethours.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: markethours.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(markethours.Table, markethours.Columns, sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt))
 	if ps := mhu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -139,10 +154,7 @@ func (mhu *MarketHoursUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{markethours.MarketInfoColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: marketinfo.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -155,10 +167,7 @@ func (mhu *MarketHoursUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{markethours.MarketInfoColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: marketinfo.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -192,15 +201,39 @@ func (mhuo *MarketHoursUpdateOne) SetDate(t time.Time) *MarketHoursUpdateOne {
 	return mhuo
 }
 
+// SetNillableDate sets the "date" field if the given value is not nil.
+func (mhuo *MarketHoursUpdateOne) SetNillableDate(t *time.Time) *MarketHoursUpdateOne {
+	if t != nil {
+		mhuo.SetDate(*t)
+	}
+	return mhuo
+}
+
 // SetStartTime sets the "start_time" field.
 func (mhuo *MarketHoursUpdateOne) SetStartTime(t time.Time) *MarketHoursUpdateOne {
 	mhuo.mutation.SetStartTime(t)
 	return mhuo
 }
 
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (mhuo *MarketHoursUpdateOne) SetNillableStartTime(t *time.Time) *MarketHoursUpdateOne {
+	if t != nil {
+		mhuo.SetStartTime(*t)
+	}
+	return mhuo
+}
+
 // SetEndTime sets the "end_time" field.
 func (mhuo *MarketHoursUpdateOne) SetEndTime(t time.Time) *MarketHoursUpdateOne {
 	mhuo.mutation.SetEndTime(t)
+	return mhuo
+}
+
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (mhuo *MarketHoursUpdateOne) SetNillableEndTime(t *time.Time) *MarketHoursUpdateOne {
+	if t != nil {
+		mhuo.SetEndTime(*t)
+	}
 	return mhuo
 }
 
@@ -234,6 +267,12 @@ func (mhuo *MarketHoursUpdateOne) ClearMarketInfo() *MarketHoursUpdateOne {
 	return mhuo
 }
 
+// Where appends a list predicates to the MarketHoursUpdate builder.
+func (mhuo *MarketHoursUpdateOne) Where(ps ...predicate.MarketHours) *MarketHoursUpdateOne {
+	mhuo.mutation.Where(ps...)
+	return mhuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (mhuo *MarketHoursUpdateOne) Select(field string, fields ...string) *MarketHoursUpdateOne {
@@ -243,7 +282,7 @@ func (mhuo *MarketHoursUpdateOne) Select(field string, fields ...string) *Market
 
 // Save executes the query and returns the updated MarketHours entity.
 func (mhuo *MarketHoursUpdateOne) Save(ctx context.Context) (*MarketHours, error) {
-	return withHooks[*MarketHours, MarketHoursMutation](ctx, mhuo.sqlSave, mhuo.mutation, mhuo.hooks)
+	return withHooks(ctx, mhuo.sqlSave, mhuo.mutation, mhuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -269,16 +308,7 @@ func (mhuo *MarketHoursUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (mhuo *MarketHoursUpdateOne) sqlSave(ctx context.Context) (_node *MarketHours, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   markethours.Table,
-			Columns: markethours.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: markethours.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(markethours.Table, markethours.Columns, sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt))
 	id, ok := mhuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "MarketHours.id" for update`)}
@@ -320,10 +350,7 @@ func (mhuo *MarketHoursUpdateOne) sqlSave(ctx context.Context) (_node *MarketHou
 			Columns: []string{markethours.MarketInfoColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: marketinfo.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -336,10 +363,7 @@ func (mhuo *MarketHoursUpdateOne) sqlSave(ctx context.Context) (_node *MarketHou
 			Columns: []string{markethours.MarketInfoColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: marketinfo.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

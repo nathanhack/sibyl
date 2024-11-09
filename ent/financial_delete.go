@@ -27,7 +27,7 @@ func (fd *FinancialDelete) Where(ps ...predicate.Financial) *FinancialDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (fd *FinancialDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, FinancialMutation](ctx, fd.sqlExec, fd.mutation, fd.hooks)
+	return withHooks(ctx, fd.sqlExec, fd.mutation, fd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (fd *FinancialDelete) ExecX(ctx context.Context) int {
 }
 
 func (fd *FinancialDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: financial.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: financial.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(financial.Table, sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt))
 	if ps := fd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type FinancialDeleteOne struct {
 	fd *FinancialDelete
 }
 
+// Where appends a list predicates to the FinancialDelete builder.
+func (fdo *FinancialDeleteOne) Where(ps ...predicate.Financial) *FinancialDeleteOne {
+	fdo.fd.mutation.Where(ps...)
+	return fdo
+}
+
 // Exec executes the deletion query.
 func (fdo *FinancialDeleteOne) Exec(ctx context.Context) error {
 	n, err := fdo.fd.Exec(ctx)
@@ -84,5 +82,7 @@ func (fdo *FinancialDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (fdo *FinancialDeleteOne) ExecX(ctx context.Context) {
-	fdo.fd.ExecX(ctx)
+	if err := fdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

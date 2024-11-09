@@ -2,6 +2,11 @@
 
 package marketinfo
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the marketinfo type in the database.
 	Label = "market_info"
@@ -39,4 +44,43 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the MarketInfo queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByHoursStart orders the results by the hours_start field.
+func ByHoursStart(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHoursStart, opts...).ToFunc()
+}
+
+// ByHoursEnd orders the results by the hours_end field.
+func ByHoursEnd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHoursEnd, opts...).ToFunc()
+}
+
+// ByHoursCount orders the results by hours count.
+func ByHoursCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newHoursStep(), opts...)
+	}
+}
+
+// ByHours orders the results by hours terms.
+func ByHours(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newHoursStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newHoursStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(HoursInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, HoursTable, HoursColumn),
+	)
 }

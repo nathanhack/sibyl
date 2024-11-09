@@ -3,7 +3,8 @@
 package dividend
 
 import (
-	"fmt"
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -11,16 +12,12 @@ const (
 	Label = "dividend"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldCashAmount holds the string denoting the cash_amount field in the database.
-	FieldCashAmount = "cash_amount"
+	// FieldRate holds the string denoting the rate field in the database.
+	FieldRate = "rate"
 	// FieldDeclarationDate holds the string denoting the declaration_date field in the database.
 	FieldDeclarationDate = "declaration_date"
-	// FieldDividendType holds the string denoting the dividend_type field in the database.
-	FieldDividendType = "dividend_type"
 	// FieldExDividendDate holds the string denoting the ex_dividend_date field in the database.
 	FieldExDividendDate = "ex_dividend_date"
-	// FieldFrequency holds the string denoting the frequency field in the database.
-	FieldFrequency = "frequency"
 	// FieldRecordDate holds the string denoting the record_date field in the database.
 	FieldRecordDate = "record_date"
 	// FieldPayDate holds the string denoting the pay_date field in the database.
@@ -39,11 +36,9 @@ const (
 // Columns holds all SQL columns for dividend fields.
 var Columns = []string{
 	FieldID,
-	FieldCashAmount,
+	FieldRate,
 	FieldDeclarationDate,
-	FieldDividendType,
 	FieldExDividendDate,
-	FieldFrequency,
 	FieldRecordDate,
 	FieldPayDate,
 }
@@ -64,27 +59,56 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-// DividendType defines the type for the "dividend_type" enum field.
-type DividendType string
+// OrderOption defines the ordering options for the Dividend queries.
+type OrderOption func(*sql.Selector)
 
-// DividendType values.
-const (
-	DividendTypeCD DividendType = "CD"
-	DividendTypeSC DividendType = "SC"
-	DividendTypeLT DividendType = "LT"
-	DividendTypeST DividendType = "ST"
-)
-
-func (dt DividendType) String() string {
-	return string(dt)
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// DividendTypeValidator is a validator for the "dividend_type" field enum values. It is called by the builders before save.
-func DividendTypeValidator(dt DividendType) error {
-	switch dt {
-	case DividendTypeCD, DividendTypeSC, DividendTypeLT, DividendTypeST:
-		return nil
-	default:
-		return fmt.Errorf("dividend: invalid enum value for dividend_type field: %q", dt)
+// ByRate orders the results by the rate field.
+func ByRate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRate, opts...).ToFunc()
+}
+
+// ByDeclarationDate orders the results by the declaration_date field.
+func ByDeclarationDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeclarationDate, opts...).ToFunc()
+}
+
+// ByExDividendDate orders the results by the ex_dividend_date field.
+func ByExDividendDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExDividendDate, opts...).ToFunc()
+}
+
+// ByRecordDate orders the results by the record_date field.
+func ByRecordDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRecordDate, opts...).ToFunc()
+}
+
+// ByPayDate orders the results by the pay_date field.
+func ByPayDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPayDate, opts...).ToFunc()
+}
+
+// ByStockCount orders the results by stock count.
+func ByStockCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStockStep(), opts...)
 	}
+}
+
+// ByStock orders the results by stock terms.
+func ByStock(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStockStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newStockStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StockInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, StockTable, StockPrimaryKey...),
+	)
 }

@@ -49,5 +49,6 @@ func (BarTimeRange) Edges() []ent.Edge {
 func (BarTimeRange) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("interval_id", "start", "end").Unique(),
+		index.Fields("status"),
 	}
 }

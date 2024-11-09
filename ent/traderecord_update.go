@@ -39,6 +39,14 @@ func (tru *TradeRecordUpdate) SetPrice(f float64) *TradeRecordUpdate {
 	return tru
 }
 
+// SetNillablePrice sets the "price" field if the given value is not nil.
+func (tru *TradeRecordUpdate) SetNillablePrice(f *float64) *TradeRecordUpdate {
+	if f != nil {
+		tru.SetPrice(*f)
+	}
+	return tru
+}
+
 // AddPrice adds f to the "price" field.
 func (tru *TradeRecordUpdate) AddPrice(f float64) *TradeRecordUpdate {
 	tru.mutation.AddPrice(f)
@@ -51,10 +59,26 @@ func (tru *TradeRecordUpdate) SetTimestamp(t time.Time) *TradeRecordUpdate {
 	return tru
 }
 
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (tru *TradeRecordUpdate) SetNillableTimestamp(t *time.Time) *TradeRecordUpdate {
+	if t != nil {
+		tru.SetTimestamp(*t)
+	}
+	return tru
+}
+
 // SetVolume sets the "volume" field.
 func (tru *TradeRecordUpdate) SetVolume(i int32) *TradeRecordUpdate {
 	tru.mutation.ResetVolume()
 	tru.mutation.SetVolume(i)
+	return tru
+}
+
+// SetNillableVolume sets the "volume" field if the given value is not nil.
+func (tru *TradeRecordUpdate) SetNillableVolume(i *int32) *TradeRecordUpdate {
+	if i != nil {
+		tru.SetVolume(*i)
+	}
 	return tru
 }
 
@@ -67,6 +91,14 @@ func (tru *TradeRecordUpdate) AddVolume(i int32) *TradeRecordUpdate {
 // SetTimeRangeID sets the "time_range_id" field.
 func (tru *TradeRecordUpdate) SetTimeRangeID(i int) *TradeRecordUpdate {
 	tru.mutation.SetTimeRangeID(i)
+	return tru
+}
+
+// SetNillableTimeRangeID sets the "time_range_id" field if the given value is not nil.
+func (tru *TradeRecordUpdate) SetNillableTimeRangeID(i *int) *TradeRecordUpdate {
+	if i != nil {
+		tru.SetTimeRangeID(*i)
+	}
 	return tru
 }
 
@@ -196,7 +228,7 @@ func (tru *TradeRecordUpdate) RemoveExchange(e ...*Exchange) *TradeRecordUpdate 
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (tru *TradeRecordUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, TradeRecordMutation](ctx, tru.sqlSave, tru.mutation, tru.hooks)
+	return withHooks(ctx, tru.sqlSave, tru.mutation, tru.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -223,7 +255,7 @@ func (tru *TradeRecordUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (tru *TradeRecordUpdate) check() error {
-	if _, ok := tru.mutation.TimeRangeID(); tru.mutation.TimeRangeCleared() && !ok {
+	if tru.mutation.TimeRangeCleared() && len(tru.mutation.TimeRangeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TradeRecord.time_range"`)
 	}
 	return nil
@@ -233,16 +265,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := tru.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   traderecord.Table,
-			Columns: traderecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: traderecord.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(traderecord.Table, traderecord.Columns, sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt))
 	if ps := tru.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -273,10 +296,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{traderecord.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -289,10 +309,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{traderecord.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -308,10 +325,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -324,10 +338,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -343,10 +354,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -362,10 +370,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -378,10 +383,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -397,10 +399,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -416,10 +415,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -432,10 +428,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -451,10 +444,7 @@ func (tru *TradeRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -489,6 +479,14 @@ func (truo *TradeRecordUpdateOne) SetPrice(f float64) *TradeRecordUpdateOne {
 	return truo
 }
 
+// SetNillablePrice sets the "price" field if the given value is not nil.
+func (truo *TradeRecordUpdateOne) SetNillablePrice(f *float64) *TradeRecordUpdateOne {
+	if f != nil {
+		truo.SetPrice(*f)
+	}
+	return truo
+}
+
 // AddPrice adds f to the "price" field.
 func (truo *TradeRecordUpdateOne) AddPrice(f float64) *TradeRecordUpdateOne {
 	truo.mutation.AddPrice(f)
@@ -501,10 +499,26 @@ func (truo *TradeRecordUpdateOne) SetTimestamp(t time.Time) *TradeRecordUpdateOn
 	return truo
 }
 
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (truo *TradeRecordUpdateOne) SetNillableTimestamp(t *time.Time) *TradeRecordUpdateOne {
+	if t != nil {
+		truo.SetTimestamp(*t)
+	}
+	return truo
+}
+
 // SetVolume sets the "volume" field.
 func (truo *TradeRecordUpdateOne) SetVolume(i int32) *TradeRecordUpdateOne {
 	truo.mutation.ResetVolume()
 	truo.mutation.SetVolume(i)
+	return truo
+}
+
+// SetNillableVolume sets the "volume" field if the given value is not nil.
+func (truo *TradeRecordUpdateOne) SetNillableVolume(i *int32) *TradeRecordUpdateOne {
+	if i != nil {
+		truo.SetVolume(*i)
+	}
 	return truo
 }
 
@@ -517,6 +531,14 @@ func (truo *TradeRecordUpdateOne) AddVolume(i int32) *TradeRecordUpdateOne {
 // SetTimeRangeID sets the "time_range_id" field.
 func (truo *TradeRecordUpdateOne) SetTimeRangeID(i int) *TradeRecordUpdateOne {
 	truo.mutation.SetTimeRangeID(i)
+	return truo
+}
+
+// SetNillableTimeRangeID sets the "time_range_id" field if the given value is not nil.
+func (truo *TradeRecordUpdateOne) SetNillableTimeRangeID(i *int) *TradeRecordUpdateOne {
+	if i != nil {
+		truo.SetTimeRangeID(*i)
+	}
 	return truo
 }
 
@@ -644,6 +666,12 @@ func (truo *TradeRecordUpdateOne) RemoveExchange(e ...*Exchange) *TradeRecordUpd
 	return truo.RemoveExchangeIDs(ids...)
 }
 
+// Where appends a list predicates to the TradeRecordUpdate builder.
+func (truo *TradeRecordUpdateOne) Where(ps ...predicate.TradeRecord) *TradeRecordUpdateOne {
+	truo.mutation.Where(ps...)
+	return truo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (truo *TradeRecordUpdateOne) Select(field string, fields ...string) *TradeRecordUpdateOne {
@@ -653,7 +681,7 @@ func (truo *TradeRecordUpdateOne) Select(field string, fields ...string) *TradeR
 
 // Save executes the query and returns the updated TradeRecord entity.
 func (truo *TradeRecordUpdateOne) Save(ctx context.Context) (*TradeRecord, error) {
-	return withHooks[*TradeRecord, TradeRecordMutation](ctx, truo.sqlSave, truo.mutation, truo.hooks)
+	return withHooks(ctx, truo.sqlSave, truo.mutation, truo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -680,7 +708,7 @@ func (truo *TradeRecordUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (truo *TradeRecordUpdateOne) check() error {
-	if _, ok := truo.mutation.TimeRangeID(); truo.mutation.TimeRangeCleared() && !ok {
+	if truo.mutation.TimeRangeCleared() && len(truo.mutation.TimeRangeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TradeRecord.time_range"`)
 	}
 	return nil
@@ -690,16 +718,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 	if err := truo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   traderecord.Table,
-			Columns: traderecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: traderecord.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(traderecord.Table, traderecord.Columns, sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt))
 	id, ok := truo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TradeRecord.id" for update`)}
@@ -747,10 +766,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: []string{traderecord.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -763,10 +779,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: []string{traderecord.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -782,10 +795,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -798,10 +808,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -817,10 +824,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -836,10 +840,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -852,10 +853,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -871,10 +869,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -890,10 +885,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -906,10 +898,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -925,10 +914,7 @@ func (truo *TradeRecordUpdateOne) sqlSave(ctx context.Context) (_node *TradeReco
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

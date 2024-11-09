@@ -37,8 +37,8 @@ func decodeCreateBarGroupResponse(resp *http.Response) (res CreateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarGroupCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -72,8 +72,8 @@ func decodeCreateBarGroupResponse(resp *http.Response) (res CreateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -107,8 +107,8 @@ func decodeCreateBarGroupResponse(resp *http.Response) (res CreateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -142,8 +142,8 @@ func decodeCreateBarGroupResponse(resp *http.Response) (res CreateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -183,8 +183,8 @@ func decodeCreateBarRecordResponse(resp *http.Response) (res CreateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarRecordCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -218,8 +218,8 @@ func decodeCreateBarRecordResponse(resp *http.Response) (res CreateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -253,8 +253,8 @@ func decodeCreateBarRecordResponse(resp *http.Response) (res CreateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -288,8 +288,8 @@ func decodeCreateBarRecordResponse(resp *http.Response) (res CreateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -329,8 +329,8 @@ func decodeCreateBarTimeRangeResponse(resp *http.Response) (res CreateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarTimeRangeCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -364,8 +364,8 @@ func decodeCreateBarTimeRangeResponse(resp *http.Response) (res CreateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -399,8 +399,8 @@ func decodeCreateBarTimeRangeResponse(resp *http.Response) (res CreateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -434,8 +434,8 @@ func decodeCreateBarTimeRangeResponse(resp *http.Response) (res CreateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -475,8 +475,8 @@ func decodeCreateDataSourceResponse(resp *http.Response) (res CreateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DataSourceCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -510,8 +510,8 @@ func decodeCreateDataSourceResponse(resp *http.Response) (res CreateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -545,8 +545,8 @@ func decodeCreateDataSourceResponse(resp *http.Response) (res CreateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -580,8 +580,8 @@ func decodeCreateDataSourceResponse(resp *http.Response) (res CreateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -621,8 +621,8 @@ func decodeCreateDividendResponse(resp *http.Response) (res CreateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DividendCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -656,8 +656,8 @@ func decodeCreateDividendResponse(resp *http.Response) (res CreateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -691,8 +691,8 @@ func decodeCreateDividendResponse(resp *http.Response) (res CreateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -726,8 +726,8 @@ func decodeCreateDividendResponse(resp *http.Response) (res CreateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -767,8 +767,8 @@ func decodeCreateEntityResponse(resp *http.Response) (res CreateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response EntityCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -802,8 +802,8 @@ func decodeCreateEntityResponse(resp *http.Response) (res CreateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -837,8 +837,8 @@ func decodeCreateEntityResponse(resp *http.Response) (res CreateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -872,8 +872,8 @@ func decodeCreateEntityResponse(resp *http.Response) (res CreateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -913,8 +913,8 @@ func decodeCreateExchangeResponse(resp *http.Response) (res CreateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ExchangeCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -948,8 +948,8 @@ func decodeCreateExchangeResponse(resp *http.Response) (res CreateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -983,8 +983,8 @@ func decodeCreateExchangeResponse(resp *http.Response) (res CreateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1018,8 +1018,8 @@ func decodeCreateExchangeResponse(resp *http.Response) (res CreateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1059,8 +1059,8 @@ func decodeCreateFinancialResponse(resp *http.Response) (res CreateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response FinancialCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1094,8 +1094,8 @@ func decodeCreateFinancialResponse(resp *http.Response) (res CreateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1129,8 +1129,8 @@ func decodeCreateFinancialResponse(resp *http.Response) (res CreateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1164,8 +1164,8 @@ func decodeCreateFinancialResponse(resp *http.Response) (res CreateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1205,8 +1205,8 @@ func decodeCreateIntervalResponse(resp *http.Response) (res CreateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response IntervalCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1240,8 +1240,8 @@ func decodeCreateIntervalResponse(resp *http.Response) (res CreateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1275,8 +1275,8 @@ func decodeCreateIntervalResponse(resp *http.Response) (res CreateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1310,8 +1310,8 @@ func decodeCreateIntervalResponse(resp *http.Response) (res CreateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1351,8 +1351,8 @@ func decodeCreateMarketHoursResponse(resp *http.Response) (res CreateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketHoursCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1386,8 +1386,8 @@ func decodeCreateMarketHoursResponse(resp *http.Response) (res CreateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1421,8 +1421,8 @@ func decodeCreateMarketHoursResponse(resp *http.Response) (res CreateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1456,8 +1456,8 @@ func decodeCreateMarketHoursResponse(resp *http.Response) (res CreateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1497,8 +1497,8 @@ func decodeCreateMarketInfoResponse(resp *http.Response) (res CreateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketInfoCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1532,8 +1532,8 @@ func decodeCreateMarketInfoResponse(resp *http.Response) (res CreateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1567,8 +1567,8 @@ func decodeCreateMarketInfoResponse(resp *http.Response) (res CreateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1602,8 +1602,8 @@ func decodeCreateMarketInfoResponse(resp *http.Response) (res CreateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1643,8 +1643,8 @@ func decodeCreateSplitResponse(resp *http.Response) (res CreateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response SplitCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1678,8 +1678,8 @@ func decodeCreateSplitResponse(resp *http.Response) (res CreateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1713,8 +1713,8 @@ func decodeCreateSplitResponse(resp *http.Response) (res CreateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1748,8 +1748,8 @@ func decodeCreateSplitResponse(resp *http.Response) (res CreateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1789,8 +1789,8 @@ func decodeCreateTradeConditionResponse(resp *http.Response) (res CreateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeConditionCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1824,8 +1824,8 @@ func decodeCreateTradeConditionResponse(resp *http.Response) (res CreateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1859,8 +1859,8 @@ func decodeCreateTradeConditionResponse(resp *http.Response) (res CreateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1894,8 +1894,8 @@ func decodeCreateTradeConditionResponse(resp *http.Response) (res CreateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1935,8 +1935,8 @@ func decodeCreateTradeCorrectionResponse(resp *http.Response) (res CreateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeCorrectionCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -1970,8 +1970,8 @@ func decodeCreateTradeCorrectionResponse(resp *http.Response) (res CreateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2005,8 +2005,8 @@ func decodeCreateTradeCorrectionResponse(resp *http.Response) (res CreateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2040,8 +2040,8 @@ func decodeCreateTradeCorrectionResponse(resp *http.Response) (res CreateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2081,8 +2081,8 @@ func decodeCreateTradeRecordResponse(resp *http.Response) (res CreateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeRecordCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2116,8 +2116,8 @@ func decodeCreateTradeRecordResponse(resp *http.Response) (res CreateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2151,8 +2151,8 @@ func decodeCreateTradeRecordResponse(resp *http.Response) (res CreateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2186,8 +2186,8 @@ func decodeCreateTradeRecordResponse(resp *http.Response) (res CreateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2227,8 +2227,8 @@ func decodeCreateTradeTimeRangeResponse(resp *http.Response) (res CreateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeTimeRangeCreate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2262,8 +2262,8 @@ func decodeCreateTradeTimeRangeResponse(resp *http.Response) (res CreateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2297,8 +2297,8 @@ func decodeCreateTradeTimeRangeResponse(resp *http.Response) (res CreateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2332,8 +2332,8 @@ func decodeCreateTradeTimeRangeResponse(resp *http.Response) (res CreateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2376,8 +2376,8 @@ func decodeDeleteBarGroupResponse(resp *http.Response) (res DeleteBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2411,8 +2411,8 @@ func decodeDeleteBarGroupResponse(resp *http.Response) (res DeleteBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2446,8 +2446,8 @@ func decodeDeleteBarGroupResponse(resp *http.Response) (res DeleteBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2481,8 +2481,8 @@ func decodeDeleteBarGroupResponse(resp *http.Response) (res DeleteBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2525,8 +2525,8 @@ func decodeDeleteBarRecordResponse(resp *http.Response) (res DeleteBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2560,8 +2560,8 @@ func decodeDeleteBarRecordResponse(resp *http.Response) (res DeleteBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2595,8 +2595,8 @@ func decodeDeleteBarRecordResponse(resp *http.Response) (res DeleteBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2630,8 +2630,8 @@ func decodeDeleteBarRecordResponse(resp *http.Response) (res DeleteBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2674,8 +2674,8 @@ func decodeDeleteBarTimeRangeResponse(resp *http.Response) (res DeleteBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2709,8 +2709,8 @@ func decodeDeleteBarTimeRangeResponse(resp *http.Response) (res DeleteBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2744,8 +2744,8 @@ func decodeDeleteBarTimeRangeResponse(resp *http.Response) (res DeleteBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2779,8 +2779,8 @@ func decodeDeleteBarTimeRangeResponse(resp *http.Response) (res DeleteBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2823,8 +2823,8 @@ func decodeDeleteDataSourceResponse(resp *http.Response) (res DeleteDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2858,8 +2858,8 @@ func decodeDeleteDataSourceResponse(resp *http.Response) (res DeleteDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2893,8 +2893,8 @@ func decodeDeleteDataSourceResponse(resp *http.Response) (res DeleteDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2928,8 +2928,8 @@ func decodeDeleteDataSourceResponse(resp *http.Response) (res DeleteDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -2972,8 +2972,8 @@ func decodeDeleteDividendResponse(resp *http.Response) (res DeleteDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3007,8 +3007,8 @@ func decodeDeleteDividendResponse(resp *http.Response) (res DeleteDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3042,8 +3042,8 @@ func decodeDeleteDividendResponse(resp *http.Response) (res DeleteDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3077,8 +3077,8 @@ func decodeDeleteDividendResponse(resp *http.Response) (res DeleteDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3121,8 +3121,8 @@ func decodeDeleteEntityResponse(resp *http.Response) (res DeleteEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3156,8 +3156,8 @@ func decodeDeleteEntityResponse(resp *http.Response) (res DeleteEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3191,8 +3191,8 @@ func decodeDeleteEntityResponse(resp *http.Response) (res DeleteEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3226,8 +3226,8 @@ func decodeDeleteEntityResponse(resp *http.Response) (res DeleteEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3270,8 +3270,8 @@ func decodeDeleteExchangeResponse(resp *http.Response) (res DeleteExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3305,8 +3305,8 @@ func decodeDeleteExchangeResponse(resp *http.Response) (res DeleteExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3340,8 +3340,8 @@ func decodeDeleteExchangeResponse(resp *http.Response) (res DeleteExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3375,8 +3375,8 @@ func decodeDeleteExchangeResponse(resp *http.Response) (res DeleteExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3419,8 +3419,8 @@ func decodeDeleteFinancialResponse(resp *http.Response) (res DeleteFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3454,8 +3454,8 @@ func decodeDeleteFinancialResponse(resp *http.Response) (res DeleteFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3489,8 +3489,8 @@ func decodeDeleteFinancialResponse(resp *http.Response) (res DeleteFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3524,8 +3524,8 @@ func decodeDeleteFinancialResponse(resp *http.Response) (res DeleteFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3568,8 +3568,8 @@ func decodeDeleteIntervalResponse(resp *http.Response) (res DeleteIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3603,8 +3603,8 @@ func decodeDeleteIntervalResponse(resp *http.Response) (res DeleteIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3638,8 +3638,8 @@ func decodeDeleteIntervalResponse(resp *http.Response) (res DeleteIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3673,8 +3673,8 @@ func decodeDeleteIntervalResponse(resp *http.Response) (res DeleteIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3717,8 +3717,8 @@ func decodeDeleteMarketHoursResponse(resp *http.Response) (res DeleteMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3752,8 +3752,8 @@ func decodeDeleteMarketHoursResponse(resp *http.Response) (res DeleteMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3787,8 +3787,8 @@ func decodeDeleteMarketHoursResponse(resp *http.Response) (res DeleteMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3822,8 +3822,8 @@ func decodeDeleteMarketHoursResponse(resp *http.Response) (res DeleteMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3866,8 +3866,8 @@ func decodeDeleteMarketInfoResponse(resp *http.Response) (res DeleteMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3901,8 +3901,8 @@ func decodeDeleteMarketInfoResponse(resp *http.Response) (res DeleteMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3936,8 +3936,8 @@ func decodeDeleteMarketInfoResponse(resp *http.Response) (res DeleteMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -3971,8 +3971,8 @@ func decodeDeleteMarketInfoResponse(resp *http.Response) (res DeleteMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4015,8 +4015,8 @@ func decodeDeleteSplitResponse(resp *http.Response) (res DeleteSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4050,8 +4050,8 @@ func decodeDeleteSplitResponse(resp *http.Response) (res DeleteSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4085,8 +4085,8 @@ func decodeDeleteSplitResponse(resp *http.Response) (res DeleteSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4120,8 +4120,8 @@ func decodeDeleteSplitResponse(resp *http.Response) (res DeleteSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4164,8 +4164,8 @@ func decodeDeleteTradeConditionResponse(resp *http.Response) (res DeleteTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4199,8 +4199,8 @@ func decodeDeleteTradeConditionResponse(resp *http.Response) (res DeleteTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4234,8 +4234,8 @@ func decodeDeleteTradeConditionResponse(resp *http.Response) (res DeleteTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4269,8 +4269,8 @@ func decodeDeleteTradeConditionResponse(resp *http.Response) (res DeleteTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4313,8 +4313,8 @@ func decodeDeleteTradeCorrectionResponse(resp *http.Response) (res DeleteTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4348,8 +4348,8 @@ func decodeDeleteTradeCorrectionResponse(resp *http.Response) (res DeleteTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4383,8 +4383,8 @@ func decodeDeleteTradeCorrectionResponse(resp *http.Response) (res DeleteTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4418,8 +4418,8 @@ func decodeDeleteTradeCorrectionResponse(resp *http.Response) (res DeleteTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4462,8 +4462,8 @@ func decodeDeleteTradeRecordResponse(resp *http.Response) (res DeleteTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4497,8 +4497,8 @@ func decodeDeleteTradeRecordResponse(resp *http.Response) (res DeleteTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4532,8 +4532,8 @@ func decodeDeleteTradeRecordResponse(resp *http.Response) (res DeleteTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4567,8 +4567,8 @@ func decodeDeleteTradeRecordResponse(resp *http.Response) (res DeleteTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4611,8 +4611,8 @@ func decodeDeleteTradeTimeRangeResponse(resp *http.Response) (res DeleteTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4646,8 +4646,8 @@ func decodeDeleteTradeTimeRangeResponse(resp *http.Response) (res DeleteTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4681,8 +4681,8 @@ func decodeDeleteTradeTimeRangeResponse(resp *http.Response) (res DeleteTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4716,8 +4716,8 @@ func decodeDeleteTradeTimeRangeResponse(resp *http.Response) (res DeleteTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4757,8 +4757,8 @@ func decodeListBarGroupResponse(resp *http.Response) (res ListBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListBarGroupOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4792,8 +4792,8 @@ func decodeListBarGroupResponse(resp *http.Response) (res ListBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4827,8 +4827,8 @@ func decodeListBarGroupResponse(resp *http.Response) (res ListBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4862,8 +4862,8 @@ func decodeListBarGroupResponse(resp *http.Response) (res ListBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4897,8 +4897,8 @@ func decodeListBarGroupResponse(resp *http.Response) (res ListBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4938,8 +4938,8 @@ func decodeListBarGroupRecordsResponse(resp *http.Response) (res ListBarGroupRec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListBarGroupRecordsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -4973,8 +4973,8 @@ func decodeListBarGroupRecordsResponse(resp *http.Response) (res ListBarGroupRec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5008,8 +5008,8 @@ func decodeListBarGroupRecordsResponse(resp *http.Response) (res ListBarGroupRec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5043,8 +5043,8 @@ func decodeListBarGroupRecordsResponse(resp *http.Response) (res ListBarGroupRec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5078,8 +5078,8 @@ func decodeListBarGroupRecordsResponse(resp *http.Response) (res ListBarGroupRec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5119,8 +5119,8 @@ func decodeListBarRecordResponse(resp *http.Response) (res ListBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListBarRecordOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5154,8 +5154,8 @@ func decodeListBarRecordResponse(resp *http.Response) (res ListBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5189,8 +5189,8 @@ func decodeListBarRecordResponse(resp *http.Response) (res ListBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5224,8 +5224,8 @@ func decodeListBarRecordResponse(resp *http.Response) (res ListBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5259,8 +5259,8 @@ func decodeListBarRecordResponse(resp *http.Response) (res ListBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5300,8 +5300,8 @@ func decodeListBarTimeRangeResponse(resp *http.Response) (res ListBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListBarTimeRangeOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5335,8 +5335,8 @@ func decodeListBarTimeRangeResponse(resp *http.Response) (res ListBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5370,8 +5370,8 @@ func decodeListBarTimeRangeResponse(resp *http.Response) (res ListBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5405,8 +5405,8 @@ func decodeListBarTimeRangeResponse(resp *http.Response) (res ListBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5440,8 +5440,8 @@ func decodeListBarTimeRangeResponse(resp *http.Response) (res ListBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5481,8 +5481,8 @@ func decodeListBarTimeRangeGroupsResponse(resp *http.Response) (res ListBarTimeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListBarTimeRangeGroupsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5516,8 +5516,8 @@ func decodeListBarTimeRangeGroupsResponse(resp *http.Response) (res ListBarTimeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5551,8 +5551,8 @@ func decodeListBarTimeRangeGroupsResponse(resp *http.Response) (res ListBarTimeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5586,8 +5586,8 @@ func decodeListBarTimeRangeGroupsResponse(resp *http.Response) (res ListBarTimeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5621,8 +5621,8 @@ func decodeListBarTimeRangeGroupsResponse(resp *http.Response) (res ListBarTimeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5662,8 +5662,8 @@ func decodeListDataSourceResponse(resp *http.Response) (res ListDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListDataSourceOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5697,8 +5697,8 @@ func decodeListDataSourceResponse(resp *http.Response) (res ListDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5732,8 +5732,8 @@ func decodeListDataSourceResponse(resp *http.Response) (res ListDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5767,8 +5767,8 @@ func decodeListDataSourceResponse(resp *http.Response) (res ListDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5802,8 +5802,8 @@ func decodeListDataSourceResponse(resp *http.Response) (res ListDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5843,8 +5843,8 @@ func decodeListDataSourceIntervalsResponse(resp *http.Response) (res ListDataSou
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListDataSourceIntervalsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5878,8 +5878,8 @@ func decodeListDataSourceIntervalsResponse(resp *http.Response) (res ListDataSou
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5913,8 +5913,8 @@ func decodeListDataSourceIntervalsResponse(resp *http.Response) (res ListDataSou
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5948,8 +5948,8 @@ func decodeListDataSourceIntervalsResponse(resp *http.Response) (res ListDataSou
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -5983,8 +5983,8 @@ func decodeListDataSourceIntervalsResponse(resp *http.Response) (res ListDataSou
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6024,8 +6024,8 @@ func decodeListDividendResponse(resp *http.Response) (res ListDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListDividendOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6059,8 +6059,8 @@ func decodeListDividendResponse(resp *http.Response) (res ListDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6094,8 +6094,8 @@ func decodeListDividendResponse(resp *http.Response) (res ListDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6129,8 +6129,8 @@ func decodeListDividendResponse(resp *http.Response) (res ListDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6164,8 +6164,8 @@ func decodeListDividendResponse(resp *http.Response) (res ListDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6205,8 +6205,8 @@ func decodeListDividendStockResponse(resp *http.Response) (res ListDividendStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListDividendStockOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6240,8 +6240,8 @@ func decodeListDividendStockResponse(resp *http.Response) (res ListDividendStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6275,8 +6275,8 @@ func decodeListDividendStockResponse(resp *http.Response) (res ListDividendStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6310,8 +6310,8 @@ func decodeListDividendStockResponse(resp *http.Response) (res ListDividendStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6345,8 +6345,8 @@ func decodeListDividendStockResponse(resp *http.Response) (res ListDividendStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6386,8 +6386,8 @@ func decodeListEntityResponse(resp *http.Response) (res ListEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntityOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6421,8 +6421,8 @@ func decodeListEntityResponse(resp *http.Response) (res ListEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6456,8 +6456,8 @@ func decodeListEntityResponse(resp *http.Response) (res ListEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6491,8 +6491,8 @@ func decodeListEntityResponse(resp *http.Response) (res ListEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6526,8 +6526,8 @@ func decodeListEntityResponse(resp *http.Response) (res ListEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6567,8 +6567,8 @@ func decodeListEntityDividendsResponse(resp *http.Response) (res ListEntityDivid
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntityDividendsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6602,8 +6602,8 @@ func decodeListEntityDividendsResponse(resp *http.Response) (res ListEntityDivid
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6637,8 +6637,8 @@ func decodeListEntityDividendsResponse(resp *http.Response) (res ListEntityDivid
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6672,8 +6672,8 @@ func decodeListEntityDividendsResponse(resp *http.Response) (res ListEntityDivid
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6707,8 +6707,8 @@ func decodeListEntityDividendsResponse(resp *http.Response) (res ListEntityDivid
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6748,8 +6748,8 @@ func decodeListEntityExchangesResponse(resp *http.Response) (res ListEntityExcha
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntityExchangesOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6783,8 +6783,8 @@ func decodeListEntityExchangesResponse(resp *http.Response) (res ListEntityExcha
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6818,8 +6818,8 @@ func decodeListEntityExchangesResponse(resp *http.Response) (res ListEntityExcha
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6853,8 +6853,8 @@ func decodeListEntityExchangesResponse(resp *http.Response) (res ListEntityExcha
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6888,8 +6888,8 @@ func decodeListEntityExchangesResponse(resp *http.Response) (res ListEntityExcha
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6929,8 +6929,8 @@ func decodeListEntityFinancialsResponse(resp *http.Response) (res ListEntityFina
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntityFinancialsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6964,8 +6964,8 @@ func decodeListEntityFinancialsResponse(resp *http.Response) (res ListEntityFina
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -6999,8 +6999,8 @@ func decodeListEntityFinancialsResponse(resp *http.Response) (res ListEntityFina
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7034,8 +7034,8 @@ func decodeListEntityFinancialsResponse(resp *http.Response) (res ListEntityFina
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7069,8 +7069,8 @@ func decodeListEntityFinancialsResponse(resp *http.Response) (res ListEntityFina
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7110,8 +7110,8 @@ func decodeListEntityIntervalsResponse(resp *http.Response) (res ListEntityInter
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntityIntervalsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7145,8 +7145,8 @@ func decodeListEntityIntervalsResponse(resp *http.Response) (res ListEntityInter
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7180,8 +7180,8 @@ func decodeListEntityIntervalsResponse(resp *http.Response) (res ListEntityInter
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7215,8 +7215,8 @@ func decodeListEntityIntervalsResponse(resp *http.Response) (res ListEntityInter
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7250,8 +7250,8 @@ func decodeListEntityIntervalsResponse(resp *http.Response) (res ListEntityInter
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7291,8 +7291,8 @@ func decodeListEntitySplitsResponse(resp *http.Response) (res ListEntitySplitsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListEntitySplitsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7326,8 +7326,8 @@ func decodeListEntitySplitsResponse(resp *http.Response) (res ListEntitySplitsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7361,8 +7361,8 @@ func decodeListEntitySplitsResponse(resp *http.Response) (res ListEntitySplitsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7396,8 +7396,8 @@ func decodeListEntitySplitsResponse(resp *http.Response) (res ListEntitySplitsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7431,8 +7431,8 @@ func decodeListEntitySplitsResponse(resp *http.Response) (res ListEntitySplitsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7472,8 +7472,8 @@ func decodeListExchangeResponse(resp *http.Response) (res ListExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListExchangeOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7507,8 +7507,8 @@ func decodeListExchangeResponse(resp *http.Response) (res ListExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7542,8 +7542,8 @@ func decodeListExchangeResponse(resp *http.Response) (res ListExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7577,8 +7577,8 @@ func decodeListExchangeResponse(resp *http.Response) (res ListExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7612,8 +7612,8 @@ func decodeListExchangeResponse(resp *http.Response) (res ListExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7653,8 +7653,8 @@ func decodeListExchangeStocksResponse(resp *http.Response) (res ListExchangeStoc
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListExchangeStocksOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7688,8 +7688,8 @@ func decodeListExchangeStocksResponse(resp *http.Response) (res ListExchangeStoc
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7723,8 +7723,8 @@ func decodeListExchangeStocksResponse(resp *http.Response) (res ListExchangeStoc
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7758,8 +7758,8 @@ func decodeListExchangeStocksResponse(resp *http.Response) (res ListExchangeStoc
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7793,8 +7793,8 @@ func decodeListExchangeStocksResponse(resp *http.Response) (res ListExchangeStoc
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7834,8 +7834,8 @@ func decodeListFinancialResponse(resp *http.Response) (res ListFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListFinancialOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7869,8 +7869,8 @@ func decodeListFinancialResponse(resp *http.Response) (res ListFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7904,8 +7904,8 @@ func decodeListFinancialResponse(resp *http.Response) (res ListFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7939,8 +7939,8 @@ func decodeListFinancialResponse(resp *http.Response) (res ListFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -7974,8 +7974,8 @@ func decodeListFinancialResponse(resp *http.Response) (res ListFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8015,8 +8015,8 @@ func decodeListFinancialStockResponse(resp *http.Response) (res ListFinancialSto
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListFinancialStockOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8050,8 +8050,8 @@ func decodeListFinancialStockResponse(resp *http.Response) (res ListFinancialSto
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8085,8 +8085,8 @@ func decodeListFinancialStockResponse(resp *http.Response) (res ListFinancialSto
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8120,8 +8120,8 @@ func decodeListFinancialStockResponse(resp *http.Response) (res ListFinancialSto
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8155,8 +8155,8 @@ func decodeListFinancialStockResponse(resp *http.Response) (res ListFinancialSto
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8196,8 +8196,8 @@ func decodeListIntervalResponse(resp *http.Response) (res ListIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListIntervalOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8231,8 +8231,8 @@ func decodeListIntervalResponse(resp *http.Response) (res ListIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8266,8 +8266,8 @@ func decodeListIntervalResponse(resp *http.Response) (res ListIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8301,8 +8301,8 @@ func decodeListIntervalResponse(resp *http.Response) (res ListIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8336,8 +8336,8 @@ func decodeListIntervalResponse(resp *http.Response) (res ListIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8377,8 +8377,8 @@ func decodeListIntervalBarsResponse(resp *http.Response) (res ListIntervalBarsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListIntervalBarsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8412,8 +8412,8 @@ func decodeListIntervalBarsResponse(resp *http.Response) (res ListIntervalBarsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8447,8 +8447,8 @@ func decodeListIntervalBarsResponse(resp *http.Response) (res ListIntervalBarsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8482,8 +8482,8 @@ func decodeListIntervalBarsResponse(resp *http.Response) (res ListIntervalBarsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8517,8 +8517,8 @@ func decodeListIntervalBarsResponse(resp *http.Response) (res ListIntervalBarsRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8558,8 +8558,8 @@ func decodeListIntervalTradesResponse(resp *http.Response) (res ListIntervalTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListIntervalTradesOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8593,8 +8593,8 @@ func decodeListIntervalTradesResponse(resp *http.Response) (res ListIntervalTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8628,8 +8628,8 @@ func decodeListIntervalTradesResponse(resp *http.Response) (res ListIntervalTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8663,8 +8663,8 @@ func decodeListIntervalTradesResponse(resp *http.Response) (res ListIntervalTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8698,8 +8698,8 @@ func decodeListIntervalTradesResponse(resp *http.Response) (res ListIntervalTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8739,8 +8739,8 @@ func decodeListMarketHoursResponse(resp *http.Response) (res ListMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListMarketHoursOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8774,8 +8774,8 @@ func decodeListMarketHoursResponse(resp *http.Response) (res ListMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8809,8 +8809,8 @@ func decodeListMarketHoursResponse(resp *http.Response) (res ListMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8844,8 +8844,8 @@ func decodeListMarketHoursResponse(resp *http.Response) (res ListMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8879,8 +8879,8 @@ func decodeListMarketHoursResponse(resp *http.Response) (res ListMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8920,8 +8920,8 @@ func decodeListMarketInfoResponse(resp *http.Response) (res ListMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListMarketInfoOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8955,8 +8955,8 @@ func decodeListMarketInfoResponse(resp *http.Response) (res ListMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -8990,8 +8990,8 @@ func decodeListMarketInfoResponse(resp *http.Response) (res ListMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9025,8 +9025,8 @@ func decodeListMarketInfoResponse(resp *http.Response) (res ListMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9060,8 +9060,8 @@ func decodeListMarketInfoResponse(resp *http.Response) (res ListMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9101,8 +9101,8 @@ func decodeListMarketInfoHoursResponse(resp *http.Response) (res ListMarketInfoH
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListMarketInfoHoursOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9136,8 +9136,8 @@ func decodeListMarketInfoHoursResponse(resp *http.Response) (res ListMarketInfoH
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9171,8 +9171,8 @@ func decodeListMarketInfoHoursResponse(resp *http.Response) (res ListMarketInfoH
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9206,8 +9206,8 @@ func decodeListMarketInfoHoursResponse(resp *http.Response) (res ListMarketInfoH
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9241,8 +9241,8 @@ func decodeListMarketInfoHoursResponse(resp *http.Response) (res ListMarketInfoH
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9282,8 +9282,8 @@ func decodeListSplitResponse(resp *http.Response) (res ListSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListSplitOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9317,8 +9317,8 @@ func decodeListSplitResponse(resp *http.Response) (res ListSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9352,8 +9352,8 @@ func decodeListSplitResponse(resp *http.Response) (res ListSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9387,8 +9387,8 @@ func decodeListSplitResponse(resp *http.Response) (res ListSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9422,8 +9422,8 @@ func decodeListSplitResponse(resp *http.Response) (res ListSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9463,8 +9463,8 @@ func decodeListTradeConditionResponse(resp *http.Response) (res ListTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeConditionOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9498,8 +9498,8 @@ func decodeListTradeConditionResponse(resp *http.Response) (res ListTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9533,8 +9533,8 @@ func decodeListTradeConditionResponse(resp *http.Response) (res ListTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9568,8 +9568,8 @@ func decodeListTradeConditionResponse(resp *http.Response) (res ListTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9603,8 +9603,8 @@ func decodeListTradeConditionResponse(resp *http.Response) (res ListTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9644,8 +9644,8 @@ func decodeListTradeConditionRecordResponse(resp *http.Response) (res ListTradeC
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeConditionRecordOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9679,8 +9679,8 @@ func decodeListTradeConditionRecordResponse(resp *http.Response) (res ListTradeC
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9714,8 +9714,8 @@ func decodeListTradeConditionRecordResponse(resp *http.Response) (res ListTradeC
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9749,8 +9749,8 @@ func decodeListTradeConditionRecordResponse(resp *http.Response) (res ListTradeC
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9784,8 +9784,8 @@ func decodeListTradeConditionRecordResponse(resp *http.Response) (res ListTradeC
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9825,8 +9825,8 @@ func decodeListTradeCorrectionResponse(resp *http.Response) (res ListTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeCorrectionOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9860,8 +9860,8 @@ func decodeListTradeCorrectionResponse(resp *http.Response) (res ListTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9895,8 +9895,8 @@ func decodeListTradeCorrectionResponse(resp *http.Response) (res ListTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9930,8 +9930,8 @@ func decodeListTradeCorrectionResponse(resp *http.Response) (res ListTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -9965,8 +9965,8 @@ func decodeListTradeCorrectionResponse(resp *http.Response) (res ListTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10006,8 +10006,8 @@ func decodeListTradeCorrectionRecordResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeCorrectionRecordOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10041,8 +10041,8 @@ func decodeListTradeCorrectionRecordResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10076,8 +10076,8 @@ func decodeListTradeCorrectionRecordResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10111,8 +10111,8 @@ func decodeListTradeCorrectionRecordResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10146,8 +10146,8 @@ func decodeListTradeCorrectionRecordResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10187,8 +10187,8 @@ func decodeListTradeRecordResponse(resp *http.Response) (res ListTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeRecordOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10222,8 +10222,8 @@ func decodeListTradeRecordResponse(resp *http.Response) (res ListTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10257,8 +10257,8 @@ func decodeListTradeRecordResponse(resp *http.Response) (res ListTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10292,8 +10292,8 @@ func decodeListTradeRecordResponse(resp *http.Response) (res ListTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10327,8 +10327,8 @@ func decodeListTradeRecordResponse(resp *http.Response) (res ListTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10368,8 +10368,8 @@ func decodeListTradeRecordConditionsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeRecordConditionsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10403,8 +10403,8 @@ func decodeListTradeRecordConditionsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10438,8 +10438,8 @@ func decodeListTradeRecordConditionsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10473,8 +10473,8 @@ func decodeListTradeRecordConditionsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10508,8 +10508,8 @@ func decodeListTradeRecordConditionsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10549,8 +10549,8 @@ func decodeListTradeRecordCorrectionResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeRecordCorrectionOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10584,8 +10584,8 @@ func decodeListTradeRecordCorrectionResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10619,8 +10619,8 @@ func decodeListTradeRecordCorrectionResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10654,8 +10654,8 @@ func decodeListTradeRecordCorrectionResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10689,8 +10689,8 @@ func decodeListTradeRecordCorrectionResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10730,8 +10730,8 @@ func decodeListTradeRecordExchangeResponse(resp *http.Response) (res ListTradeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeRecordExchangeOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10765,8 +10765,8 @@ func decodeListTradeRecordExchangeResponse(resp *http.Response) (res ListTradeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10800,8 +10800,8 @@ func decodeListTradeRecordExchangeResponse(resp *http.Response) (res ListTradeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10835,8 +10835,8 @@ func decodeListTradeRecordExchangeResponse(resp *http.Response) (res ListTradeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10870,8 +10870,8 @@ func decodeListTradeRecordExchangeResponse(resp *http.Response) (res ListTradeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10911,8 +10911,8 @@ func decodeListTradeTimeRangeResponse(resp *http.Response) (res ListTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeTimeRangeOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10946,8 +10946,8 @@ func decodeListTradeTimeRangeResponse(resp *http.Response) (res ListTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -10981,8 +10981,8 @@ func decodeListTradeTimeRangeResponse(resp *http.Response) (res ListTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11016,8 +11016,8 @@ func decodeListTradeTimeRangeResponse(resp *http.Response) (res ListTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11051,8 +11051,8 @@ func decodeListTradeTimeRangeResponse(resp *http.Response) (res ListTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11092,8 +11092,8 @@ func decodeListTradeTimeRangeRecordsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ListTradeTimeRangeRecordsOKApplicationJSON
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11127,8 +11127,8 @@ func decodeListTradeTimeRangeRecordsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11162,8 +11162,8 @@ func decodeListTradeTimeRangeRecordsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11197,8 +11197,8 @@ func decodeListTradeTimeRangeRecordsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11232,8 +11232,8 @@ func decodeListTradeTimeRangeRecordsResponse(resp *http.Response) (res ListTrade
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11273,8 +11273,8 @@ func decodeReadBarGroupResponse(resp *http.Response) (res ReadBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarGroupRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11308,8 +11308,8 @@ func decodeReadBarGroupResponse(resp *http.Response) (res ReadBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11343,8 +11343,8 @@ func decodeReadBarGroupResponse(resp *http.Response) (res ReadBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11378,8 +11378,8 @@ func decodeReadBarGroupResponse(resp *http.Response) (res ReadBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11413,8 +11413,8 @@ func decodeReadBarGroupResponse(resp *http.Response) (res ReadBarGroupRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11454,8 +11454,8 @@ func decodeReadBarGroupTimeRangeResponse(resp *http.Response) (res ReadBarGroupT
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarGroupTimeRangeRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11489,8 +11489,8 @@ func decodeReadBarGroupTimeRangeResponse(resp *http.Response) (res ReadBarGroupT
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11524,8 +11524,8 @@ func decodeReadBarGroupTimeRangeResponse(resp *http.Response) (res ReadBarGroupT
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11559,8 +11559,8 @@ func decodeReadBarGroupTimeRangeResponse(resp *http.Response) (res ReadBarGroupT
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11594,8 +11594,8 @@ func decodeReadBarGroupTimeRangeResponse(resp *http.Response) (res ReadBarGroupT
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11635,8 +11635,8 @@ func decodeReadBarRecordResponse(resp *http.Response) (res ReadBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarRecordRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11670,8 +11670,8 @@ func decodeReadBarRecordResponse(resp *http.Response) (res ReadBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11705,8 +11705,8 @@ func decodeReadBarRecordResponse(resp *http.Response) (res ReadBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11740,8 +11740,8 @@ func decodeReadBarRecordResponse(resp *http.Response) (res ReadBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11775,8 +11775,8 @@ func decodeReadBarRecordResponse(resp *http.Response) (res ReadBarRecordRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11816,8 +11816,8 @@ func decodeReadBarRecordGroupResponse(resp *http.Response) (res ReadBarRecordGro
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarRecordGroupRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11851,8 +11851,8 @@ func decodeReadBarRecordGroupResponse(resp *http.Response) (res ReadBarRecordGro
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11886,8 +11886,8 @@ func decodeReadBarRecordGroupResponse(resp *http.Response) (res ReadBarRecordGro
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11921,8 +11921,8 @@ func decodeReadBarRecordGroupResponse(resp *http.Response) (res ReadBarRecordGro
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11956,8 +11956,8 @@ func decodeReadBarRecordGroupResponse(resp *http.Response) (res ReadBarRecordGro
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -11997,8 +11997,8 @@ func decodeReadBarTimeRangeResponse(resp *http.Response) (res ReadBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarTimeRangeRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12032,8 +12032,8 @@ func decodeReadBarTimeRangeResponse(resp *http.Response) (res ReadBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12067,8 +12067,8 @@ func decodeReadBarTimeRangeResponse(resp *http.Response) (res ReadBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12102,8 +12102,8 @@ func decodeReadBarTimeRangeResponse(resp *http.Response) (res ReadBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12137,8 +12137,8 @@ func decodeReadBarTimeRangeResponse(resp *http.Response) (res ReadBarTimeRangeRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12178,8 +12178,8 @@ func decodeReadBarTimeRangeIntervalResponse(resp *http.Response) (res ReadBarTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarTimeRangeIntervalRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12213,8 +12213,8 @@ func decodeReadBarTimeRangeIntervalResponse(resp *http.Response) (res ReadBarTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12248,8 +12248,8 @@ func decodeReadBarTimeRangeIntervalResponse(resp *http.Response) (res ReadBarTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12283,8 +12283,8 @@ func decodeReadBarTimeRangeIntervalResponse(resp *http.Response) (res ReadBarTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12318,8 +12318,8 @@ func decodeReadBarTimeRangeIntervalResponse(resp *http.Response) (res ReadBarTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12359,8 +12359,8 @@ func decodeReadDataSourceResponse(resp *http.Response) (res ReadDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DataSourceRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12394,8 +12394,8 @@ func decodeReadDataSourceResponse(resp *http.Response) (res ReadDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12429,8 +12429,8 @@ func decodeReadDataSourceResponse(resp *http.Response) (res ReadDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12464,8 +12464,8 @@ func decodeReadDataSourceResponse(resp *http.Response) (res ReadDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12499,8 +12499,8 @@ func decodeReadDataSourceResponse(resp *http.Response) (res ReadDataSourceRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12540,8 +12540,8 @@ func decodeReadDividendResponse(resp *http.Response) (res ReadDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DividendRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12575,8 +12575,8 @@ func decodeReadDividendResponse(resp *http.Response) (res ReadDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12610,8 +12610,8 @@ func decodeReadDividendResponse(resp *http.Response) (res ReadDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12645,8 +12645,8 @@ func decodeReadDividendResponse(resp *http.Response) (res ReadDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12680,8 +12680,8 @@ func decodeReadDividendResponse(resp *http.Response) (res ReadDividendRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12721,8 +12721,8 @@ func decodeReadEntityResponse(resp *http.Response) (res ReadEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response EntityRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12756,8 +12756,8 @@ func decodeReadEntityResponse(resp *http.Response) (res ReadEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12791,8 +12791,8 @@ func decodeReadEntityResponse(resp *http.Response) (res ReadEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12826,8 +12826,8 @@ func decodeReadEntityResponse(resp *http.Response) (res ReadEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12861,8 +12861,8 @@ func decodeReadEntityResponse(resp *http.Response) (res ReadEntityRes, err error
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12902,8 +12902,8 @@ func decodeReadExchangeResponse(resp *http.Response) (res ReadExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ExchangeRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12937,8 +12937,8 @@ func decodeReadExchangeResponse(resp *http.Response) (res ReadExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -12972,8 +12972,8 @@ func decodeReadExchangeResponse(resp *http.Response) (res ReadExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13007,8 +13007,8 @@ func decodeReadExchangeResponse(resp *http.Response) (res ReadExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13042,8 +13042,8 @@ func decodeReadExchangeResponse(resp *http.Response) (res ReadExchangeRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13083,8 +13083,8 @@ func decodeReadFinancialResponse(resp *http.Response) (res ReadFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response FinancialRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13118,8 +13118,8 @@ func decodeReadFinancialResponse(resp *http.Response) (res ReadFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13153,8 +13153,8 @@ func decodeReadFinancialResponse(resp *http.Response) (res ReadFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13188,8 +13188,8 @@ func decodeReadFinancialResponse(resp *http.Response) (res ReadFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13223,8 +13223,8 @@ func decodeReadFinancialResponse(resp *http.Response) (res ReadFinancialRes, err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13264,8 +13264,8 @@ func decodeReadIntervalResponse(resp *http.Response) (res ReadIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response IntervalRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13299,8 +13299,8 @@ func decodeReadIntervalResponse(resp *http.Response) (res ReadIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13334,8 +13334,8 @@ func decodeReadIntervalResponse(resp *http.Response) (res ReadIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13369,8 +13369,8 @@ func decodeReadIntervalResponse(resp *http.Response) (res ReadIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13404,8 +13404,8 @@ func decodeReadIntervalResponse(resp *http.Response) (res ReadIntervalRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13445,8 +13445,8 @@ func decodeReadIntervalDataSourceResponse(resp *http.Response) (res ReadInterval
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response IntervalDataSourceRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13480,8 +13480,8 @@ func decodeReadIntervalDataSourceResponse(resp *http.Response) (res ReadInterval
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13515,8 +13515,8 @@ func decodeReadIntervalDataSourceResponse(resp *http.Response) (res ReadInterval
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13550,8 +13550,8 @@ func decodeReadIntervalDataSourceResponse(resp *http.Response) (res ReadInterval
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13585,8 +13585,8 @@ func decodeReadIntervalDataSourceResponse(resp *http.Response) (res ReadInterval
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13626,8 +13626,8 @@ func decodeReadIntervalStockResponse(resp *http.Response) (res ReadIntervalStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response IntervalStockRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13661,8 +13661,8 @@ func decodeReadIntervalStockResponse(resp *http.Response) (res ReadIntervalStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13696,8 +13696,8 @@ func decodeReadIntervalStockResponse(resp *http.Response) (res ReadIntervalStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13731,8 +13731,8 @@ func decodeReadIntervalStockResponse(resp *http.Response) (res ReadIntervalStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13766,8 +13766,8 @@ func decodeReadIntervalStockResponse(resp *http.Response) (res ReadIntervalStock
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13807,8 +13807,8 @@ func decodeReadMarketHoursResponse(resp *http.Response) (res ReadMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketHoursRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13842,8 +13842,8 @@ func decodeReadMarketHoursResponse(resp *http.Response) (res ReadMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13877,8 +13877,8 @@ func decodeReadMarketHoursResponse(resp *http.Response) (res ReadMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13912,8 +13912,8 @@ func decodeReadMarketHoursResponse(resp *http.Response) (res ReadMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13947,8 +13947,8 @@ func decodeReadMarketHoursResponse(resp *http.Response) (res ReadMarketHoursRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -13988,8 +13988,8 @@ func decodeReadMarketHoursMarketInfoResponse(resp *http.Response) (res ReadMarke
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketHoursMarketInfoRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14023,8 +14023,8 @@ func decodeReadMarketHoursMarketInfoResponse(resp *http.Response) (res ReadMarke
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14058,8 +14058,8 @@ func decodeReadMarketHoursMarketInfoResponse(resp *http.Response) (res ReadMarke
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14093,8 +14093,8 @@ func decodeReadMarketHoursMarketInfoResponse(resp *http.Response) (res ReadMarke
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14128,8 +14128,8 @@ func decodeReadMarketHoursMarketInfoResponse(resp *http.Response) (res ReadMarke
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14169,8 +14169,8 @@ func decodeReadMarketInfoResponse(resp *http.Response) (res ReadMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketInfoRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14204,8 +14204,8 @@ func decodeReadMarketInfoResponse(resp *http.Response) (res ReadMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14239,8 +14239,8 @@ func decodeReadMarketInfoResponse(resp *http.Response) (res ReadMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14274,8 +14274,8 @@ func decodeReadMarketInfoResponse(resp *http.Response) (res ReadMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14309,8 +14309,8 @@ func decodeReadMarketInfoResponse(resp *http.Response) (res ReadMarketInfoRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14350,8 +14350,8 @@ func decodeReadSplitResponse(resp *http.Response) (res ReadSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response SplitRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14385,8 +14385,8 @@ func decodeReadSplitResponse(resp *http.Response) (res ReadSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14420,8 +14420,8 @@ func decodeReadSplitResponse(resp *http.Response) (res ReadSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14455,8 +14455,8 @@ func decodeReadSplitResponse(resp *http.Response) (res ReadSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14490,8 +14490,8 @@ func decodeReadSplitResponse(resp *http.Response) (res ReadSplitRes, err error) 
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14531,8 +14531,8 @@ func decodeReadSplitStockResponse(resp *http.Response) (res ReadSplitStockRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response SplitStockRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14566,8 +14566,8 @@ func decodeReadSplitStockResponse(resp *http.Response) (res ReadSplitStockRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14601,8 +14601,8 @@ func decodeReadSplitStockResponse(resp *http.Response) (res ReadSplitStockRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14636,8 +14636,8 @@ func decodeReadSplitStockResponse(resp *http.Response) (res ReadSplitStockRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14671,8 +14671,8 @@ func decodeReadSplitStockResponse(resp *http.Response) (res ReadSplitStockRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14712,8 +14712,8 @@ func decodeReadTradeConditionResponse(resp *http.Response) (res ReadTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeConditionRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14747,8 +14747,8 @@ func decodeReadTradeConditionResponse(resp *http.Response) (res ReadTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14782,8 +14782,8 @@ func decodeReadTradeConditionResponse(resp *http.Response) (res ReadTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14817,8 +14817,8 @@ func decodeReadTradeConditionResponse(resp *http.Response) (res ReadTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14852,8 +14852,8 @@ func decodeReadTradeConditionResponse(resp *http.Response) (res ReadTradeConditi
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14893,8 +14893,8 @@ func decodeReadTradeCorrectionResponse(resp *http.Response) (res ReadTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeCorrectionRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14928,8 +14928,8 @@ func decodeReadTradeCorrectionResponse(resp *http.Response) (res ReadTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14963,8 +14963,8 @@ func decodeReadTradeCorrectionResponse(resp *http.Response) (res ReadTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -14998,8 +14998,8 @@ func decodeReadTradeCorrectionResponse(resp *http.Response) (res ReadTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15033,8 +15033,8 @@ func decodeReadTradeCorrectionResponse(resp *http.Response) (res ReadTradeCorrec
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15074,8 +15074,8 @@ func decodeReadTradeRecordResponse(resp *http.Response) (res ReadTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeRecordRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15109,8 +15109,8 @@ func decodeReadTradeRecordResponse(resp *http.Response) (res ReadTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15144,8 +15144,8 @@ func decodeReadTradeRecordResponse(resp *http.Response) (res ReadTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15179,8 +15179,8 @@ func decodeReadTradeRecordResponse(resp *http.Response) (res ReadTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15214,8 +15214,8 @@ func decodeReadTradeRecordResponse(resp *http.Response) (res ReadTradeRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15255,8 +15255,8 @@ func decodeReadTradeRecordTimeRangeResponse(resp *http.Response) (res ReadTradeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeRecordTimeRangeRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15290,8 +15290,8 @@ func decodeReadTradeRecordTimeRangeResponse(resp *http.Response) (res ReadTradeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15325,8 +15325,8 @@ func decodeReadTradeRecordTimeRangeResponse(resp *http.Response) (res ReadTradeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15360,8 +15360,8 @@ func decodeReadTradeRecordTimeRangeResponse(resp *http.Response) (res ReadTradeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15395,8 +15395,8 @@ func decodeReadTradeRecordTimeRangeResponse(resp *http.Response) (res ReadTradeR
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15436,8 +15436,8 @@ func decodeReadTradeTimeRangeResponse(resp *http.Response) (res ReadTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeTimeRangeRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15471,8 +15471,8 @@ func decodeReadTradeTimeRangeResponse(resp *http.Response) (res ReadTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15506,8 +15506,8 @@ func decodeReadTradeTimeRangeResponse(resp *http.Response) (res ReadTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15541,8 +15541,8 @@ func decodeReadTradeTimeRangeResponse(resp *http.Response) (res ReadTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15576,8 +15576,8 @@ func decodeReadTradeTimeRangeResponse(resp *http.Response) (res ReadTradeTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15617,8 +15617,8 @@ func decodeReadTradeTimeRangeIntervalResponse(resp *http.Response) (res ReadTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeTimeRangeIntervalRead
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15652,8 +15652,8 @@ func decodeReadTradeTimeRangeIntervalResponse(resp *http.Response) (res ReadTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15687,8 +15687,8 @@ func decodeReadTradeTimeRangeIntervalResponse(resp *http.Response) (res ReadTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15722,8 +15722,8 @@ func decodeReadTradeTimeRangeIntervalResponse(resp *http.Response) (res ReadTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15757,8 +15757,8 @@ func decodeReadTradeTimeRangeIntervalResponse(resp *http.Response) (res ReadTrad
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15798,8 +15798,8 @@ func decodeSearchTickerResponse(resp *http.Response) (res *SearchTickerOK, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response SearchTickerOK
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15839,8 +15839,8 @@ func decodeUpdateBarGroupResponse(resp *http.Response) (res UpdateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarGroupUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15874,8 +15874,8 @@ func decodeUpdateBarGroupResponse(resp *http.Response) (res UpdateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15909,8 +15909,8 @@ func decodeUpdateBarGroupResponse(resp *http.Response) (res UpdateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15944,8 +15944,8 @@ func decodeUpdateBarGroupResponse(resp *http.Response) (res UpdateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -15979,8 +15979,8 @@ func decodeUpdateBarGroupResponse(resp *http.Response) (res UpdateBarGroupRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16020,8 +16020,8 @@ func decodeUpdateBarRecordResponse(resp *http.Response) (res UpdateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarRecordUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16055,8 +16055,8 @@ func decodeUpdateBarRecordResponse(resp *http.Response) (res UpdateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16090,8 +16090,8 @@ func decodeUpdateBarRecordResponse(resp *http.Response) (res UpdateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16125,8 +16125,8 @@ func decodeUpdateBarRecordResponse(resp *http.Response) (res UpdateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16160,8 +16160,8 @@ func decodeUpdateBarRecordResponse(resp *http.Response) (res UpdateBarRecordRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16201,8 +16201,8 @@ func decodeUpdateBarTimeRangeResponse(resp *http.Response) (res UpdateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response BarTimeRangeUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16236,8 +16236,8 @@ func decodeUpdateBarTimeRangeResponse(resp *http.Response) (res UpdateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16271,8 +16271,8 @@ func decodeUpdateBarTimeRangeResponse(resp *http.Response) (res UpdateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16306,8 +16306,8 @@ func decodeUpdateBarTimeRangeResponse(resp *http.Response) (res UpdateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16341,8 +16341,8 @@ func decodeUpdateBarTimeRangeResponse(resp *http.Response) (res UpdateBarTimeRan
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16382,8 +16382,8 @@ func decodeUpdateDataSourceResponse(resp *http.Response) (res UpdateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DataSourceUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16417,8 +16417,8 @@ func decodeUpdateDataSourceResponse(resp *http.Response) (res UpdateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16452,8 +16452,8 @@ func decodeUpdateDataSourceResponse(resp *http.Response) (res UpdateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16487,8 +16487,8 @@ func decodeUpdateDataSourceResponse(resp *http.Response) (res UpdateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16522,8 +16522,8 @@ func decodeUpdateDataSourceResponse(resp *http.Response) (res UpdateDataSourceRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16563,8 +16563,8 @@ func decodeUpdateDividendResponse(resp *http.Response) (res UpdateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response DividendUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16598,8 +16598,8 @@ func decodeUpdateDividendResponse(resp *http.Response) (res UpdateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16633,8 +16633,8 @@ func decodeUpdateDividendResponse(resp *http.Response) (res UpdateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16668,8 +16668,8 @@ func decodeUpdateDividendResponse(resp *http.Response) (res UpdateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16703,8 +16703,8 @@ func decodeUpdateDividendResponse(resp *http.Response) (res UpdateDividendRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16744,8 +16744,8 @@ func decodeUpdateEntityResponse(resp *http.Response) (res UpdateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response EntityUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16779,8 +16779,8 @@ func decodeUpdateEntityResponse(resp *http.Response) (res UpdateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16814,8 +16814,8 @@ func decodeUpdateEntityResponse(resp *http.Response) (res UpdateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16849,8 +16849,8 @@ func decodeUpdateEntityResponse(resp *http.Response) (res UpdateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16884,8 +16884,8 @@ func decodeUpdateEntityResponse(resp *http.Response) (res UpdateEntityRes, err e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16925,8 +16925,8 @@ func decodeUpdateExchangeResponse(resp *http.Response) (res UpdateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response ExchangeUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16960,8 +16960,8 @@ func decodeUpdateExchangeResponse(resp *http.Response) (res UpdateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -16995,8 +16995,8 @@ func decodeUpdateExchangeResponse(resp *http.Response) (res UpdateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17030,8 +17030,8 @@ func decodeUpdateExchangeResponse(resp *http.Response) (res UpdateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17065,8 +17065,8 @@ func decodeUpdateExchangeResponse(resp *http.Response) (res UpdateExchangeRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17106,8 +17106,8 @@ func decodeUpdateFinancialResponse(resp *http.Response) (res UpdateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response FinancialUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17141,8 +17141,8 @@ func decodeUpdateFinancialResponse(resp *http.Response) (res UpdateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17176,8 +17176,8 @@ func decodeUpdateFinancialResponse(resp *http.Response) (res UpdateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17211,8 +17211,8 @@ func decodeUpdateFinancialResponse(resp *http.Response) (res UpdateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17246,8 +17246,8 @@ func decodeUpdateFinancialResponse(resp *http.Response) (res UpdateFinancialRes,
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17287,8 +17287,8 @@ func decodeUpdateIntervalResponse(resp *http.Response) (res UpdateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response IntervalUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17322,8 +17322,8 @@ func decodeUpdateIntervalResponse(resp *http.Response) (res UpdateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17357,8 +17357,8 @@ func decodeUpdateIntervalResponse(resp *http.Response) (res UpdateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17392,8 +17392,8 @@ func decodeUpdateIntervalResponse(resp *http.Response) (res UpdateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17427,8 +17427,8 @@ func decodeUpdateIntervalResponse(resp *http.Response) (res UpdateIntervalRes, e
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17468,8 +17468,8 @@ func decodeUpdateMarketHoursResponse(resp *http.Response) (res UpdateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketHoursUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17503,8 +17503,8 @@ func decodeUpdateMarketHoursResponse(resp *http.Response) (res UpdateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17538,8 +17538,8 @@ func decodeUpdateMarketHoursResponse(resp *http.Response) (res UpdateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17573,8 +17573,8 @@ func decodeUpdateMarketHoursResponse(resp *http.Response) (res UpdateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17608,8 +17608,8 @@ func decodeUpdateMarketHoursResponse(resp *http.Response) (res UpdateMarketHours
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17649,8 +17649,8 @@ func decodeUpdateMarketInfoResponse(resp *http.Response) (res UpdateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response MarketInfoUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17684,8 +17684,8 @@ func decodeUpdateMarketInfoResponse(resp *http.Response) (res UpdateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17719,8 +17719,8 @@ func decodeUpdateMarketInfoResponse(resp *http.Response) (res UpdateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17754,8 +17754,8 @@ func decodeUpdateMarketInfoResponse(resp *http.Response) (res UpdateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17789,8 +17789,8 @@ func decodeUpdateMarketInfoResponse(resp *http.Response) (res UpdateMarketInfoRe
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17830,8 +17830,8 @@ func decodeUpdateSplitResponse(resp *http.Response) (res UpdateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response SplitUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17865,8 +17865,8 @@ func decodeUpdateSplitResponse(resp *http.Response) (res UpdateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17900,8 +17900,8 @@ func decodeUpdateSplitResponse(resp *http.Response) (res UpdateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17935,8 +17935,8 @@ func decodeUpdateSplitResponse(resp *http.Response) (res UpdateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -17970,8 +17970,8 @@ func decodeUpdateSplitResponse(resp *http.Response) (res UpdateSplitRes, err err
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18011,8 +18011,8 @@ func decodeUpdateTradeConditionResponse(resp *http.Response) (res UpdateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeConditionUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18046,8 +18046,8 @@ func decodeUpdateTradeConditionResponse(resp *http.Response) (res UpdateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18081,8 +18081,8 @@ func decodeUpdateTradeConditionResponse(resp *http.Response) (res UpdateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18116,8 +18116,8 @@ func decodeUpdateTradeConditionResponse(resp *http.Response) (res UpdateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18151,8 +18151,8 @@ func decodeUpdateTradeConditionResponse(resp *http.Response) (res UpdateTradeCon
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18192,8 +18192,8 @@ func decodeUpdateTradeCorrectionResponse(resp *http.Response) (res UpdateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeCorrectionUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18227,8 +18227,8 @@ func decodeUpdateTradeCorrectionResponse(resp *http.Response) (res UpdateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18262,8 +18262,8 @@ func decodeUpdateTradeCorrectionResponse(resp *http.Response) (res UpdateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18297,8 +18297,8 @@ func decodeUpdateTradeCorrectionResponse(resp *http.Response) (res UpdateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18332,8 +18332,8 @@ func decodeUpdateTradeCorrectionResponse(resp *http.Response) (res UpdateTradeCo
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18373,8 +18373,8 @@ func decodeUpdateTradeRecordResponse(resp *http.Response) (res UpdateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeRecordUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18408,8 +18408,8 @@ func decodeUpdateTradeRecordResponse(resp *http.Response) (res UpdateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18443,8 +18443,8 @@ func decodeUpdateTradeRecordResponse(resp *http.Response) (res UpdateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18478,8 +18478,8 @@ func decodeUpdateTradeRecordResponse(resp *http.Response) (res UpdateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18513,8 +18513,8 @@ func decodeUpdateTradeRecordResponse(resp *http.Response) (res UpdateTradeRecord
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18554,8 +18554,8 @@ func decodeUpdateTradeTimeRangeResponse(resp *http.Response) (res UpdateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response TradeTimeRangeUpdate
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18589,8 +18589,8 @@ func decodeUpdateTradeTimeRangeResponse(resp *http.Response) (res UpdateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R400
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18624,8 +18624,8 @@ func decodeUpdateTradeTimeRangeResponse(resp *http.Response) (res UpdateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R404
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18659,8 +18659,8 @@ func decodeUpdateTradeTimeRangeResponse(resp *http.Response) (res UpdateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R409
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
@@ -18694,8 +18694,8 @@ func decodeUpdateTradeTimeRangeResponse(resp *http.Response) (res UpdateTradeTim
 			if err != nil {
 				return res, err
 			}
-
 			d := jx.DecodeBytes(buf)
+
 			var response R500
 			if err := func() error {
 				if err := response.Decode(d); err != nil {

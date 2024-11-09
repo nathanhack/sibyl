@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,11 +20,8 @@ import (
 // DataSourceQuery is the builder for querying DataSource entities.
 type DataSourceQuery struct {
 	config
-	limit         *int
-	offset        *int
-	unique        *bool
-	order         []OrderFunc
-	fields        []string
+	ctx           *QueryContext
+	order         []datasource.OrderOption
 	inters        []Interceptor
 	predicates    []predicate.DataSource
 	withIntervals *IntervalQuery
@@ -40,25 +38,25 @@ func (dsq *DataSourceQuery) Where(ps ...predicate.DataSource) *DataSourceQuery {
 
 // Limit the number of records to be returned by this query.
 func (dsq *DataSourceQuery) Limit(limit int) *DataSourceQuery {
-	dsq.limit = &limit
+	dsq.ctx.Limit = &limit
 	return dsq
 }
 
 // Offset to start from.
 func (dsq *DataSourceQuery) Offset(offset int) *DataSourceQuery {
-	dsq.offset = &offset
+	dsq.ctx.Offset = &offset
 	return dsq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (dsq *DataSourceQuery) Unique(unique bool) *DataSourceQuery {
-	dsq.unique = &unique
+	dsq.ctx.Unique = &unique
 	return dsq
 }
 
 // Order specifies how the records should be ordered.
-func (dsq *DataSourceQuery) Order(o ...OrderFunc) *DataSourceQuery {
+func (dsq *DataSourceQuery) Order(o ...datasource.OrderOption) *DataSourceQuery {
 	dsq.order = append(dsq.order, o...)
 	return dsq
 }
@@ -88,7 +86,7 @@ func (dsq *DataSourceQuery) QueryIntervals() *IntervalQuery {
 // First returns the first DataSource entity from the query.
 // Returns a *NotFoundError when no DataSource was found.
 func (dsq *DataSourceQuery) First(ctx context.Context) (*DataSource, error) {
-	nodes, err := dsq.Limit(1).All(newQueryContext(ctx, TypeDataSource, "First"))
+	nodes, err := dsq.Limit(1).All(setContextOp(ctx, dsq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (dsq *DataSourceQuery) FirstX(ctx context.Context) *DataSource {
 // Returns a *NotFoundError when no DataSource ID was found.
 func (dsq *DataSourceQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = dsq.Limit(1).IDs(newQueryContext(ctx, TypeDataSource, "FirstID")); err != nil {
+	if ids, err = dsq.Limit(1).IDs(setContextOp(ctx, dsq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (dsq *DataSourceQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one DataSource entity is found.
 // Returns a *NotFoundError when no DataSource entities are found.
 func (dsq *DataSourceQuery) Only(ctx context.Context) (*DataSource, error) {
-	nodes, err := dsq.Limit(2).All(newQueryContext(ctx, TypeDataSource, "Only"))
+	nodes, err := dsq.Limit(2).All(setContextOp(ctx, dsq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (dsq *DataSourceQuery) OnlyX(ctx context.Context) *DataSource {
 // Returns a *NotFoundError when no entities are found.
 func (dsq *DataSourceQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = dsq.Limit(2).IDs(newQueryContext(ctx, TypeDataSource, "OnlyID")); err != nil {
+	if ids, err = dsq.Limit(2).IDs(setContextOp(ctx, dsq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (dsq *DataSourceQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of DataSources.
 func (dsq *DataSourceQuery) All(ctx context.Context) ([]*DataSource, error) {
-	ctx = newQueryContext(ctx, TypeDataSource, "All")
+	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryAll)
 	if err := dsq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (dsq *DataSourceQuery) AllX(ctx context.Context) []*DataSource {
 }
 
 // IDs executes the query and returns a list of DataSource IDs.
-func (dsq *DataSourceQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeDataSource, "IDs")
-	if err := dsq.Select(datasource.FieldID).Scan(ctx, &ids); err != nil {
+func (dsq *DataSourceQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if dsq.ctx.Unique == nil && dsq.path != nil {
+		dsq.Unique(true)
+	}
+	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryIDs)
+	if err = dsq.Select(datasource.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (dsq *DataSourceQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (dsq *DataSourceQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeDataSource, "Count")
+	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryCount)
 	if err := dsq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (dsq *DataSourceQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (dsq *DataSourceQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeDataSource, "Exist")
+	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryExist)
 	switch _, err := dsq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (dsq *DataSourceQuery) Clone() *DataSourceQuery {
 	}
 	return &DataSourceQuery{
 		config:        dsq.config,
-		limit:         dsq.limit,
-		offset:        dsq.offset,
-		order:         append([]OrderFunc{}, dsq.order...),
+		ctx:           dsq.ctx.Clone(),
+		order:         append([]datasource.OrderOption{}, dsq.order...),
 		inters:        append([]Interceptor{}, dsq.inters...),
 		predicates:    append([]predicate.DataSource{}, dsq.predicates...),
 		withIntervals: dsq.withIntervals.Clone(),
 		// clone intermediate query.
-		sql:    dsq.sql.Clone(),
-		path:   dsq.path,
-		unique: dsq.unique,
+		sql:  dsq.sql.Clone(),
+		path: dsq.path,
 	}
 }
 
@@ -310,9 +308,9 @@ func (dsq *DataSourceQuery) WithIntervals(opts ...func(*IntervalQuery)) *DataSou
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (dsq *DataSourceQuery) GroupBy(field string, fields ...string) *DataSourceGroupBy {
-	dsq.fields = append([]string{field}, fields...)
+	dsq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &DataSourceGroupBy{build: dsq}
-	grbuild.flds = &dsq.fields
+	grbuild.flds = &dsq.ctx.Fields
 	grbuild.label = datasource.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -331,10 +329,10 @@ func (dsq *DataSourceQuery) GroupBy(field string, fields ...string) *DataSourceG
 //		Select(datasource.FieldName).
 //		Scan(ctx, &v)
 func (dsq *DataSourceQuery) Select(fields ...string) *DataSourceSelect {
-	dsq.fields = append(dsq.fields, fields...)
+	dsq.ctx.Fields = append(dsq.ctx.Fields, fields...)
 	sbuild := &DataSourceSelect{DataSourceQuery: dsq}
 	sbuild.label = datasource.Label
-	sbuild.flds, sbuild.scan = &dsq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &dsq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (dsq *DataSourceQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range dsq.fields {
+	for _, f := range dsq.ctx.Fields {
 		if !datasource.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -415,8 +413,11 @@ func (dsq *DataSourceQuery) loadIntervals(ctx context.Context, query *IntervalQu
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(interval.FieldDataSourceID)
+	}
 	query.Where(predicate.Interval(func(s *sql.Selector) {
-		s.Where(sql.InValues(datasource.IntervalsColumn, fks...))
+		s.Where(sql.InValues(s.C(datasource.IntervalsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -426,7 +427,7 @@ func (dsq *DataSourceQuery) loadIntervals(ctx context.Context, query *IntervalQu
 		fk := n.DataSourceID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "data_source_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "data_source_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -435,30 +436,22 @@ func (dsq *DataSourceQuery) loadIntervals(ctx context.Context, query *IntervalQu
 
 func (dsq *DataSourceQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := dsq.querySpec()
-	_spec.Node.Columns = dsq.fields
-	if len(dsq.fields) > 0 {
-		_spec.Unique = dsq.unique != nil && *dsq.unique
+	_spec.Node.Columns = dsq.ctx.Fields
+	if len(dsq.ctx.Fields) > 0 {
+		_spec.Unique = dsq.ctx.Unique != nil && *dsq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, dsq.driver, _spec)
 }
 
 func (dsq *DataSourceQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   datasource.Table,
-			Columns: datasource.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: datasource.FieldID,
-			},
-		},
-		From:   dsq.sql,
-		Unique: true,
-	}
-	if unique := dsq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(datasource.Table, datasource.Columns, sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt))
+	_spec.From = dsq.sql
+	if unique := dsq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if dsq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := dsq.fields; len(fields) > 0 {
+	if fields := dsq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, datasource.FieldID)
 		for i := range fields {
@@ -474,10 +467,10 @@ func (dsq *DataSourceQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := dsq.limit; limit != nil {
+	if limit := dsq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := dsq.offset; offset != nil {
+	if offset := dsq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := dsq.order; len(ps) > 0 {
@@ -493,7 +486,7 @@ func (dsq *DataSourceQuery) querySpec() *sqlgraph.QuerySpec {
 func (dsq *DataSourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(dsq.driver.Dialect())
 	t1 := builder.Table(datasource.Table)
-	columns := dsq.fields
+	columns := dsq.ctx.Fields
 	if len(columns) == 0 {
 		columns = datasource.Columns
 	}
@@ -502,7 +495,7 @@ func (dsq *DataSourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = dsq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if dsq.unique != nil && *dsq.unique {
+	if dsq.ctx.Unique != nil && *dsq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range dsq.predicates {
@@ -511,12 +504,12 @@ func (dsq *DataSourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range dsq.order {
 		p(selector)
 	}
-	if offset := dsq.offset; offset != nil {
+	if offset := dsq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := dsq.limit; limit != nil {
+	if limit := dsq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -536,7 +529,7 @@ func (dsgb *DataSourceGroupBy) Aggregate(fns ...AggregateFunc) *DataSourceGroupB
 
 // Scan applies the selector query and scans the result into the given value.
 func (dsgb *DataSourceGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeDataSource, "GroupBy")
+	ctx = setContextOp(ctx, dsgb.build.ctx, ent.OpQueryGroupBy)
 	if err := dsgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -584,7 +577,7 @@ func (dss *DataSourceSelect) Aggregate(fns ...AggregateFunc) *DataSourceSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (dss *DataSourceSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeDataSource, "Select")
+	ctx = setContextOp(ctx, dss.ctx, ent.OpQuerySelect)
 	if err := dss.prepareQuery(ctx); err != nil {
 		return err
 	}

@@ -44,8 +44,6 @@ func (s *Server) decodeCreateBarGroupRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateBarGroupReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -56,6 +54,8 @@ func (s *Server) decodeCreateBarGroupRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateBarGroupReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -107,8 +107,6 @@ func (s *Server) decodeCreateBarRecordRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateBarRecordReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -119,6 +117,8 @@ func (s *Server) decodeCreateBarRecordRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateBarRecordReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -178,8 +178,6 @@ func (s *Server) decodeCreateBarTimeRangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateBarTimeRangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -190,6 +188,8 @@ func (s *Server) decodeCreateBarTimeRangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateBarTimeRangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -249,8 +249,6 @@ func (s *Server) decodeCreateDataSourceRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateDataSourceReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -261,6 +259,8 @@ func (s *Server) decodeCreateDataSourceRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateDataSourceReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -312,8 +312,6 @@ func (s *Server) decodeCreateDividendRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateDividendReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -324,6 +322,8 @@ func (s *Server) decodeCreateDividendRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateDividendReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -383,8 +383,6 @@ func (s *Server) decodeCreateEntityRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateEntityReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -395,6 +393,8 @@ func (s *Server) decodeCreateEntityRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateEntityReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -446,8 +446,6 @@ func (s *Server) decodeCreateExchangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateExchangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -458,6 +456,8 @@ func (s *Server) decodeCreateExchangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateExchangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -509,8 +509,6 @@ func (s *Server) decodeCreateFinancialRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateFinancialReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -521,6 +519,8 @@ func (s *Server) decodeCreateFinancialRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateFinancialReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -572,8 +572,6 @@ func (s *Server) decodeCreateIntervalRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateIntervalReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -584,6 +582,8 @@ func (s *Server) decodeCreateIntervalRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateIntervalReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -643,8 +643,6 @@ func (s *Server) decodeCreateMarketHoursRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateMarketHoursReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -655,6 +653,8 @@ func (s *Server) decodeCreateMarketHoursRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateMarketHoursReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -706,8 +706,6 @@ func (s *Server) decodeCreateMarketInfoRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateMarketInfoReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -718,6 +716,8 @@ func (s *Server) decodeCreateMarketInfoRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateMarketInfoReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -769,8 +769,6 @@ func (s *Server) decodeCreateSplitRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateSplitReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -781,6 +779,8 @@ func (s *Server) decodeCreateSplitRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateSplitReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -840,8 +840,6 @@ func (s *Server) decodeCreateTradeConditionRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateTradeConditionReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -852,6 +850,8 @@ func (s *Server) decodeCreateTradeConditionRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateTradeConditionReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -903,8 +903,6 @@ func (s *Server) decodeCreateTradeCorrectionRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateTradeCorrectionReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -915,6 +913,8 @@ func (s *Server) decodeCreateTradeCorrectionRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateTradeCorrectionReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -966,8 +966,6 @@ func (s *Server) decodeCreateTradeRecordRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateTradeRecordReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -978,6 +976,8 @@ func (s *Server) decodeCreateTradeRecordRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateTradeRecordReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1037,8 +1037,6 @@ func (s *Server) decodeCreateTradeTimeRangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request CreateTradeTimeRangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1049,6 +1047,8 @@ func (s *Server) decodeCreateTradeTimeRangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request CreateTradeTimeRangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1100,8 +1100,6 @@ func (s *Server) decodeUpdateBarGroupRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateBarGroupReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1112,6 +1110,8 @@ func (s *Server) decodeUpdateBarGroupRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateBarGroupReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1163,8 +1163,6 @@ func (s *Server) decodeUpdateBarRecordRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateBarRecordReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1175,6 +1173,8 @@ func (s *Server) decodeUpdateBarRecordRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateBarRecordReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1234,8 +1234,6 @@ func (s *Server) decodeUpdateBarTimeRangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateBarTimeRangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1246,6 +1244,8 @@ func (s *Server) decodeUpdateBarTimeRangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateBarTimeRangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1305,8 +1305,6 @@ func (s *Server) decodeUpdateDataSourceRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateDataSourceReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1317,6 +1315,8 @@ func (s *Server) decodeUpdateDataSourceRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateDataSourceReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1368,8 +1368,6 @@ func (s *Server) decodeUpdateDividendRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateDividendReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1380,6 +1378,8 @@ func (s *Server) decodeUpdateDividendRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateDividendReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1439,8 +1439,6 @@ func (s *Server) decodeUpdateEntityRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateEntityReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1451,6 +1449,8 @@ func (s *Server) decodeUpdateEntityRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateEntityReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1502,8 +1502,6 @@ func (s *Server) decodeUpdateExchangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateExchangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1514,6 +1512,8 @@ func (s *Server) decodeUpdateExchangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateExchangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1565,8 +1565,6 @@ func (s *Server) decodeUpdateFinancialRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateFinancialReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1577,6 +1575,8 @@ func (s *Server) decodeUpdateFinancialRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateFinancialReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1628,8 +1628,6 @@ func (s *Server) decodeUpdateIntervalRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateIntervalReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1640,6 +1638,8 @@ func (s *Server) decodeUpdateIntervalRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateIntervalReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1699,8 +1699,6 @@ func (s *Server) decodeUpdateMarketHoursRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateMarketHoursReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1711,6 +1709,8 @@ func (s *Server) decodeUpdateMarketHoursRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateMarketHoursReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1762,8 +1762,6 @@ func (s *Server) decodeUpdateMarketInfoRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateMarketInfoReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1774,6 +1772,8 @@ func (s *Server) decodeUpdateMarketInfoRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateMarketInfoReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1825,8 +1825,6 @@ func (s *Server) decodeUpdateSplitRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateSplitReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1837,6 +1835,8 @@ func (s *Server) decodeUpdateSplitRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateSplitReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1896,8 +1896,6 @@ func (s *Server) decodeUpdateTradeConditionRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateTradeConditionReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1908,6 +1906,8 @@ func (s *Server) decodeUpdateTradeConditionRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateTradeConditionReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -1959,8 +1959,6 @@ func (s *Server) decodeUpdateTradeCorrectionRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateTradeCorrectionReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -1971,6 +1969,8 @@ func (s *Server) decodeUpdateTradeCorrectionRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateTradeCorrectionReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -2022,8 +2022,6 @@ func (s *Server) decodeUpdateTradeRecordRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateTradeRecordReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -2034,6 +2032,8 @@ func (s *Server) decodeUpdateTradeRecordRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateTradeRecordReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err
@@ -2093,8 +2093,6 @@ func (s *Server) decodeUpdateTradeTimeRangeRequest(r *http.Request) (
 		if r.ContentLength == 0 {
 			return req, close, validate.ErrBodyRequired
 		}
-
-		var request UpdateTradeTimeRangeReq
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			return req, close, err
@@ -2105,6 +2103,8 @@ func (s *Server) decodeUpdateTradeTimeRangeRequest(r *http.Request) (
 		}
 
 		d := jx.DecodeBytes(buf)
+
+		var request UpdateTradeTimeRangeReq
 		if err := func() error {
 			if err := request.Decode(d); err != nil {
 				return err

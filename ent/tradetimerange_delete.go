@@ -27,7 +27,7 @@ func (ttrd *TradeTimeRangeDelete) Where(ps ...predicate.TradeTimeRange) *TradeTi
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (ttrd *TradeTimeRangeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, TradeTimeRangeMutation](ctx, ttrd.sqlExec, ttrd.mutation, ttrd.hooks)
+	return withHooks(ctx, ttrd.sqlExec, ttrd.mutation, ttrd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (ttrd *TradeTimeRangeDelete) ExecX(ctx context.Context) int {
 }
 
 func (ttrd *TradeTimeRangeDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: tradetimerange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradetimerange.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(tradetimerange.Table, sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt))
 	if ps := ttrd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type TradeTimeRangeDeleteOne struct {
 	ttrd *TradeTimeRangeDelete
 }
 
+// Where appends a list predicates to the TradeTimeRangeDelete builder.
+func (ttrdo *TradeTimeRangeDeleteOne) Where(ps ...predicate.TradeTimeRange) *TradeTimeRangeDeleteOne {
+	ttrdo.ttrd.mutation.Where(ps...)
+	return ttrdo
+}
+
 // Exec executes the deletion query.
 func (ttrdo *TradeTimeRangeDeleteOne) Exec(ctx context.Context) error {
 	n, err := ttrdo.ttrd.Exec(ctx)
@@ -84,5 +82,7 @@ func (ttrdo *TradeTimeRangeDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (ttrdo *TradeTimeRangeDeleteOne) ExecX(ctx context.Context) {
-	ttrdo.ttrd.ExecX(ctx)
+	if err := ttrdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

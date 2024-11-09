@@ -73,7 +73,7 @@ func (bgc *BarGroupCreate) Mutation() *BarGroupMutation {
 
 // Save creates the BarGroup in the database.
 func (bgc *BarGroupCreate) Save(ctx context.Context) (*BarGroup, error) {
-	return withHooks[*BarGroup, BarGroupMutation](ctx, bgc.sqlSave, bgc.mutation, bgc.hooks)
+	return withHooks(ctx, bgc.sqlSave, bgc.mutation, bgc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -112,7 +112,7 @@ func (bgc *BarGroupCreate) check() error {
 	if _, ok := bgc.mutation.TimeRangeID(); !ok {
 		return &ValidationError{Name: "time_range_id", err: errors.New(`ent: missing required field "BarGroup.time_range_id"`)}
 	}
-	if _, ok := bgc.mutation.TimeRangeID(); !ok {
+	if len(bgc.mutation.TimeRangeIDs()) == 0 {
 		return &ValidationError{Name: "time_range", err: errors.New(`ent: missing required edge "BarGroup.time_range"`)}
 	}
 	return nil
@@ -139,13 +139,7 @@ func (bgc *BarGroupCreate) sqlSave(ctx context.Context) (*BarGroup, error) {
 func (bgc *BarGroupCreate) createSpec() (*BarGroup, *sqlgraph.CreateSpec) {
 	var (
 		_node = &BarGroup{config: bgc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: bargroup.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bargroup.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(bargroup.Table, sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt))
 	)
 	if value, ok := bgc.mutation.First(); ok {
 		_spec.SetField(bargroup.FieldFirst, field.TypeTime, value)
@@ -167,10 +161,7 @@ func (bgc *BarGroupCreate) createSpec() (*BarGroup, *sqlgraph.CreateSpec) {
 			Columns: []string{bargroup.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -187,10 +178,7 @@ func (bgc *BarGroupCreate) createSpec() (*BarGroup, *sqlgraph.CreateSpec) {
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -204,11 +192,15 @@ func (bgc *BarGroupCreate) createSpec() (*BarGroup, *sqlgraph.CreateSpec) {
 // BarGroupCreateBulk is the builder for creating many BarGroup entities in bulk.
 type BarGroupCreateBulk struct {
 	config
+	err      error
 	builders []*BarGroupCreate
 }
 
 // Save creates the BarGroup entities in the database.
 func (bgcb *BarGroupCreateBulk) Save(ctx context.Context) ([]*BarGroup, error) {
+	if bgcb.err != nil {
+		return nil, bgcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(bgcb.builders))
 	nodes := make([]*BarGroup, len(bgcb.builders))
 	mutators := make([]Mutator, len(bgcb.builders))
@@ -224,8 +216,8 @@ func (bgcb *BarGroupCreateBulk) Save(ctx context.Context) ([]*BarGroup, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, bgcb.builders[i+1].mutation)
 				} else {

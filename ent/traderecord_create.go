@@ -105,7 +105,7 @@ func (trc *TradeRecordCreate) Mutation() *TradeRecordMutation {
 
 // Save creates the TradeRecord in the database.
 func (trc *TradeRecordCreate) Save(ctx context.Context) (*TradeRecord, error) {
-	return withHooks[*TradeRecord, TradeRecordMutation](ctx, trc.sqlSave, trc.mutation, trc.hooks)
+	return withHooks(ctx, trc.sqlSave, trc.mutation, trc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -144,7 +144,7 @@ func (trc *TradeRecordCreate) check() error {
 	if _, ok := trc.mutation.TimeRangeID(); !ok {
 		return &ValidationError{Name: "time_range_id", err: errors.New(`ent: missing required field "TradeRecord.time_range_id"`)}
 	}
-	if _, ok := trc.mutation.TimeRangeID(); !ok {
+	if len(trc.mutation.TimeRangeIDs()) == 0 {
 		return &ValidationError{Name: "time_range", err: errors.New(`ent: missing required edge "TradeRecord.time_range"`)}
 	}
 	return nil
@@ -171,13 +171,7 @@ func (trc *TradeRecordCreate) sqlSave(ctx context.Context) (*TradeRecord, error)
 func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) {
 	var (
 		_node = &TradeRecord{config: trc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: traderecord.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: traderecord.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(traderecord.Table, sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt))
 	)
 	if value, ok := trc.mutation.Price(); ok {
 		_spec.SetField(traderecord.FieldPrice, field.TypeFloat64, value)
@@ -199,10 +193,7 @@ func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) 
 			Columns: []string{traderecord.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -219,10 +210,7 @@ func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) 
 			Columns: traderecord.ConditionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecondition.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -238,10 +226,7 @@ func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) 
 			Columns: traderecord.CorrectionPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradecorrection.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -257,10 +242,7 @@ func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) 
 			Columns: []string{traderecord.ExchangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -274,11 +256,15 @@ func (trc *TradeRecordCreate) createSpec() (*TradeRecord, *sqlgraph.CreateSpec) 
 // TradeRecordCreateBulk is the builder for creating many TradeRecord entities in bulk.
 type TradeRecordCreateBulk struct {
 	config
+	err      error
 	builders []*TradeRecordCreate
 }
 
 // Save creates the TradeRecord entities in the database.
 func (trcb *TradeRecordCreateBulk) Save(ctx context.Context) ([]*TradeRecord, error) {
+	if trcb.err != nil {
+		return nil, trcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(trcb.builders))
 	nodes := make([]*TradeRecord, len(trcb.builders))
 	mutators := make([]Mutator, len(trcb.builders))
@@ -294,8 +280,8 @@ func (trcb *TradeRecordCreateBulk) Save(ctx context.Context) ([]*TradeRecord, er
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, trcb.builders[i+1].mutation)
 				} else {

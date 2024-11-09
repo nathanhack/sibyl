@@ -27,7 +27,7 @@ func (ed *EntityDelete) Where(ps ...predicate.Entity) *EntityDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (ed *EntityDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, EntityMutation](ctx, ed.sqlExec, ed.mutation, ed.hooks)
+	return withHooks(ctx, ed.sqlExec, ed.mutation, ed.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (ed *EntityDelete) ExecX(ctx context.Context) int {
 }
 
 func (ed *EntityDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: entity.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: entity.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(entity.Table, sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt))
 	if ps := ed.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type EntityDeleteOne struct {
 	ed *EntityDelete
 }
 
+// Where appends a list predicates to the EntityDelete builder.
+func (edo *EntityDeleteOne) Where(ps ...predicate.Entity) *EntityDeleteOne {
+	edo.ed.mutation.Where(ps...)
+	return edo
+}
+
 // Exec executes the deletion query.
 func (edo *EntityDeleteOne) Exec(ctx context.Context) error {
 	n, err := edo.ed.Exec(ctx)
@@ -84,5 +82,7 @@ func (edo *EntityDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (edo *EntityDeleteOne) ExecX(ctx context.Context) {
-	edo.ed.ExecX(ctx)
+	if err := edo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

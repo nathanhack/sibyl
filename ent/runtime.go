@@ -50,8 +50,14 @@ func init() {
 	entity.NameValidator = entityDescName.Validators[0].(func(string) error)
 	// entityDescDescription is the schema descriptor for description field.
 	entityDescDescription := entityFields[3].Descriptor()
+	// entity.DefaultDescription holds the default value on creation for the description field.
+	entity.DefaultDescription = entityDescDescription.Default.(string)
 	// entity.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	entity.DescriptionValidator = entityDescDescription.Validators[0].(func(string) error)
+	// entityDescListDate is the schema descriptor for list_date field.
+	entityDescListDate := entityFields[4].Descriptor()
+	// entity.DefaultListDate holds the default value on creation for the list_date field.
+	entity.DefaultListDate = entityDescListDate.Default.(time.Time)
 	intervalFields := schema.Interval{}.Fields()
 	_ = intervalFields
 	// intervalDescActive is the schema descriptor for active field.

@@ -14,54 +14,92 @@ Sibyl is WIP stock trading platform.  Sibyl is setup to use a couple of data sou
     * [Showing](#showing)
   - [Roadmap](#Roadmap)
 
-# Installing
-(To be updated)
 # Running
-(To be updated)
+There is a server and a client. The server run in the background and downloads data and stores it in a database (either Sqlite3 or MySql configured via `sibyl.json` config).
 
 ## server
-(To be updated)
+For help and usage:
+`go run cmd/server/main.go -h`
+
+For the quick and easy just run:
+`go run cmd/server/main.go`
+
+This will create the `sibyl.json` config if it doesn't exists. Then you can update it for you configuration. Then rerun to start the server. 
+
 
 ### Sqlite3
-(To be updated)
+Sibyl can use Sqlite3 just provide it configuration info in the sibl.json config. ex:
+```
+"databaseold": {
+    "dialect": "sqlite3",
+    "dsn": "./db.sqlite?_fk=1"
+  },
+```
 
 ### MySQL
-(To be updated)
+Sibyl expects to use a database calls `sibyl` so for MySql it must already exists.
+To connect to a MySql database add the following to the configuration sibyl.json updated for your configuration:
+```
+ "database": {
+    "dialect": "mysql",
+    "dsn": "root:my-secret-pw@tcp(localhost:3306)/sibyl?parseTime=True"
+  },
+```
+The above sibyl.json configuration works with the example local insecure MySql docker example below.
+
+The following is a fast way to setup a insecure docker MySql for testing:
+```
+docker run --name mysql -p 3306:3306 -v <DIRECTORY_FOR_MYSQL>:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:latest
+```
+
+If your running MySql but would like Sibyl to create the sibyl database for you. Just include `"root"` in the database section of the sibyl.json ex:
+```
+ "database": {
+    "dialect": "mysql",
+    "dsn": "root:my-secret-pw@tcp(localhost:3307)/sibyl?parseTime=True"
+    "root": "root:my-secret-pw@tcp(localhost:3307)/?parseTime=True"
+  },
+```
 
 
 ## cli
-(To be updated)
 
 To interact with the server there is a cli tool. The tool supports adding and deleting stocks, showing stocks, history and intraday values.  Once a stock is added it will validate the symbol was a valid stock and depending on which actions are enabled it will being downloading the appropriate information.
 
 ### Adding
-(To be updated)
-
 To add a stock for the SibylServer track you execute the following command. Note you must [enable](#enabling) downloading for the stock, because any new stocks added default to disabled for all actions.
 
-    cli add STOCK
+    `go run cmd/cli/main.go add STOCK`
 
 ### Showing
-(To be updated)
-
 Information is all stored in the database and is accessed via the server.
 To show a list of stocks currently being tracked:
 
-    cli show stocks
+```
+go run cmd/cli/main.go show stocks
+```
+
 or
     
-    cli show stocks --details
+```
+go run cmd/cli/main.go show stocks --details
+```
 
 To show the history for a particular stock:
 
-    cli show bars daily STOCK
+```
+go run cmd/cli/main.go show bars daily STOCK
+```
 
 ## Roadmap
-* Add a web GUI
-* cli
-    * Add a Load command (reverse of dump)
-* server
-    * Get stock financials from Polygon.io
-    * Add support trades history
-    * Add support for realtime data (websockets)
-    * Add external web api to trade through Alpaca
+client
+    
+    - [ ] Add a Load command (reverse of dump)
+
+server
+
+    - [ ] Add a web GUI
+    - [ ] Get stock financials from Polygon.io
+    - [X]Add support trades history
+    - [ ] Add support for realtime data (websockets)
+    - [ ] Add external web api to trade through Alpaca

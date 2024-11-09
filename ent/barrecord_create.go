@@ -89,7 +89,7 @@ func (brc *BarRecordCreate) Mutation() *BarRecordMutation {
 
 // Save creates the BarRecord in the database.
 func (brc *BarRecordCreate) Save(ctx context.Context) (*BarRecord, error) {
-	return withHooks[*BarRecord, BarRecordMutation](ctx, brc.sqlSave, brc.mutation, brc.hooks)
+	return withHooks(ctx, brc.sqlSave, brc.mutation, brc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -161,13 +161,7 @@ func (brc *BarRecordCreate) sqlSave(ctx context.Context) (*BarRecord, error) {
 func (brc *BarRecordCreate) createSpec() (*BarRecord, *sqlgraph.CreateSpec) {
 	var (
 		_node = &BarRecord{config: brc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: barrecord.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: barrecord.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(barrecord.Table, sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt))
 	)
 	if value, ok := brc.mutation.Close(); ok {
 		_spec.SetField(barrecord.FieldClose, field.TypeFloat64, value)
@@ -205,10 +199,7 @@ func (brc *BarRecordCreate) createSpec() (*BarRecord, *sqlgraph.CreateSpec) {
 			Columns: []string{barrecord.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -223,11 +214,15 @@ func (brc *BarRecordCreate) createSpec() (*BarRecord, *sqlgraph.CreateSpec) {
 // BarRecordCreateBulk is the builder for creating many BarRecord entities in bulk.
 type BarRecordCreateBulk struct {
 	config
+	err      error
 	builders []*BarRecordCreate
 }
 
 // Save creates the BarRecord entities in the database.
 func (brcb *BarRecordCreateBulk) Save(ctx context.Context) ([]*BarRecord, error) {
+	if brcb.err != nil {
+		return nil, brcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(brcb.builders))
 	nodes := make([]*BarRecord, len(brcb.builders))
 	mutators := make([]Mutator, len(brcb.builders))
@@ -243,8 +238,8 @@ func (brcb *BarRecordCreateBulk) Save(ctx context.Context) ([]*BarRecord, error)
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, brcb.builders[i+1].mutation)
 				} else {

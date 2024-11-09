@@ -2,6 +2,11 @@
 
 package traderecord
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the traderecord type in the database.
 	Label = "trade_record"
@@ -77,4 +82,109 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the TradeRecord queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByPrice orders the results by the price field.
+func ByPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPrice, opts...).ToFunc()
+}
+
+// ByTimestamp orders the results by the timestamp field.
+func ByTimestamp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimestamp, opts...).ToFunc()
+}
+
+// ByVolume orders the results by the volume field.
+func ByVolume(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVolume, opts...).ToFunc()
+}
+
+// ByTimeRangeID orders the results by the time_range_id field.
+func ByTimeRangeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimeRangeID, opts...).ToFunc()
+}
+
+// ByTimeRangeField orders the results by time_range field.
+func ByTimeRangeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTimeRangeStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByConditionsCount orders the results by conditions count.
+func ByConditionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newConditionsStep(), opts...)
+	}
+}
+
+// ByConditions orders the results by conditions terms.
+func ByConditions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newConditionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCorrectionCount orders the results by correction count.
+func ByCorrectionCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCorrectionStep(), opts...)
+	}
+}
+
+// ByCorrection orders the results by correction terms.
+func ByCorrection(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCorrectionStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByExchangeCount orders the results by exchange count.
+func ByExchangeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newExchangeStep(), opts...)
+	}
+}
+
+// ByExchange orders the results by exchange terms.
+func ByExchange(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newExchangeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTimeRangeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TimeRangeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TimeRangeTable, TimeRangeColumn),
+	)
+}
+func newConditionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ConditionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ConditionsTable, ConditionsPrimaryKey...),
+	)
+}
+func newCorrectionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CorrectionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, CorrectionTable, CorrectionPrimaryKey...),
+	)
+}
+func newExchangeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ExchangeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ExchangeTable, ExchangeColumn),
+	)
 }

@@ -1810,6 +1810,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type Route struct {
 	name        string
 	operationID string
+	pathPattern string
 	count       int
 	args        [1]string
 }
@@ -1824,6 +1825,11 @@ func (r Route) Name() string {
 // OperationID returns OpenAPI operationId.
 func (r Route) OperationID() string {
 	return r.operationID
+}
+
+// PathPattern returns OpenAPI path.
+func (r Route) PathPattern() string {
+	return r.pathPattern
 }
 
 // Args returns parsed arguments.
@@ -1898,12 +1904,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListBarGroup"
 							r.operationID = "listBarGroup"
+							r.pathPattern = "/rest/bar-groups"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateBarGroup"
 							r.operationID = "createBarGroup"
+							r.pathPattern = "/rest/bar-groups"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -1933,18 +1941,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteBarGroup"
 								r.operationID = "deleteBarGroup"
+								r.pathPattern = "/rest/bar-groups/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadBarGroup"
 								r.operationID = "readBarGroup"
+								r.pathPattern = "/rest/bar-groups/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateBarGroup"
 								r.operationID = "updateBarGroup"
+								r.pathPattern = "/rest/bar-groups/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -1977,6 +1988,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListBarGroupRecords
 										r.name = "ListBarGroupRecords"
 										r.operationID = "listBarGroupRecords"
+										r.pathPattern = "/rest/bar-groups/{id}/records"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -1997,6 +2009,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ReadBarGroupTimeRange
 										r.name = "ReadBarGroupTimeRange"
 										r.operationID = "readBarGroupTimeRange"
+										r.pathPattern = "/rest/bar-groups/{id}/time-range"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2019,12 +2032,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListBarRecord"
 							r.operationID = "listBarRecord"
+							r.pathPattern = "/rest/bar-records"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateBarRecord"
 							r.operationID = "createBarRecord"
+							r.pathPattern = "/rest/bar-records"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2054,18 +2069,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteBarRecord"
 								r.operationID = "deleteBarRecord"
+								r.pathPattern = "/rest/bar-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadBarRecord"
 								r.operationID = "readBarRecord"
+								r.pathPattern = "/rest/bar-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateBarRecord"
 								r.operationID = "updateBarRecord"
+								r.pathPattern = "/rest/bar-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2087,6 +2105,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ReadBarRecordGroup
 									r.name = "ReadBarRecordGroup"
 									r.operationID = "readBarRecordGroup"
+									r.pathPattern = "/rest/bar-records/{id}/group"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2108,12 +2127,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListBarTimeRange"
 							r.operationID = "listBarTimeRange"
+							r.pathPattern = "/rest/bar-time-ranges"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateBarTimeRange"
 							r.operationID = "createBarTimeRange"
+							r.pathPattern = "/rest/bar-time-ranges"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2143,18 +2164,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteBarTimeRange"
 								r.operationID = "deleteBarTimeRange"
+								r.pathPattern = "/rest/bar-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadBarTimeRange"
 								r.operationID = "readBarTimeRange"
+								r.pathPattern = "/rest/bar-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateBarTimeRange"
 								r.operationID = "updateBarTimeRange"
+								r.pathPattern = "/rest/bar-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2187,6 +2211,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListBarTimeRangeGroups
 										r.name = "ListBarTimeRangeGroups"
 										r.operationID = "listBarTimeRangeGroups"
+										r.pathPattern = "/rest/bar-time-ranges/{id}/groups"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2207,6 +2232,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ReadBarTimeRangeInterval
 										r.name = "ReadBarTimeRangeInterval"
 										r.operationID = "readBarTimeRangeInterval"
+										r.pathPattern = "/rest/bar-time-ranges/{id}/interval"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2241,12 +2267,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListDataSource"
 							r.operationID = "listDataSource"
+							r.pathPattern = "/rest/data-sources"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateDataSource"
 							r.operationID = "createDataSource"
+							r.pathPattern = "/rest/data-sources"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2276,18 +2304,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteDataSource"
 								r.operationID = "deleteDataSource"
+								r.pathPattern = "/rest/data-sources/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadDataSource"
 								r.operationID = "readDataSource"
+								r.pathPattern = "/rest/data-sources/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateDataSource"
 								r.operationID = "updateDataSource"
+								r.pathPattern = "/rest/data-sources/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2309,6 +2340,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListDataSourceIntervals
 									r.name = "ListDataSourceIntervals"
 									r.operationID = "listDataSourceIntervals"
+									r.pathPattern = "/rest/data-sources/{id}/intervals"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2330,12 +2362,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListDividend"
 							r.operationID = "listDividend"
+							r.pathPattern = "/rest/dividends"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateDividend"
 							r.operationID = "createDividend"
+							r.pathPattern = "/rest/dividends"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2365,18 +2399,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteDividend"
 								r.operationID = "deleteDividend"
+								r.pathPattern = "/rest/dividends/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadDividend"
 								r.operationID = "readDividend"
+								r.pathPattern = "/rest/dividends/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateDividend"
 								r.operationID = "updateDividend"
+								r.pathPattern = "/rest/dividends/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2398,6 +2435,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListDividendStock
 									r.name = "ListDividendStock"
 									r.operationID = "listDividendStock"
+									r.pathPattern = "/rest/dividends/{id}/stock"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2431,12 +2469,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListEntity"
 							r.operationID = "listEntity"
+							r.pathPattern = "/rest/entities"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateEntity"
 							r.operationID = "createEntity"
+							r.pathPattern = "/rest/entities"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2474,6 +2514,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: AddTicker
 									r.name = "AddTicker"
 									r.operationID = "addTicker"
+									r.pathPattern = "/rest/entities/add/{ticker}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2496,18 +2537,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteEntity"
 								r.operationID = "deleteEntity"
+								r.pathPattern = "/rest/entities/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadEntity"
 								r.operationID = "readEntity"
+								r.pathPattern = "/rest/entities/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateEntity"
 								r.operationID = "updateEntity"
+								r.pathPattern = "/rest/entities/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2540,6 +2584,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListEntityDividends
 										r.name = "ListEntityDividends"
 										r.operationID = "listEntityDividends"
+										r.pathPattern = "/rest/entities/{id}/dividends"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2560,6 +2605,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListEntityExchanges
 										r.name = "ListEntityExchanges"
 										r.operationID = "listEntityExchanges"
+										r.pathPattern = "/rest/entities/{id}/exchanges"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2580,6 +2626,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListEntityFinancials
 										r.name = "ListEntityFinancials"
 										r.operationID = "listEntityFinancials"
+										r.pathPattern = "/rest/entities/{id}/financials"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2600,6 +2647,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListEntityIntervals
 										r.name = "ListEntityIntervals"
 										r.operationID = "listEntityIntervals"
+										r.pathPattern = "/rest/entities/{id}/intervals"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2620,6 +2668,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListEntitySplits
 										r.name = "ListEntitySplits"
 										r.operationID = "listEntitySplits"
+										r.pathPattern = "/rest/entities/{id}/splits"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -2642,12 +2691,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListExchange"
 							r.operationID = "listExchange"
+							r.pathPattern = "/rest/exchanges"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateExchange"
 							r.operationID = "createExchange"
+							r.pathPattern = "/rest/exchanges"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -2677,18 +2728,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteExchange"
 								r.operationID = "deleteExchange"
+								r.pathPattern = "/rest/exchanges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadExchange"
 								r.operationID = "readExchange"
+								r.pathPattern = "/rest/exchanges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateExchange"
 								r.operationID = "updateExchange"
+								r.pathPattern = "/rest/exchanges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2710,6 +2764,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListExchangeStocks
 									r.name = "ListExchangeStocks"
 									r.operationID = "listExchangeStocks"
+									r.pathPattern = "/rest/exchanges/{id}/stocks"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2732,12 +2787,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						r.name = "ListFinancial"
 						r.operationID = "listFinancial"
+						r.pathPattern = "/rest/financials"
 						r.args = args
 						r.count = 0
 						return r, true
 					case "POST":
 						r.name = "CreateFinancial"
 						r.operationID = "createFinancial"
+						r.pathPattern = "/rest/financials"
 						r.args = args
 						r.count = 0
 						return r, true
@@ -2767,18 +2824,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "DELETE":
 							r.name = "DeleteFinancial"
 							r.operationID = "deleteFinancial"
+							r.pathPattern = "/rest/financials/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
 						case "GET":
 							r.name = "ReadFinancial"
 							r.operationID = "readFinancial"
+							r.pathPattern = "/rest/financials/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
 						case "PATCH":
 							r.name = "UpdateFinancial"
 							r.operationID = "updateFinancial"
+							r.pathPattern = "/rest/financials/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
@@ -2800,6 +2860,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf: ListFinancialStock
 								r.name = "ListFinancialStock"
 								r.operationID = "listFinancialStock"
+								r.pathPattern = "/rest/financials/{id}/stock"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -2821,12 +2882,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						r.name = "ListInterval"
 						r.operationID = "listInterval"
+						r.pathPattern = "/rest/intervals"
 						r.args = args
 						r.count = 0
 						return r, true
 					case "POST":
 						r.name = "CreateInterval"
 						r.operationID = "createInterval"
+						r.pathPattern = "/rest/intervals"
 						r.args = args
 						r.count = 0
 						return r, true
@@ -2856,18 +2919,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "DELETE":
 							r.name = "DeleteInterval"
 							r.operationID = "deleteInterval"
+							r.pathPattern = "/rest/intervals/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
 						case "GET":
 							r.name = "ReadInterval"
 							r.operationID = "readInterval"
+							r.pathPattern = "/rest/intervals/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
 						case "PATCH":
 							r.name = "UpdateInterval"
 							r.operationID = "updateInterval"
+							r.pathPattern = "/rest/intervals/{id}"
 							r.args = args
 							r.count = 1
 							return r, true
@@ -2900,6 +2966,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListIntervalBars
 									r.name = "ListIntervalBars"
 									r.operationID = "listIntervalBars"
+									r.pathPattern = "/rest/intervals/{id}/bars"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2920,6 +2987,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ReadIntervalDataSource
 									r.name = "ReadIntervalDataSource"
 									r.operationID = "readIntervalDataSource"
+									r.pathPattern = "/rest/intervals/{id}/data-source"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2940,6 +3008,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ReadIntervalStock
 									r.name = "ReadIntervalStock"
 									r.operationID = "readIntervalStock"
+									r.pathPattern = "/rest/intervals/{id}/stock"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2960,6 +3029,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListIntervalTrades
 									r.name = "ListIntervalTrades"
 									r.operationID = "listIntervalTrades"
+									r.pathPattern = "/rest/intervals/{id}/trades"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -2993,12 +3063,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListMarketHours"
 							r.operationID = "listMarketHours"
+							r.pathPattern = "/rest/market-hours"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateMarketHours"
 							r.operationID = "createMarketHours"
+							r.pathPattern = "/rest/market-hours"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -3028,18 +3100,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteMarketHours"
 								r.operationID = "deleteMarketHours"
+								r.pathPattern = "/rest/market-hours/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadMarketHours"
 								r.operationID = "readMarketHours"
+								r.pathPattern = "/rest/market-hours/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateMarketHours"
 								r.operationID = "updateMarketHours"
+								r.pathPattern = "/rest/market-hours/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -3061,6 +3136,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ReadMarketHoursMarketInfo
 									r.name = "ReadMarketHoursMarketInfo"
 									r.operationID = "readMarketHoursMarketInfo"
+									r.pathPattern = "/rest/market-hours/{id}/market-info"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -3082,12 +3158,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListMarketInfo"
 							r.operationID = "listMarketInfo"
+							r.pathPattern = "/rest/market-infos"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateMarketInfo"
 							r.operationID = "createMarketInfo"
+							r.pathPattern = "/rest/market-infos"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -3117,18 +3195,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteMarketInfo"
 								r.operationID = "deleteMarketInfo"
+								r.pathPattern = "/rest/market-infos/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadMarketInfo"
 								r.operationID = "readMarketInfo"
+								r.pathPattern = "/rest/market-infos/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateMarketInfo"
 								r.operationID = "updateMarketInfo"
+								r.pathPattern = "/rest/market-infos/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -3150,6 +3231,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ListMarketInfoHours
 									r.name = "ListMarketInfoHours"
 									r.operationID = "listMarketInfoHours"
+									r.pathPattern = "/rest/market-infos/{id}/hours"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -3189,6 +3271,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf: SearchTicker
 							r.name = "SearchTicker"
 							r.operationID = "searchTicker"
+							r.pathPattern = "/rest/search/{ticker}"
 							r.args = args
 							r.count = 1
 							return r, true
@@ -3208,12 +3291,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListSplit"
 							r.operationID = "listSplit"
+							r.pathPattern = "/rest/splits"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateSplit"
 							r.operationID = "createSplit"
+							r.pathPattern = "/rest/splits"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -3243,18 +3328,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteSplit"
 								r.operationID = "deleteSplit"
+								r.pathPattern = "/rest/splits/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadSplit"
 								r.operationID = "readSplit"
+								r.pathPattern = "/rest/splits/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateSplit"
 								r.operationID = "updateSplit"
+								r.pathPattern = "/rest/splits/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -3276,6 +3364,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: ReadSplitStock
 									r.name = "ReadSplitStock"
 									r.operationID = "readSplitStock"
+									r.pathPattern = "/rest/splits/{id}/stock"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -3320,12 +3409,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								r.name = "ListTradeCondition"
 								r.operationID = "listTradeCondition"
+								r.pathPattern = "/rest/trade-conditions"
 								r.args = args
 								r.count = 0
 								return r, true
 							case "POST":
 								r.name = "CreateTradeCondition"
 								r.operationID = "createTradeCondition"
+								r.pathPattern = "/rest/trade-conditions"
 								r.args = args
 								r.count = 0
 								return r, true
@@ -3355,18 +3446,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "DELETE":
 									r.name = "DeleteTradeCondition"
 									r.operationID = "deleteTradeCondition"
+									r.pathPattern = "/rest/trade-conditions/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
 								case "GET":
 									r.name = "ReadTradeCondition"
 									r.operationID = "readTradeCondition"
+									r.pathPattern = "/rest/trade-conditions/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
 								case "PATCH":
 									r.name = "UpdateTradeCondition"
 									r.operationID = "updateTradeCondition"
+									r.pathPattern = "/rest/trade-conditions/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -3388,6 +3482,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListTradeConditionRecord
 										r.name = "ListTradeConditionRecord"
 										r.operationID = "listTradeConditionRecord"
+										r.pathPattern = "/rest/trade-conditions/{id}/record"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -3409,12 +3504,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								r.name = "ListTradeCorrection"
 								r.operationID = "listTradeCorrection"
+								r.pathPattern = "/rest/trade-corrections"
 								r.args = args
 								r.count = 0
 								return r, true
 							case "POST":
 								r.name = "CreateTradeCorrection"
 								r.operationID = "createTradeCorrection"
+								r.pathPattern = "/rest/trade-corrections"
 								r.args = args
 								r.count = 0
 								return r, true
@@ -3444,18 +3541,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "DELETE":
 									r.name = "DeleteTradeCorrection"
 									r.operationID = "deleteTradeCorrection"
+									r.pathPattern = "/rest/trade-corrections/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
 								case "GET":
 									r.name = "ReadTradeCorrection"
 									r.operationID = "readTradeCorrection"
+									r.pathPattern = "/rest/trade-corrections/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
 								case "PATCH":
 									r.name = "UpdateTradeCorrection"
 									r.operationID = "updateTradeCorrection"
+									r.pathPattern = "/rest/trade-corrections/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -3477,6 +3577,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListTradeCorrectionRecord
 										r.name = "ListTradeCorrectionRecord"
 										r.operationID = "listTradeCorrectionRecord"
+										r.pathPattern = "/rest/trade-corrections/{id}/record"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -3499,12 +3600,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListTradeRecord"
 							r.operationID = "listTradeRecord"
+							r.pathPattern = "/rest/trade-records"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateTradeRecord"
 							r.operationID = "createTradeRecord"
+							r.pathPattern = "/rest/trade-records"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -3534,18 +3637,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteTradeRecord"
 								r.operationID = "deleteTradeRecord"
+								r.pathPattern = "/rest/trade-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadTradeRecord"
 								r.operationID = "readTradeRecord"
+								r.pathPattern = "/rest/trade-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateTradeRecord"
 								r.operationID = "updateTradeRecord"
+								r.pathPattern = "/rest/trade-records/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -3589,6 +3695,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											// Leaf: ListTradeRecordConditions
 											r.name = "ListTradeRecordConditions"
 											r.operationID = "listTradeRecordConditions"
+											r.pathPattern = "/rest/trade-records/{id}/conditions"
 											r.args = args
 											r.count = 1
 											return r, true
@@ -3609,6 +3716,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											// Leaf: ListTradeRecordCorrection
 											r.name = "ListTradeRecordCorrection"
 											r.operationID = "listTradeRecordCorrection"
+											r.pathPattern = "/rest/trade-records/{id}/correction"
 											r.args = args
 											r.count = 1
 											return r, true
@@ -3630,6 +3738,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListTradeRecordExchange
 										r.name = "ListTradeRecordExchange"
 										r.operationID = "listTradeRecordExchange"
+										r.pathPattern = "/rest/trade-records/{id}/exchange"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -3650,6 +3759,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ReadTradeRecordTimeRange
 										r.name = "ReadTradeRecordTimeRange"
 										r.operationID = "readTradeRecordTimeRange"
+										r.pathPattern = "/rest/trade-records/{id}/time-range"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -3672,12 +3782,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							r.name = "ListTradeTimeRange"
 							r.operationID = "listTradeTimeRange"
+							r.pathPattern = "/rest/trade-time-ranges"
 							r.args = args
 							r.count = 0
 							return r, true
 						case "POST":
 							r.name = "CreateTradeTimeRange"
 							r.operationID = "createTradeTimeRange"
+							r.pathPattern = "/rest/trade-time-ranges"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -3707,18 +3819,21 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "DELETE":
 								r.name = "DeleteTradeTimeRange"
 								r.operationID = "deleteTradeTimeRange"
+								r.pathPattern = "/rest/trade-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "GET":
 								r.name = "ReadTradeTimeRange"
 								r.operationID = "readTradeTimeRange"
+								r.pathPattern = "/rest/trade-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
 							case "PATCH":
 								r.name = "UpdateTradeTimeRange"
 								r.operationID = "updateTradeTimeRange"
+								r.pathPattern = "/rest/trade-time-ranges/{id}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -3751,6 +3866,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ReadTradeTimeRangeInterval
 										r.name = "ReadTradeTimeRangeInterval"
 										r.operationID = "readTradeTimeRangeInterval"
+										r.pathPattern = "/rest/trade-time-ranges/{id}/interval"
 										r.args = args
 										r.count = 1
 										return r, true
@@ -3771,6 +3887,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										// Leaf: ListTradeTimeRangeRecords
 										r.name = "ListTradeTimeRangeRecords"
 										r.operationID = "listTradeTimeRangeRecords"
+										r.pathPattern = "/rest/trade-time-ranges/{id}/records"
 										r.args = args
 										r.count = 1
 										return r, true

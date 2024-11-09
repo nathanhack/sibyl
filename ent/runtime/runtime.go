@@ -5,6 +5,6 @@ package runtime
 // The schema-stitching logic is generated in github.com/nathanhack/sibyl/ent/runtime.go
 
 const (
-	Version = "v0.11.5"                                         // Version of ent codegen.
-	Sum     = "h1:V2qhG91C4PMQTa82Q4StoESMQ4dzkMNeStCzszxi0jQ=" // Sum of ent codegen.
+	Version = "v0.14.1"                                         // Version of ent codegen.
+	Sum     = "h1:fUERL506Pqr92EPHJqr8EYxbPioflJo6PudkrEA8a/s=" // Sum of ent codegen.
 )

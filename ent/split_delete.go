@@ -27,7 +27,7 @@ func (sd *SplitDelete) Where(ps ...predicate.Split) *SplitDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (sd *SplitDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, SplitMutation](ctx, sd.sqlExec, sd.mutation, sd.hooks)
+	return withHooks(ctx, sd.sqlExec, sd.mutation, sd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (sd *SplitDelete) ExecX(ctx context.Context) int {
 }
 
 func (sd *SplitDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: split.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: split.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(split.Table, sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt))
 	if ps := sd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type SplitDeleteOne struct {
 	sd *SplitDelete
 }
 
+// Where appends a list predicates to the SplitDelete builder.
+func (sdo *SplitDeleteOne) Where(ps ...predicate.Split) *SplitDeleteOne {
+	sdo.sd.mutation.Where(ps...)
+	return sdo
+}
+
 // Exec executes the deletion query.
 func (sdo *SplitDeleteOne) Exec(ctx context.Context) error {
 	n, err := sdo.sd.Exec(ctx)
@@ -84,5 +82,7 @@ func (sdo *SplitDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (sdo *SplitDeleteOne) ExecX(ctx context.Context) {
-	sdo.sd.ExecX(ctx)
+	if err := sdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

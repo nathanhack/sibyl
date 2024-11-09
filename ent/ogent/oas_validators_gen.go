@@ -611,24 +611,13 @@ func (s CreateBarTimeRangeReqStatus) Validate() error {
 func (s *CreateDividendReq) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -636,20 +625,6 @@ func (s *CreateDividendReq) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s CreateDividendReqDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *CreateIntervalReq) Validate() error {
 	var failures []validate.FieldError
@@ -769,24 +744,13 @@ func (s DataSourceIntervalsListInterval) Validate() error {
 func (s *DividendCreate) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -794,42 +758,17 @@ func (s *DividendCreate) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s DividendCreateDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *DividendList) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -837,42 +776,17 @@ func (s *DividendList) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s DividendListDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *DividendRead) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -880,42 +794,17 @@ func (s *DividendRead) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s DividendReadDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *DividendUpdate) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -923,42 +812,17 @@ func (s *DividendUpdate) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s DividendUpdateDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *EntityDividendsList) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.CashAmount)); err != nil {
+		if err := (validate.Float{}).Validate(float64(s.Rate)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.DividendType.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -966,20 +830,6 @@ func (s *EntityDividendsList) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s EntityDividendsListDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *EntityIntervalsList) Validate() error {
 	var failures []validate.FieldError
@@ -2117,9 +1967,9 @@ func (s UpdateBarTimeRangeReqStatus) Validate() error {
 func (s *UpdateDividendReq) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.CashAmount.Set {
+		if s.Rate.Set {
 			if err := func() error {
-				if err := (validate.Float{}).Validate(float64(s.CashAmount.Value)); err != nil {
+				if err := (validate.Float{}).Validate(float64(s.Rate.Value)); err != nil {
 					return errors.Wrap(err, "float")
 				}
 				return nil
@@ -2130,25 +1980,7 @@ func (s *UpdateDividendReq) Validate() error {
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "cash_amount",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if s.DividendType.Set {
-			if err := func() error {
-				if err := s.DividendType.Value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "dividend_type",
+			Name:  "rate",
 			Error: err,
 		})
 	}
@@ -2156,20 +1988,6 @@ func (s *UpdateDividendReq) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s UpdateDividendReqDividendType) Validate() error {
-	switch s {
-	case "CD":
-		return nil
-	case "SC":
-		return nil
-	case "LT":
-		return nil
-	case "ST":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *UpdateIntervalReq) Validate() error {
 	var failures []validate.FieldError

@@ -103,7 +103,7 @@ func (ic *IntervalCreate) Mutation() *IntervalMutation {
 // Save creates the Interval in the database.
 func (ic *IntervalCreate) Save(ctx context.Context) (*Interval, error) {
 	ic.defaults()
-	return withHooks[*Interval, IntervalMutation](ctx, ic.sqlSave, ic.mutation, ic.hooks)
+	return withHooks(ctx, ic.sqlSave, ic.mutation, ic.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -155,10 +155,10 @@ func (ic *IntervalCreate) check() error {
 	if _, ok := ic.mutation.DataSourceID(); !ok {
 		return &ValidationError{Name: "data_source_id", err: errors.New(`ent: missing required field "Interval.data_source_id"`)}
 	}
-	if _, ok := ic.mutation.DataSourceID(); !ok {
+	if len(ic.mutation.DataSourceIDs()) == 0 {
 		return &ValidationError{Name: "data_source", err: errors.New(`ent: missing required edge "Interval.data_source"`)}
 	}
-	if _, ok := ic.mutation.StockID(); !ok {
+	if len(ic.mutation.StockIDs()) == 0 {
 		return &ValidationError{Name: "stock", err: errors.New(`ent: missing required edge "Interval.stock"`)}
 	}
 	return nil
@@ -185,13 +185,7 @@ func (ic *IntervalCreate) sqlSave(ctx context.Context) (*Interval, error) {
 func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Interval{config: ic.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: interval.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: interval.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(interval.Table, sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt))
 	)
 	if value, ok := ic.mutation.Active(); ok {
 		_spec.SetField(interval.FieldActive, field.TypeBool, value)
@@ -209,10 +203,7 @@ func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 			Columns: []string{interval.DataSourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: datasource.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -229,10 +220,7 @@ func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 			Columns: []string{interval.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -249,10 +237,7 @@ func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -268,10 +253,7 @@ func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -285,11 +267,15 @@ func (ic *IntervalCreate) createSpec() (*Interval, *sqlgraph.CreateSpec) {
 // IntervalCreateBulk is the builder for creating many Interval entities in bulk.
 type IntervalCreateBulk struct {
 	config
+	err      error
 	builders []*IntervalCreate
 }
 
 // Save creates the Interval entities in the database.
 func (icb *IntervalCreateBulk) Save(ctx context.Context) ([]*Interval, error) {
+	if icb.err != nil {
+		return nil, icb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(icb.builders))
 	nodes := make([]*Interval, len(icb.builders))
 	mutators := make([]Mutator, len(icb.builders))
@@ -306,8 +292,8 @@ func (icb *IntervalCreateBulk) Save(ctx context.Context) ([]*Interval, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, icb.builders[i+1].mutation)
 				} else {

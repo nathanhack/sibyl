@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,11 +19,8 @@ import (
 // BarRecordQuery is the builder for querying BarRecord entities.
 type BarRecordQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []barrecord.OrderOption
 	inters     []Interceptor
 	predicates []predicate.BarRecord
 	withGroup  *BarGroupQuery
@@ -40,25 +38,25 @@ func (brq *BarRecordQuery) Where(ps ...predicate.BarRecord) *BarRecordQuery {
 
 // Limit the number of records to be returned by this query.
 func (brq *BarRecordQuery) Limit(limit int) *BarRecordQuery {
-	brq.limit = &limit
+	brq.ctx.Limit = &limit
 	return brq
 }
 
 // Offset to start from.
 func (brq *BarRecordQuery) Offset(offset int) *BarRecordQuery {
-	brq.offset = &offset
+	brq.ctx.Offset = &offset
 	return brq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (brq *BarRecordQuery) Unique(unique bool) *BarRecordQuery {
-	brq.unique = &unique
+	brq.ctx.Unique = &unique
 	return brq
 }
 
 // Order specifies how the records should be ordered.
-func (brq *BarRecordQuery) Order(o ...OrderFunc) *BarRecordQuery {
+func (brq *BarRecordQuery) Order(o ...barrecord.OrderOption) *BarRecordQuery {
 	brq.order = append(brq.order, o...)
 	return brq
 }
@@ -88,7 +86,7 @@ func (brq *BarRecordQuery) QueryGroup() *BarGroupQuery {
 // First returns the first BarRecord entity from the query.
 // Returns a *NotFoundError when no BarRecord was found.
 func (brq *BarRecordQuery) First(ctx context.Context) (*BarRecord, error) {
-	nodes, err := brq.Limit(1).All(newQueryContext(ctx, TypeBarRecord, "First"))
+	nodes, err := brq.Limit(1).All(setContextOp(ctx, brq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (brq *BarRecordQuery) FirstX(ctx context.Context) *BarRecord {
 // Returns a *NotFoundError when no BarRecord ID was found.
 func (brq *BarRecordQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = brq.Limit(1).IDs(newQueryContext(ctx, TypeBarRecord, "FirstID")); err != nil {
+	if ids, err = brq.Limit(1).IDs(setContextOp(ctx, brq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (brq *BarRecordQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one BarRecord entity is found.
 // Returns a *NotFoundError when no BarRecord entities are found.
 func (brq *BarRecordQuery) Only(ctx context.Context) (*BarRecord, error) {
-	nodes, err := brq.Limit(2).All(newQueryContext(ctx, TypeBarRecord, "Only"))
+	nodes, err := brq.Limit(2).All(setContextOp(ctx, brq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (brq *BarRecordQuery) OnlyX(ctx context.Context) *BarRecord {
 // Returns a *NotFoundError when no entities are found.
 func (brq *BarRecordQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = brq.Limit(2).IDs(newQueryContext(ctx, TypeBarRecord, "OnlyID")); err != nil {
+	if ids, err = brq.Limit(2).IDs(setContextOp(ctx, brq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (brq *BarRecordQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of BarRecords.
 func (brq *BarRecordQuery) All(ctx context.Context) ([]*BarRecord, error) {
-	ctx = newQueryContext(ctx, TypeBarRecord, "All")
+	ctx = setContextOp(ctx, brq.ctx, ent.OpQueryAll)
 	if err := brq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (brq *BarRecordQuery) AllX(ctx context.Context) []*BarRecord {
 }
 
 // IDs executes the query and returns a list of BarRecord IDs.
-func (brq *BarRecordQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeBarRecord, "IDs")
-	if err := brq.Select(barrecord.FieldID).Scan(ctx, &ids); err != nil {
+func (brq *BarRecordQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if brq.ctx.Unique == nil && brq.path != nil {
+		brq.Unique(true)
+	}
+	ctx = setContextOp(ctx, brq.ctx, ent.OpQueryIDs)
+	if err = brq.Select(barrecord.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (brq *BarRecordQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (brq *BarRecordQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeBarRecord, "Count")
+	ctx = setContextOp(ctx, brq.ctx, ent.OpQueryCount)
 	if err := brq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (brq *BarRecordQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (brq *BarRecordQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeBarRecord, "Exist")
+	ctx = setContextOp(ctx, brq.ctx, ent.OpQueryExist)
 	switch _, err := brq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (brq *BarRecordQuery) Clone() *BarRecordQuery {
 	}
 	return &BarRecordQuery{
 		config:     brq.config,
-		limit:      brq.limit,
-		offset:     brq.offset,
-		order:      append([]OrderFunc{}, brq.order...),
+		ctx:        brq.ctx.Clone(),
+		order:      append([]barrecord.OrderOption{}, brq.order...),
 		inters:     append([]Interceptor{}, brq.inters...),
 		predicates: append([]predicate.BarRecord{}, brq.predicates...),
 		withGroup:  brq.withGroup.Clone(),
 		// clone intermediate query.
-		sql:    brq.sql.Clone(),
-		path:   brq.path,
-		unique: brq.unique,
+		sql:  brq.sql.Clone(),
+		path: brq.path,
 	}
 }
 
@@ -310,9 +308,9 @@ func (brq *BarRecordQuery) WithGroup(opts ...func(*BarGroupQuery)) *BarRecordQue
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (brq *BarRecordQuery) GroupBy(field string, fields ...string) *BarRecordGroupBy {
-	brq.fields = append([]string{field}, fields...)
+	brq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &BarRecordGroupBy{build: brq}
-	grbuild.flds = &brq.fields
+	grbuild.flds = &brq.ctx.Fields
 	grbuild.label = barrecord.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -331,10 +329,10 @@ func (brq *BarRecordQuery) GroupBy(field string, fields ...string) *BarRecordGro
 //		Select(barrecord.FieldClose).
 //		Scan(ctx, &v)
 func (brq *BarRecordQuery) Select(fields ...string) *BarRecordSelect {
-	brq.fields = append(brq.fields, fields...)
+	brq.ctx.Fields = append(brq.ctx.Fields, fields...)
 	sbuild := &BarRecordSelect{BarRecordQuery: brq}
 	sbuild.label = barrecord.Label
-	sbuild.flds, sbuild.scan = &brq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &brq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (brq *BarRecordQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range brq.fields {
+	for _, f := range brq.ctx.Fields {
 		if !barrecord.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -424,6 +422,9 @@ func (brq *BarRecordQuery) loadGroup(ctx context.Context, query *BarGroupQuery, 
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(bargroup.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -443,30 +444,22 @@ func (brq *BarRecordQuery) loadGroup(ctx context.Context, query *BarGroupQuery, 
 
 func (brq *BarRecordQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := brq.querySpec()
-	_spec.Node.Columns = brq.fields
-	if len(brq.fields) > 0 {
-		_spec.Unique = brq.unique != nil && *brq.unique
+	_spec.Node.Columns = brq.ctx.Fields
+	if len(brq.ctx.Fields) > 0 {
+		_spec.Unique = brq.ctx.Unique != nil && *brq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, brq.driver, _spec)
 }
 
 func (brq *BarRecordQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   barrecord.Table,
-			Columns: barrecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: barrecord.FieldID,
-			},
-		},
-		From:   brq.sql,
-		Unique: true,
-	}
-	if unique := brq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(barrecord.Table, barrecord.Columns, sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt))
+	_spec.From = brq.sql
+	if unique := brq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if brq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := brq.fields; len(fields) > 0 {
+	if fields := brq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, barrecord.FieldID)
 		for i := range fields {
@@ -482,10 +475,10 @@ func (brq *BarRecordQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := brq.limit; limit != nil {
+	if limit := brq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := brq.offset; offset != nil {
+	if offset := brq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := brq.order; len(ps) > 0 {
@@ -501,7 +494,7 @@ func (brq *BarRecordQuery) querySpec() *sqlgraph.QuerySpec {
 func (brq *BarRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(brq.driver.Dialect())
 	t1 := builder.Table(barrecord.Table)
-	columns := brq.fields
+	columns := brq.ctx.Fields
 	if len(columns) == 0 {
 		columns = barrecord.Columns
 	}
@@ -510,7 +503,7 @@ func (brq *BarRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = brq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if brq.unique != nil && *brq.unique {
+	if brq.ctx.Unique != nil && *brq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range brq.predicates {
@@ -519,12 +512,12 @@ func (brq *BarRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range brq.order {
 		p(selector)
 	}
-	if offset := brq.offset; offset != nil {
+	if offset := brq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := brq.limit; limit != nil {
+	if limit := brq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -544,7 +537,7 @@ func (brgb *BarRecordGroupBy) Aggregate(fns ...AggregateFunc) *BarRecordGroupBy 
 
 // Scan applies the selector query and scans the result into the given value.
 func (brgb *BarRecordGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarRecord, "GroupBy")
+	ctx = setContextOp(ctx, brgb.build.ctx, ent.OpQueryGroupBy)
 	if err := brgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -592,7 +585,7 @@ func (brs *BarRecordSelect) Aggregate(fns ...AggregateFunc) *BarRecordSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (brs *BarRecordSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarRecord, "Select")
+	ctx = setContextOp(ctx, brs.ctx, ent.OpQuerySelect)
 	if err := brs.prepareQuery(ctx); err != nil {
 		return err
 	}

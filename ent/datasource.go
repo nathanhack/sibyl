@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/datasource"
 )
@@ -21,7 +22,8 @@ type DataSource struct {
 	Address string `json:"address,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DataSourceQuery when eager-loading is set.
-	Edges DataSourceEdges `json:"edges"`
+	Edges        DataSourceEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // DataSourceEdges holds the relations/edges for other nodes in the graph.
@@ -52,7 +54,7 @@ func (*DataSource) scanValues(columns []string) ([]any, error) {
 		case datasource.FieldName, datasource.FieldAddress:
 			values[i] = new(sql.NullString)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type DataSource", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -84,21 +86,29 @@ func (ds *DataSource) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ds.Address = value.String
 			}
+		default:
+			ds.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the DataSource.
+// This includes values selected through modifiers, order, etc.
+func (ds *DataSource) Value(name string) (ent.Value, error) {
+	return ds.selectValues.Get(name)
+}
+
 // QueryIntervals queries the "intervals" edge of the DataSource entity.
 func (ds *DataSource) QueryIntervals() *IntervalQuery {
-	return (&DataSourceClient{config: ds.config}).QueryIntervals(ds)
+	return NewDataSourceClient(ds.config).QueryIntervals(ds)
 }
 
 // Update returns a builder for updating this DataSource.
 // Note that you need to call DataSource.Unwrap() before calling this method if this DataSource
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (ds *DataSource) Update() *DataSourceUpdateOne {
-	return (&DataSourceClient{config: ds.config}).UpdateOne(ds)
+	return NewDataSourceClient(ds.config).UpdateOne(ds)
 }
 
 // Unwrap unwraps the DataSource entity that was returned from a transaction after it was closed,
@@ -128,9 +138,3 @@ func (ds *DataSource) String() string {
 
 // DataSources is a parsable slice of DataSource.
 type DataSources []*DataSource
-
-func (ds DataSources) config(cfg config) {
-	for _i := range ds {
-		ds[_i].config = cfg
-	}
-}

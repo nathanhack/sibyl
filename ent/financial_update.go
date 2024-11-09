@@ -71,7 +71,7 @@ func (fu *FinancialUpdate) RemoveStock(e ...*Entity) *FinancialUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (fu *FinancialUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, FinancialMutation](ctx, fu.sqlSave, fu.mutation, fu.hooks)
+	return withHooks(ctx, fu.sqlSave, fu.mutation, fu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -97,16 +97,7 @@ func (fu *FinancialUpdate) ExecX(ctx context.Context) {
 }
 
 func (fu *FinancialUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   financial.Table,
-			Columns: financial.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: financial.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(financial.Table, financial.Columns, sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt))
 	if ps := fu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -122,10 +113,7 @@ func (fu *FinancialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -138,10 +126,7 @@ func (fu *FinancialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -157,10 +142,7 @@ func (fu *FinancialUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -229,6 +211,12 @@ func (fuo *FinancialUpdateOne) RemoveStock(e ...*Entity) *FinancialUpdateOne {
 	return fuo.RemoveStockIDs(ids...)
 }
 
+// Where appends a list predicates to the FinancialUpdate builder.
+func (fuo *FinancialUpdateOne) Where(ps ...predicate.Financial) *FinancialUpdateOne {
+	fuo.mutation.Where(ps...)
+	return fuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (fuo *FinancialUpdateOne) Select(field string, fields ...string) *FinancialUpdateOne {
@@ -238,7 +226,7 @@ func (fuo *FinancialUpdateOne) Select(field string, fields ...string) *Financial
 
 // Save executes the query and returns the updated Financial entity.
 func (fuo *FinancialUpdateOne) Save(ctx context.Context) (*Financial, error) {
-	return withHooks[*Financial, FinancialMutation](ctx, fuo.sqlSave, fuo.mutation, fuo.hooks)
+	return withHooks(ctx, fuo.sqlSave, fuo.mutation, fuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -264,16 +252,7 @@ func (fuo *FinancialUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (fuo *FinancialUpdateOne) sqlSave(ctx context.Context) (_node *Financial, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   financial.Table,
-			Columns: financial.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: financial.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(financial.Table, financial.Columns, sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt))
 	id, ok := fuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Financial.id" for update`)}
@@ -306,10 +285,7 @@ func (fuo *FinancialUpdateOne) sqlSave(ctx context.Context) (_node *Financial, e
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -322,10 +298,7 @@ func (fuo *FinancialUpdateOne) sqlSave(ctx context.Context) (_node *Financial, e
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -341,10 +314,7 @@ func (fuo *FinancialUpdateOne) sqlSave(ctx context.Context) (_node *Financial, e
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

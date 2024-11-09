@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,11 +21,8 @@ import (
 // BarGroupQuery is the builder for querying BarGroup entities.
 type BarGroupQuery struct {
 	config
-	limit         *int
-	offset        *int
-	unique        *bool
-	order         []OrderFunc
-	fields        []string
+	ctx           *QueryContext
+	order         []bargroup.OrderOption
 	inters        []Interceptor
 	predicates    []predicate.BarGroup
 	withTimeRange *BarTimeRangeQuery
@@ -42,25 +40,25 @@ func (bgq *BarGroupQuery) Where(ps ...predicate.BarGroup) *BarGroupQuery {
 
 // Limit the number of records to be returned by this query.
 func (bgq *BarGroupQuery) Limit(limit int) *BarGroupQuery {
-	bgq.limit = &limit
+	bgq.ctx.Limit = &limit
 	return bgq
 }
 
 // Offset to start from.
 func (bgq *BarGroupQuery) Offset(offset int) *BarGroupQuery {
-	bgq.offset = &offset
+	bgq.ctx.Offset = &offset
 	return bgq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (bgq *BarGroupQuery) Unique(unique bool) *BarGroupQuery {
-	bgq.unique = &unique
+	bgq.ctx.Unique = &unique
 	return bgq
 }
 
 // Order specifies how the records should be ordered.
-func (bgq *BarGroupQuery) Order(o ...OrderFunc) *BarGroupQuery {
+func (bgq *BarGroupQuery) Order(o ...bargroup.OrderOption) *BarGroupQuery {
 	bgq.order = append(bgq.order, o...)
 	return bgq
 }
@@ -112,7 +110,7 @@ func (bgq *BarGroupQuery) QueryRecords() *BarRecordQuery {
 // First returns the first BarGroup entity from the query.
 // Returns a *NotFoundError when no BarGroup was found.
 func (bgq *BarGroupQuery) First(ctx context.Context) (*BarGroup, error) {
-	nodes, err := bgq.Limit(1).All(newQueryContext(ctx, TypeBarGroup, "First"))
+	nodes, err := bgq.Limit(1).All(setContextOp(ctx, bgq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +133,7 @@ func (bgq *BarGroupQuery) FirstX(ctx context.Context) *BarGroup {
 // Returns a *NotFoundError when no BarGroup ID was found.
 func (bgq *BarGroupQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = bgq.Limit(1).IDs(newQueryContext(ctx, TypeBarGroup, "FirstID")); err != nil {
+	if ids, err = bgq.Limit(1).IDs(setContextOp(ctx, bgq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -158,7 +156,7 @@ func (bgq *BarGroupQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one BarGroup entity is found.
 // Returns a *NotFoundError when no BarGroup entities are found.
 func (bgq *BarGroupQuery) Only(ctx context.Context) (*BarGroup, error) {
-	nodes, err := bgq.Limit(2).All(newQueryContext(ctx, TypeBarGroup, "Only"))
+	nodes, err := bgq.Limit(2).All(setContextOp(ctx, bgq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +184,7 @@ func (bgq *BarGroupQuery) OnlyX(ctx context.Context) *BarGroup {
 // Returns a *NotFoundError when no entities are found.
 func (bgq *BarGroupQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = bgq.Limit(2).IDs(newQueryContext(ctx, TypeBarGroup, "OnlyID")); err != nil {
+	if ids, err = bgq.Limit(2).IDs(setContextOp(ctx, bgq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -211,7 +209,7 @@ func (bgq *BarGroupQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of BarGroups.
 func (bgq *BarGroupQuery) All(ctx context.Context) ([]*BarGroup, error) {
-	ctx = newQueryContext(ctx, TypeBarGroup, "All")
+	ctx = setContextOp(ctx, bgq.ctx, ent.OpQueryAll)
 	if err := bgq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -229,10 +227,12 @@ func (bgq *BarGroupQuery) AllX(ctx context.Context) []*BarGroup {
 }
 
 // IDs executes the query and returns a list of BarGroup IDs.
-func (bgq *BarGroupQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeBarGroup, "IDs")
-	if err := bgq.Select(bargroup.FieldID).Scan(ctx, &ids); err != nil {
+func (bgq *BarGroupQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if bgq.ctx.Unique == nil && bgq.path != nil {
+		bgq.Unique(true)
+	}
+	ctx = setContextOp(ctx, bgq.ctx, ent.OpQueryIDs)
+	if err = bgq.Select(bargroup.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -249,7 +249,7 @@ func (bgq *BarGroupQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (bgq *BarGroupQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeBarGroup, "Count")
+	ctx = setContextOp(ctx, bgq.ctx, ent.OpQueryCount)
 	if err := bgq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +267,7 @@ func (bgq *BarGroupQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (bgq *BarGroupQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeBarGroup, "Exist")
+	ctx = setContextOp(ctx, bgq.ctx, ent.OpQueryExist)
 	switch _, err := bgq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -295,17 +295,15 @@ func (bgq *BarGroupQuery) Clone() *BarGroupQuery {
 	}
 	return &BarGroupQuery{
 		config:        bgq.config,
-		limit:         bgq.limit,
-		offset:        bgq.offset,
-		order:         append([]OrderFunc{}, bgq.order...),
+		ctx:           bgq.ctx.Clone(),
+		order:         append([]bargroup.OrderOption{}, bgq.order...),
 		inters:        append([]Interceptor{}, bgq.inters...),
 		predicates:    append([]predicate.BarGroup{}, bgq.predicates...),
 		withTimeRange: bgq.withTimeRange.Clone(),
 		withRecords:   bgq.withRecords.Clone(),
 		// clone intermediate query.
-		sql:    bgq.sql.Clone(),
-		path:   bgq.path,
-		unique: bgq.unique,
+		sql:  bgq.sql.Clone(),
+		path: bgq.path,
 	}
 }
 
@@ -346,9 +344,9 @@ func (bgq *BarGroupQuery) WithRecords(opts ...func(*BarRecordQuery)) *BarGroupQu
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (bgq *BarGroupQuery) GroupBy(field string, fields ...string) *BarGroupGroupBy {
-	bgq.fields = append([]string{field}, fields...)
+	bgq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &BarGroupGroupBy{build: bgq}
-	grbuild.flds = &bgq.fields
+	grbuild.flds = &bgq.ctx.Fields
 	grbuild.label = bargroup.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -367,10 +365,10 @@ func (bgq *BarGroupQuery) GroupBy(field string, fields ...string) *BarGroupGroup
 //		Select(bargroup.FieldFirst).
 //		Scan(ctx, &v)
 func (bgq *BarGroupQuery) Select(fields ...string) *BarGroupSelect {
-	bgq.fields = append(bgq.fields, fields...)
+	bgq.ctx.Fields = append(bgq.ctx.Fields, fields...)
 	sbuild := &BarGroupSelect{BarGroupQuery: bgq}
 	sbuild.label = bargroup.Label
-	sbuild.flds, sbuild.scan = &bgq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &bgq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -390,7 +388,7 @@ func (bgq *BarGroupQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range bgq.fields {
+	for _, f := range bgq.ctx.Fields {
 		if !bargroup.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -458,6 +456,9 @@ func (bgq *BarGroupQuery) loadTimeRange(ctx context.Context, query *BarTimeRange
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(bartimerange.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -486,7 +487,7 @@ func (bgq *BarGroupQuery) loadRecords(ctx context.Context, query *BarRecordQuery
 	}
 	query.withFKs = true
 	query.Where(predicate.BarRecord(func(s *sql.Selector) {
-		s.Where(sql.InValues(bargroup.RecordsColumn, fks...))
+		s.Where(sql.InValues(s.C(bargroup.RecordsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -499,7 +500,7 @@ func (bgq *BarGroupQuery) loadRecords(ctx context.Context, query *BarRecordQuery
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "bar_group_records" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "bar_group_records" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -508,36 +509,31 @@ func (bgq *BarGroupQuery) loadRecords(ctx context.Context, query *BarRecordQuery
 
 func (bgq *BarGroupQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := bgq.querySpec()
-	_spec.Node.Columns = bgq.fields
-	if len(bgq.fields) > 0 {
-		_spec.Unique = bgq.unique != nil && *bgq.unique
+	_spec.Node.Columns = bgq.ctx.Fields
+	if len(bgq.ctx.Fields) > 0 {
+		_spec.Unique = bgq.ctx.Unique != nil && *bgq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, bgq.driver, _spec)
 }
 
 func (bgq *BarGroupQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   bargroup.Table,
-			Columns: bargroup.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bargroup.FieldID,
-			},
-		},
-		From:   bgq.sql,
-		Unique: true,
-	}
-	if unique := bgq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(bargroup.Table, bargroup.Columns, sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt))
+	_spec.From = bgq.sql
+	if unique := bgq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if bgq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := bgq.fields; len(fields) > 0 {
+	if fields := bgq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, bargroup.FieldID)
 		for i := range fields {
 			if fields[i] != bargroup.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if bgq.withTimeRange != nil {
+			_spec.Node.AddColumnOnce(bargroup.FieldTimeRangeID)
 		}
 	}
 	if ps := bgq.predicates; len(ps) > 0 {
@@ -547,10 +543,10 @@ func (bgq *BarGroupQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := bgq.limit; limit != nil {
+	if limit := bgq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := bgq.offset; offset != nil {
+	if offset := bgq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := bgq.order; len(ps) > 0 {
@@ -566,7 +562,7 @@ func (bgq *BarGroupQuery) querySpec() *sqlgraph.QuerySpec {
 func (bgq *BarGroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(bgq.driver.Dialect())
 	t1 := builder.Table(bargroup.Table)
-	columns := bgq.fields
+	columns := bgq.ctx.Fields
 	if len(columns) == 0 {
 		columns = bargroup.Columns
 	}
@@ -575,7 +571,7 @@ func (bgq *BarGroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = bgq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if bgq.unique != nil && *bgq.unique {
+	if bgq.ctx.Unique != nil && *bgq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range bgq.predicates {
@@ -584,12 +580,12 @@ func (bgq *BarGroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range bgq.order {
 		p(selector)
 	}
-	if offset := bgq.offset; offset != nil {
+	if offset := bgq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := bgq.limit; limit != nil {
+	if limit := bgq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -609,7 +605,7 @@ func (bggb *BarGroupGroupBy) Aggregate(fns ...AggregateFunc) *BarGroupGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (bggb *BarGroupGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarGroup, "GroupBy")
+	ctx = setContextOp(ctx, bggb.build.ctx, ent.OpQueryGroupBy)
 	if err := bggb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -657,7 +653,7 @@ func (bgs *BarGroupSelect) Aggregate(fns ...AggregateFunc) *BarGroupSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (bgs *BarGroupSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarGroup, "Select")
+	ctx = setContextOp(ctx, bgs.ctx, ent.OpQuerySelect)
 	if err := bgs.prepareQuery(ctx); err != nil {
 		return err
 	}

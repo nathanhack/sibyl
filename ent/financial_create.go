@@ -41,7 +41,7 @@ func (fc *FinancialCreate) Mutation() *FinancialMutation {
 
 // Save creates the Financial in the database.
 func (fc *FinancialCreate) Save(ctx context.Context) (*Financial, error) {
-	return withHooks[*Financial, FinancialMutation](ctx, fc.sqlSave, fc.mutation, fc.hooks)
+	return withHooks(ctx, fc.sqlSave, fc.mutation, fc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -92,13 +92,7 @@ func (fc *FinancialCreate) sqlSave(ctx context.Context) (*Financial, error) {
 func (fc *FinancialCreate) createSpec() (*Financial, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Financial{config: fc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: financial.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: financial.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(financial.Table, sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt))
 	)
 	if nodes := fc.mutation.StockIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -108,10 +102,7 @@ func (fc *FinancialCreate) createSpec() (*Financial, *sqlgraph.CreateSpec) {
 			Columns: financial.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -125,11 +116,15 @@ func (fc *FinancialCreate) createSpec() (*Financial, *sqlgraph.CreateSpec) {
 // FinancialCreateBulk is the builder for creating many Financial entities in bulk.
 type FinancialCreateBulk struct {
 	config
+	err      error
 	builders []*FinancialCreate
 }
 
 // Save creates the Financial entities in the database.
 func (fcb *FinancialCreateBulk) Save(ctx context.Context) ([]*Financial, error) {
+	if fcb.err != nil {
+		return nil, fcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(fcb.builders))
 	nodes := make([]*Financial, len(fcb.builders))
 	mutators := make([]Mutator, len(fcb.builders))
@@ -145,8 +140,8 @@ func (fcb *FinancialCreateBulk) Save(ctx context.Context) ([]*Financial, error) 
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, fcb.builders[i+1].mutation)
 				} else {

@@ -21,9 +21,9 @@ type DividendCreate struct {
 	hooks    []Hook
 }
 
-// SetCashAmount sets the "cash_amount" field.
-func (dc *DividendCreate) SetCashAmount(f float64) *DividendCreate {
-	dc.mutation.SetCashAmount(f)
+// SetRate sets the "rate" field.
+func (dc *DividendCreate) SetRate(f float64) *DividendCreate {
+	dc.mutation.SetRate(f)
 	return dc
 }
 
@@ -33,21 +33,9 @@ func (dc *DividendCreate) SetDeclarationDate(t time.Time) *DividendCreate {
 	return dc
 }
 
-// SetDividendType sets the "dividend_type" field.
-func (dc *DividendCreate) SetDividendType(dt dividend.DividendType) *DividendCreate {
-	dc.mutation.SetDividendType(dt)
-	return dc
-}
-
 // SetExDividendDate sets the "ex_dividend_date" field.
 func (dc *DividendCreate) SetExDividendDate(t time.Time) *DividendCreate {
 	dc.mutation.SetExDividendDate(t)
-	return dc
-}
-
-// SetFrequency sets the "frequency" field.
-func (dc *DividendCreate) SetFrequency(i int) *DividendCreate {
-	dc.mutation.SetFrequency(i)
 	return dc
 }
 
@@ -85,7 +73,7 @@ func (dc *DividendCreate) Mutation() *DividendMutation {
 
 // Save creates the Dividend in the database.
 func (dc *DividendCreate) Save(ctx context.Context) (*Dividend, error) {
-	return withHooks[*Dividend, DividendMutation](ctx, dc.sqlSave, dc.mutation, dc.hooks)
+	return withHooks(ctx, dc.sqlSave, dc.mutation, dc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -112,25 +100,14 @@ func (dc *DividendCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (dc *DividendCreate) check() error {
-	if _, ok := dc.mutation.CashAmount(); !ok {
-		return &ValidationError{Name: "cash_amount", err: errors.New(`ent: missing required field "Dividend.cash_amount"`)}
+	if _, ok := dc.mutation.Rate(); !ok {
+		return &ValidationError{Name: "rate", err: errors.New(`ent: missing required field "Dividend.rate"`)}
 	}
 	if _, ok := dc.mutation.DeclarationDate(); !ok {
 		return &ValidationError{Name: "declaration_date", err: errors.New(`ent: missing required field "Dividend.declaration_date"`)}
 	}
-	if _, ok := dc.mutation.DividendType(); !ok {
-		return &ValidationError{Name: "dividend_type", err: errors.New(`ent: missing required field "Dividend.dividend_type"`)}
-	}
-	if v, ok := dc.mutation.DividendType(); ok {
-		if err := dividend.DividendTypeValidator(v); err != nil {
-			return &ValidationError{Name: "dividend_type", err: fmt.Errorf(`ent: validator failed for field "Dividend.dividend_type": %w`, err)}
-		}
-	}
 	if _, ok := dc.mutation.ExDividendDate(); !ok {
 		return &ValidationError{Name: "ex_dividend_date", err: errors.New(`ent: missing required field "Dividend.ex_dividend_date"`)}
-	}
-	if _, ok := dc.mutation.Frequency(); !ok {
-		return &ValidationError{Name: "frequency", err: errors.New(`ent: missing required field "Dividend.frequency"`)}
 	}
 	if _, ok := dc.mutation.RecordDate(); !ok {
 		return &ValidationError{Name: "record_date", err: errors.New(`ent: missing required field "Dividend.record_date"`)}
@@ -162,33 +139,19 @@ func (dc *DividendCreate) sqlSave(ctx context.Context) (*Dividend, error) {
 func (dc *DividendCreate) createSpec() (*Dividend, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Dividend{config: dc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: dividend.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: dividend.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(dividend.Table, sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt))
 	)
-	if value, ok := dc.mutation.CashAmount(); ok {
-		_spec.SetField(dividend.FieldCashAmount, field.TypeFloat64, value)
-		_node.CashAmount = value
+	if value, ok := dc.mutation.Rate(); ok {
+		_spec.SetField(dividend.FieldRate, field.TypeFloat64, value)
+		_node.Rate = value
 	}
 	if value, ok := dc.mutation.DeclarationDate(); ok {
 		_spec.SetField(dividend.FieldDeclarationDate, field.TypeTime, value)
 		_node.DeclarationDate = value
 	}
-	if value, ok := dc.mutation.DividendType(); ok {
-		_spec.SetField(dividend.FieldDividendType, field.TypeEnum, value)
-		_node.DividendType = value
-	}
 	if value, ok := dc.mutation.ExDividendDate(); ok {
 		_spec.SetField(dividend.FieldExDividendDate, field.TypeTime, value)
 		_node.ExDividendDate = value
-	}
-	if value, ok := dc.mutation.Frequency(); ok {
-		_spec.SetField(dividend.FieldFrequency, field.TypeInt, value)
-		_node.Frequency = value
 	}
 	if value, ok := dc.mutation.RecordDate(); ok {
 		_spec.SetField(dividend.FieldRecordDate, field.TypeTime, value)
@@ -206,10 +169,7 @@ func (dc *DividendCreate) createSpec() (*Dividend, *sqlgraph.CreateSpec) {
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -223,11 +183,15 @@ func (dc *DividendCreate) createSpec() (*Dividend, *sqlgraph.CreateSpec) {
 // DividendCreateBulk is the builder for creating many Dividend entities in bulk.
 type DividendCreateBulk struct {
 	config
+	err      error
 	builders []*DividendCreate
 }
 
 // Save creates the Dividend entities in the database.
 func (dcb *DividendCreateBulk) Save(ctx context.Context) ([]*Dividend, error) {
+	if dcb.err != nil {
+		return nil, dcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(dcb.builders))
 	nodes := make([]*Dividend, len(dcb.builders))
 	mutators := make([]Mutator, len(dcb.builders))
@@ -243,8 +207,8 @@ func (dcb *DividendCreateBulk) Save(ctx context.Context) ([]*Dividend, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, dcb.builders[i+1].mutation)
 				} else {

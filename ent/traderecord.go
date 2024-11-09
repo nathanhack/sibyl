@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/traderecord"
 	"github.com/nathanhack/sibyl/ent/tradetimerange"
@@ -27,7 +28,8 @@ type TradeRecord struct {
 	TimeRangeID int `json:"time_range_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TradeRecordQuery when eager-loading is set.
-	Edges TradeRecordEdges `json:"edges"`
+	Edges        TradeRecordEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // TradeRecordEdges holds the relations/edges for other nodes in the graph.
@@ -48,12 +50,10 @@ type TradeRecordEdges struct {
 // TimeRangeOrErr returns the TimeRange value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e TradeRecordEdges) TimeRangeOrErr() (*TradeTimeRange, error) {
-	if e.loadedTypes[0] {
-		if e.TimeRange == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: tradetimerange.Label}
-		}
+	if e.TimeRange != nil {
 		return e.TimeRange, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: tradetimerange.Label}
 	}
 	return nil, &NotLoadedError{edge: "time_range"}
 }
@@ -97,7 +97,7 @@ func (*TradeRecord) scanValues(columns []string) ([]any, error) {
 		case traderecord.FieldTimestamp:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type TradeRecord", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -141,36 +141,44 @@ func (tr *TradeRecord) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tr.TimeRangeID = int(value.Int64)
 			}
+		default:
+			tr.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the TradeRecord.
+// This includes values selected through modifiers, order, etc.
+func (tr *TradeRecord) Value(name string) (ent.Value, error) {
+	return tr.selectValues.Get(name)
+}
+
 // QueryTimeRange queries the "time_range" edge of the TradeRecord entity.
 func (tr *TradeRecord) QueryTimeRange() *TradeTimeRangeQuery {
-	return (&TradeRecordClient{config: tr.config}).QueryTimeRange(tr)
+	return NewTradeRecordClient(tr.config).QueryTimeRange(tr)
 }
 
 // QueryConditions queries the "conditions" edge of the TradeRecord entity.
 func (tr *TradeRecord) QueryConditions() *TradeConditionQuery {
-	return (&TradeRecordClient{config: tr.config}).QueryConditions(tr)
+	return NewTradeRecordClient(tr.config).QueryConditions(tr)
 }
 
 // QueryCorrection queries the "correction" edge of the TradeRecord entity.
 func (tr *TradeRecord) QueryCorrection() *TradeCorrectionQuery {
-	return (&TradeRecordClient{config: tr.config}).QueryCorrection(tr)
+	return NewTradeRecordClient(tr.config).QueryCorrection(tr)
 }
 
 // QueryExchange queries the "exchange" edge of the TradeRecord entity.
 func (tr *TradeRecord) QueryExchange() *ExchangeQuery {
-	return (&TradeRecordClient{config: tr.config}).QueryExchange(tr)
+	return NewTradeRecordClient(tr.config).QueryExchange(tr)
 }
 
 // Update returns a builder for updating this TradeRecord.
 // Note that you need to call TradeRecord.Unwrap() before calling this method if this TradeRecord
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (tr *TradeRecord) Update() *TradeRecordUpdateOne {
-	return (&TradeRecordClient{config: tr.config}).UpdateOne(tr)
+	return NewTradeRecordClient(tr.config).UpdateOne(tr)
 }
 
 // Unwrap unwraps the TradeRecord entity that was returned from a transaction after it was closed,
@@ -206,9 +214,3 @@ func (tr *TradeRecord) String() string {
 
 // TradeRecords is a parsable slice of TradeRecord.
 type TradeRecords []*TradeRecord
-
-func (tr TradeRecords) config(cfg config) {
-	for _i := range tr {
-		tr[_i].config = cfg
-	}
-}

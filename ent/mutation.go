@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"entgo.io/ent"
+	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/bargroup"
 	"github.com/nathanhack/sibyl/ent/barrecord"
 	"github.com/nathanhack/sibyl/ent/bartimerange"
@@ -26,9 +28,6 @@ import (
 	"github.com/nathanhack/sibyl/ent/tradecorrection"
 	"github.com/nathanhack/sibyl/ent/traderecord"
 	"github.com/nathanhack/sibyl/ent/tradetimerange"
-
-	"entgo.io/ent"
-	"entgo.io/ent/dialect/sql"
 )
 
 const (
@@ -344,6 +343,7 @@ func (m *BarGroupMutation) ResetTimeRangeID() {
 // ClearTimeRange clears the "time_range" edge to the BarTimeRange entity.
 func (m *BarGroupMutation) ClearTimeRange() {
 	m.clearedtime_range = true
+	m.clearedFields[bargroup.FieldTimeRangeID] = struct{}{}
 }
 
 // TimeRangeCleared reports if the "time_range" edge to the BarTimeRange entity was cleared.
@@ -1998,6 +1998,7 @@ func (m *BarTimeRangeMutation) ResetUpdateTime() {
 // ClearInterval clears the "interval" edge to the Interval entity.
 func (m *BarTimeRangeMutation) ClearInterval() {
 	m.clearedinterval = true
+	m.clearedFields[bartimerange.FieldIntervalID] = struct{}{}
 }
 
 // IntervalCleared reports if the "interval" edge to the Interval entity was cleared.
@@ -2887,13 +2888,10 @@ type DividendMutation struct {
 	op               Op
 	typ              string
 	id               *int
-	cash_amount      *float64
-	addcash_amount   *float64
+	rate             *float64
+	addrate          *float64
 	declaration_date *time.Time
-	dividend_type    *dividend.DividendType
 	ex_dividend_date *time.Time
-	frequency        *int
-	addfrequency     *int
 	record_date      *time.Time
 	pay_date         *time.Time
 	clearedFields    map[string]struct{}
@@ -3003,60 +3001,60 @@ func (m *DividendMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetCashAmount sets the "cash_amount" field.
-func (m *DividendMutation) SetCashAmount(f float64) {
-	m.cash_amount = &f
-	m.addcash_amount = nil
+// SetRate sets the "rate" field.
+func (m *DividendMutation) SetRate(f float64) {
+	m.rate = &f
+	m.addrate = nil
 }
 
-// CashAmount returns the value of the "cash_amount" field in the mutation.
-func (m *DividendMutation) CashAmount() (r float64, exists bool) {
-	v := m.cash_amount
+// Rate returns the value of the "rate" field in the mutation.
+func (m *DividendMutation) Rate() (r float64, exists bool) {
+	v := m.rate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCashAmount returns the old "cash_amount" field's value of the Dividend entity.
+// OldRate returns the old "rate" field's value of the Dividend entity.
 // If the Dividend object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DividendMutation) OldCashAmount(ctx context.Context) (v float64, err error) {
+func (m *DividendMutation) OldRate(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCashAmount is only allowed on UpdateOne operations")
+		return v, errors.New("OldRate is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCashAmount requires an ID field in the mutation")
+		return v, errors.New("OldRate requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCashAmount: %w", err)
+		return v, fmt.Errorf("querying old value for OldRate: %w", err)
 	}
-	return oldValue.CashAmount, nil
+	return oldValue.Rate, nil
 }
 
-// AddCashAmount adds f to the "cash_amount" field.
-func (m *DividendMutation) AddCashAmount(f float64) {
-	if m.addcash_amount != nil {
-		*m.addcash_amount += f
+// AddRate adds f to the "rate" field.
+func (m *DividendMutation) AddRate(f float64) {
+	if m.addrate != nil {
+		*m.addrate += f
 	} else {
-		m.addcash_amount = &f
+		m.addrate = &f
 	}
 }
 
-// AddedCashAmount returns the value that was added to the "cash_amount" field in this mutation.
-func (m *DividendMutation) AddedCashAmount() (r float64, exists bool) {
-	v := m.addcash_amount
+// AddedRate returns the value that was added to the "rate" field in this mutation.
+func (m *DividendMutation) AddedRate() (r float64, exists bool) {
+	v := m.addrate
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetCashAmount resets all changes to the "cash_amount" field.
-func (m *DividendMutation) ResetCashAmount() {
-	m.cash_amount = nil
-	m.addcash_amount = nil
+// ResetRate resets all changes to the "rate" field.
+func (m *DividendMutation) ResetRate() {
+	m.rate = nil
+	m.addrate = nil
 }
 
 // SetDeclarationDate sets the "declaration_date" field.
@@ -3095,42 +3093,6 @@ func (m *DividendMutation) ResetDeclarationDate() {
 	m.declaration_date = nil
 }
 
-// SetDividendType sets the "dividend_type" field.
-func (m *DividendMutation) SetDividendType(dt dividend.DividendType) {
-	m.dividend_type = &dt
-}
-
-// DividendType returns the value of the "dividend_type" field in the mutation.
-func (m *DividendMutation) DividendType() (r dividend.DividendType, exists bool) {
-	v := m.dividend_type
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDividendType returns the old "dividend_type" field's value of the Dividend entity.
-// If the Dividend object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DividendMutation) OldDividendType(ctx context.Context) (v dividend.DividendType, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDividendType is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDividendType requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDividendType: %w", err)
-	}
-	return oldValue.DividendType, nil
-}
-
-// ResetDividendType resets all changes to the "dividend_type" field.
-func (m *DividendMutation) ResetDividendType() {
-	m.dividend_type = nil
-}
-
 // SetExDividendDate sets the "ex_dividend_date" field.
 func (m *DividendMutation) SetExDividendDate(t time.Time) {
 	m.ex_dividend_date = &t
@@ -3165,62 +3127,6 @@ func (m *DividendMutation) OldExDividendDate(ctx context.Context) (v time.Time, 
 // ResetExDividendDate resets all changes to the "ex_dividend_date" field.
 func (m *DividendMutation) ResetExDividendDate() {
 	m.ex_dividend_date = nil
-}
-
-// SetFrequency sets the "frequency" field.
-func (m *DividendMutation) SetFrequency(i int) {
-	m.frequency = &i
-	m.addfrequency = nil
-}
-
-// Frequency returns the value of the "frequency" field in the mutation.
-func (m *DividendMutation) Frequency() (r int, exists bool) {
-	v := m.frequency
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFrequency returns the old "frequency" field's value of the Dividend entity.
-// If the Dividend object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DividendMutation) OldFrequency(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFrequency is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFrequency requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFrequency: %w", err)
-	}
-	return oldValue.Frequency, nil
-}
-
-// AddFrequency adds i to the "frequency" field.
-func (m *DividendMutation) AddFrequency(i int) {
-	if m.addfrequency != nil {
-		*m.addfrequency += i
-	} else {
-		m.addfrequency = &i
-	}
-}
-
-// AddedFrequency returns the value that was added to the "frequency" field in this mutation.
-func (m *DividendMutation) AddedFrequency() (r int, exists bool) {
-	v := m.addfrequency
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetFrequency resets all changes to the "frequency" field.
-func (m *DividendMutation) ResetFrequency() {
-	m.frequency = nil
-	m.addfrequency = nil
 }
 
 // SetRecordDate sets the "record_date" field.
@@ -3383,21 +3289,15 @@ func (m *DividendMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DividendMutation) Fields() []string {
-	fields := make([]string, 0, 7)
-	if m.cash_amount != nil {
-		fields = append(fields, dividend.FieldCashAmount)
+	fields := make([]string, 0, 5)
+	if m.rate != nil {
+		fields = append(fields, dividend.FieldRate)
 	}
 	if m.declaration_date != nil {
 		fields = append(fields, dividend.FieldDeclarationDate)
 	}
-	if m.dividend_type != nil {
-		fields = append(fields, dividend.FieldDividendType)
-	}
 	if m.ex_dividend_date != nil {
 		fields = append(fields, dividend.FieldExDividendDate)
-	}
-	if m.frequency != nil {
-		fields = append(fields, dividend.FieldFrequency)
 	}
 	if m.record_date != nil {
 		fields = append(fields, dividend.FieldRecordDate)
@@ -3413,16 +3313,12 @@ func (m *DividendMutation) Fields() []string {
 // schema.
 func (m *DividendMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case dividend.FieldCashAmount:
-		return m.CashAmount()
+	case dividend.FieldRate:
+		return m.Rate()
 	case dividend.FieldDeclarationDate:
 		return m.DeclarationDate()
-	case dividend.FieldDividendType:
-		return m.DividendType()
 	case dividend.FieldExDividendDate:
 		return m.ExDividendDate()
-	case dividend.FieldFrequency:
-		return m.Frequency()
 	case dividend.FieldRecordDate:
 		return m.RecordDate()
 	case dividend.FieldPayDate:
@@ -3436,16 +3332,12 @@ func (m *DividendMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *DividendMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case dividend.FieldCashAmount:
-		return m.OldCashAmount(ctx)
+	case dividend.FieldRate:
+		return m.OldRate(ctx)
 	case dividend.FieldDeclarationDate:
 		return m.OldDeclarationDate(ctx)
-	case dividend.FieldDividendType:
-		return m.OldDividendType(ctx)
 	case dividend.FieldExDividendDate:
 		return m.OldExDividendDate(ctx)
-	case dividend.FieldFrequency:
-		return m.OldFrequency(ctx)
 	case dividend.FieldRecordDate:
 		return m.OldRecordDate(ctx)
 	case dividend.FieldPayDate:
@@ -3459,12 +3351,12 @@ func (m *DividendMutation) OldField(ctx context.Context, name string) (ent.Value
 // type.
 func (m *DividendMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case dividend.FieldCashAmount:
+	case dividend.FieldRate:
 		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCashAmount(v)
+		m.SetRate(v)
 		return nil
 	case dividend.FieldDeclarationDate:
 		v, ok := value.(time.Time)
@@ -3473,26 +3365,12 @@ func (m *DividendMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDeclarationDate(v)
 		return nil
-	case dividend.FieldDividendType:
-		v, ok := value.(dividend.DividendType)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDividendType(v)
-		return nil
 	case dividend.FieldExDividendDate:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetExDividendDate(v)
-		return nil
-	case dividend.FieldFrequency:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFrequency(v)
 		return nil
 	case dividend.FieldRecordDate:
 		v, ok := value.(time.Time)
@@ -3516,11 +3394,8 @@ func (m *DividendMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *DividendMutation) AddedFields() []string {
 	var fields []string
-	if m.addcash_amount != nil {
-		fields = append(fields, dividend.FieldCashAmount)
-	}
-	if m.addfrequency != nil {
-		fields = append(fields, dividend.FieldFrequency)
+	if m.addrate != nil {
+		fields = append(fields, dividend.FieldRate)
 	}
 	return fields
 }
@@ -3530,10 +3405,8 @@ func (m *DividendMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *DividendMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case dividend.FieldCashAmount:
-		return m.AddedCashAmount()
-	case dividend.FieldFrequency:
-		return m.AddedFrequency()
+	case dividend.FieldRate:
+		return m.AddedRate()
 	}
 	return nil, false
 }
@@ -3543,19 +3416,12 @@ func (m *DividendMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *DividendMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case dividend.FieldCashAmount:
+	case dividend.FieldRate:
 		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddCashAmount(v)
-		return nil
-	case dividend.FieldFrequency:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddFrequency(v)
+		m.AddRate(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Dividend numeric field %s", name)
@@ -3584,20 +3450,14 @@ func (m *DividendMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *DividendMutation) ResetField(name string) error {
 	switch name {
-	case dividend.FieldCashAmount:
-		m.ResetCashAmount()
+	case dividend.FieldRate:
+		m.ResetRate()
 		return nil
 	case dividend.FieldDeclarationDate:
 		m.ResetDeclarationDate()
 		return nil
-	case dividend.FieldDividendType:
-		m.ResetDividendType()
-		return nil
 	case dividend.FieldExDividendDate:
 		m.ResetExDividendDate()
-		return nil
-	case dividend.FieldFrequency:
-		m.ResetFrequency()
 		return nil
 	case dividend.FieldRecordDate:
 		m.ResetRecordDate()
@@ -3704,7 +3564,8 @@ type EntityMutation struct {
 	name              *string
 	description       *string
 	list_date         *time.Time
-	delisted          *time.Time
+	options           *bool
+	tradable          *bool
 	clearedFields     map[string]struct{}
 	exchanges         map[int]struct{}
 	removedexchanges  map[int]struct{}
@@ -4004,53 +3865,76 @@ func (m *EntityMutation) ResetListDate() {
 	m.list_date = nil
 }
 
-// SetDelisted sets the "delisted" field.
-func (m *EntityMutation) SetDelisted(t time.Time) {
-	m.delisted = &t
+// SetOptions sets the "options" field.
+func (m *EntityMutation) SetOptions(b bool) {
+	m.options = &b
 }
 
-// Delisted returns the value of the "delisted" field in the mutation.
-func (m *EntityMutation) Delisted() (r time.Time, exists bool) {
-	v := m.delisted
+// Options returns the value of the "options" field in the mutation.
+func (m *EntityMutation) Options() (r bool, exists bool) {
+	v := m.options
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldDelisted returns the old "delisted" field's value of the Entity entity.
+// OldOptions returns the old "options" field's value of the Entity entity.
 // If the Entity object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EntityMutation) OldDelisted(ctx context.Context) (v *time.Time, err error) {
+func (m *EntityMutation) OldOptions(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDelisted is only allowed on UpdateOne operations")
+		return v, errors.New("OldOptions is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDelisted requires an ID field in the mutation")
+		return v, errors.New("OldOptions requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDelisted: %w", err)
+		return v, fmt.Errorf("querying old value for OldOptions: %w", err)
 	}
-	return oldValue.Delisted, nil
+	return oldValue.Options, nil
 }
 
-// ClearDelisted clears the value of the "delisted" field.
-func (m *EntityMutation) ClearDelisted() {
-	m.delisted = nil
-	m.clearedFields[entity.FieldDelisted] = struct{}{}
+// ResetOptions resets all changes to the "options" field.
+func (m *EntityMutation) ResetOptions() {
+	m.options = nil
 }
 
-// DelistedCleared returns if the "delisted" field was cleared in this mutation.
-func (m *EntityMutation) DelistedCleared() bool {
-	_, ok := m.clearedFields[entity.FieldDelisted]
-	return ok
+// SetTradable sets the "tradable" field.
+func (m *EntityMutation) SetTradable(b bool) {
+	m.tradable = &b
 }
 
-// ResetDelisted resets all changes to the "delisted" field.
-func (m *EntityMutation) ResetDelisted() {
-	m.delisted = nil
-	delete(m.clearedFields, entity.FieldDelisted)
+// Tradable returns the value of the "tradable" field in the mutation.
+func (m *EntityMutation) Tradable() (r bool, exists bool) {
+	v := m.tradable
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTradable returns the old "tradable" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldTradable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTradable is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTradable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTradable: %w", err)
+	}
+	return oldValue.Tradable, nil
+}
+
+// ResetTradable resets all changes to the "tradable" field.
+func (m *EntityMutation) ResetTradable() {
+	m.tradable = nil
 }
 
 // AddExchangeIDs adds the "exchanges" edge to the Exchange entity by ids.
@@ -4357,7 +4241,7 @@ func (m *EntityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EntityMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.active != nil {
 		fields = append(fields, entity.FieldActive)
 	}
@@ -4373,8 +4257,11 @@ func (m *EntityMutation) Fields() []string {
 	if m.list_date != nil {
 		fields = append(fields, entity.FieldListDate)
 	}
-	if m.delisted != nil {
-		fields = append(fields, entity.FieldDelisted)
+	if m.options != nil {
+		fields = append(fields, entity.FieldOptions)
+	}
+	if m.tradable != nil {
+		fields = append(fields, entity.FieldTradable)
 	}
 	return fields
 }
@@ -4394,8 +4281,10 @@ func (m *EntityMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case entity.FieldListDate:
 		return m.ListDate()
-	case entity.FieldDelisted:
-		return m.Delisted()
+	case entity.FieldOptions:
+		return m.Options()
+	case entity.FieldTradable:
+		return m.Tradable()
 	}
 	return nil, false
 }
@@ -4415,8 +4304,10 @@ func (m *EntityMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldDescription(ctx)
 	case entity.FieldListDate:
 		return m.OldListDate(ctx)
-	case entity.FieldDelisted:
-		return m.OldDelisted(ctx)
+	case entity.FieldOptions:
+		return m.OldOptions(ctx)
+	case entity.FieldTradable:
+		return m.OldTradable(ctx)
 	}
 	return nil, fmt.Errorf("unknown Entity field %s", name)
 }
@@ -4461,12 +4352,19 @@ func (m *EntityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetListDate(v)
 		return nil
-	case entity.FieldDelisted:
-		v, ok := value.(time.Time)
+	case entity.FieldOptions:
+		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetDelisted(v)
+		m.SetOptions(v)
+		return nil
+	case entity.FieldTradable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTradable(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Entity field %s", name)
@@ -4497,11 +4395,7 @@ func (m *EntityMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *EntityMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(entity.FieldDelisted) {
-		fields = append(fields, entity.FieldDelisted)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -4514,11 +4408,6 @@ func (m *EntityMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *EntityMutation) ClearField(name string) error {
-	switch name {
-	case entity.FieldDelisted:
-		m.ClearDelisted()
-		return nil
-	}
 	return fmt.Errorf("unknown Entity nullable field %s", name)
 }
 
@@ -4541,8 +4430,11 @@ func (m *EntityMutation) ResetField(name string) error {
 	case entity.FieldListDate:
 		m.ResetListDate()
 		return nil
-	case entity.FieldDelisted:
-		m.ResetDelisted()
+	case entity.FieldOptions:
+		m.ResetOptions()
+		return nil
+	case entity.FieldTradable:
+		m.ResetTradable()
 		return nil
 	}
 	return fmt.Errorf("unknown Entity field %s", name)
@@ -5835,6 +5727,7 @@ func (m *IntervalMutation) ResetDataSourceID() {
 // ClearDataSource clears the "data_source" edge to the DataSource entity.
 func (m *IntervalMutation) ClearDataSource() {
 	m.cleareddata_source = true
+	m.clearedFields[interval.FieldDataSourceID] = struct{}{}
 }
 
 // DataSourceCleared reports if the "data_source" edge to the DataSource entity was cleared.
@@ -5861,6 +5754,7 @@ func (m *IntervalMutation) ResetDataSource() {
 // ClearStock clears the "stock" edge to the Entity entity.
 func (m *IntervalMutation) ClearStock() {
 	m.clearedstock = true
+	m.clearedFields[interval.FieldStockID] = struct{}{}
 }
 
 // StockCleared reports if the "stock" edge to the Entity entity was cleared.
@@ -9018,6 +8912,7 @@ func (m *TradeRecordMutation) ResetTimeRangeID() {
 // ClearTimeRange clears the "time_range" edge to the TradeTimeRange entity.
 func (m *TradeRecordMutation) ClearTimeRange() {
 	m.clearedtime_range = true
+	m.clearedFields[traderecord.FieldTimeRangeID] = struct{}{}
 }
 
 // TimeRangeCleared reports if the "time_range" edge to the TradeTimeRange entity was cleared.
@@ -9794,6 +9689,7 @@ func (m *TradeTimeRangeMutation) ResetIntervalID() {
 // ClearInterval clears the "interval" edge to the Interval entity.
 func (m *TradeTimeRangeMutation) ClearInterval() {
 	m.clearedinterval = true
+	m.clearedFields[tradetimerange.FieldIntervalID] = struct{}{}
 }
 
 // IntervalCleared reports if the "interval" edge to the Interval entity was cleared.

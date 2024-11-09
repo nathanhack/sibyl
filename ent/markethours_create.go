@@ -65,7 +65,7 @@ func (mhc *MarketHoursCreate) Mutation() *MarketHoursMutation {
 
 // Save creates the MarketHours in the database.
 func (mhc *MarketHoursCreate) Save(ctx context.Context) (*MarketHours, error) {
-	return withHooks[*MarketHours, MarketHoursMutation](ctx, mhc.sqlSave, mhc.mutation, mhc.hooks)
+	return withHooks(ctx, mhc.sqlSave, mhc.mutation, mhc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -125,13 +125,7 @@ func (mhc *MarketHoursCreate) sqlSave(ctx context.Context) (*MarketHours, error)
 func (mhc *MarketHoursCreate) createSpec() (*MarketHours, *sqlgraph.CreateSpec) {
 	var (
 		_node = &MarketHours{config: mhc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: markethours.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: markethours.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(markethours.Table, sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt))
 	)
 	if value, ok := mhc.mutation.Date(); ok {
 		_spec.SetField(markethours.FieldDate, field.TypeTime, value)
@@ -153,10 +147,7 @@ func (mhc *MarketHoursCreate) createSpec() (*MarketHours, *sqlgraph.CreateSpec) 
 			Columns: []string{markethours.MarketInfoColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: marketinfo.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -171,11 +162,15 @@ func (mhc *MarketHoursCreate) createSpec() (*MarketHours, *sqlgraph.CreateSpec) 
 // MarketHoursCreateBulk is the builder for creating many MarketHours entities in bulk.
 type MarketHoursCreateBulk struct {
 	config
+	err      error
 	builders []*MarketHoursCreate
 }
 
 // Save creates the MarketHours entities in the database.
 func (mhcb *MarketHoursCreateBulk) Save(ctx context.Context) ([]*MarketHours, error) {
+	if mhcb.err != nil {
+		return nil, mhcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(mhcb.builders))
 	nodes := make([]*MarketHours, len(mhcb.builders))
 	mutators := make([]Mutator, len(mhcb.builders))
@@ -191,8 +186,8 @@ func (mhcb *MarketHoursCreateBulk) Save(ctx context.Context) ([]*MarketHours, er
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, mhcb.builders[i+1].mutation)
 				} else {

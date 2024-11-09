@@ -54,7 +54,7 @@ func (ec *ExchangeCreate) Mutation() *ExchangeMutation {
 
 // Save creates the Exchange in the database.
 func (ec *ExchangeCreate) Save(ctx context.Context) (*Exchange, error) {
-	return withHooks[*Exchange, ExchangeMutation](ctx, ec.sqlSave, ec.mutation, ec.hooks)
+	return withHooks(ctx, ec.sqlSave, ec.mutation, ec.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -111,13 +111,7 @@ func (ec *ExchangeCreate) sqlSave(ctx context.Context) (*Exchange, error) {
 func (ec *ExchangeCreate) createSpec() (*Exchange, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Exchange{config: ec.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: exchange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: exchange.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(exchange.Table, sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt))
 	)
 	if value, ok := ec.mutation.Code(); ok {
 		_spec.SetField(exchange.FieldCode, field.TypeString, value)
@@ -135,10 +129,7 @@ func (ec *ExchangeCreate) createSpec() (*Exchange, *sqlgraph.CreateSpec) {
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -152,11 +143,15 @@ func (ec *ExchangeCreate) createSpec() (*Exchange, *sqlgraph.CreateSpec) {
 // ExchangeCreateBulk is the builder for creating many Exchange entities in bulk.
 type ExchangeCreateBulk struct {
 	config
+	err      error
 	builders []*ExchangeCreate
 }
 
 // Save creates the Exchange entities in the database.
 func (ecb *ExchangeCreateBulk) Save(ctx context.Context) ([]*Exchange, error) {
+	if ecb.err != nil {
+		return nil, ecb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(ecb.builders))
 	nodes := make([]*Exchange, len(ecb.builders))
 	mutators := make([]Mutator, len(ecb.builders))
@@ -172,8 +167,8 @@ func (ecb *ExchangeCreateBulk) Save(ctx context.Context) ([]*Exchange, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, ecb.builders[i+1].mutation)
 				} else {

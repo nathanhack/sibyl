@@ -22,7 +22,7 @@ type BarHistoryResults struct {
 
 type BarRequester interface {
 	DataSourceId() int
-	Name() string
+	Name() string //Agent Name
 	MaxTimeRange(intervalValue interval.Interval) (start time.Time, end time.Time)
 	BarRequest(ctx context.Context, ticker string, intervalValue interval.Interval, start, end time.Time) (*BarHistoryResults, error)
 }
@@ -33,21 +33,27 @@ type EntitySearchResults struct {
 }
 
 type EntitySearcher interface {
+	Name() string // Agent Name
 	EntitySearch(ctx context.Context, ticker string, limit int) ([]EntitySearchResults, error)
-	Entity(ctx context.Context, ticker string) (*ent.EntityCreate, error)
+}
+
+type EntitySourcing interface {
+	Name() string // Agent Name
+	EntityCreate(ctx context.Context, ticker string) (*ent.EntityCreate, error)
+	EntityCreateUpdate(ctx context.Context, current ...*ent.Entity) ([]*ent.EntityUpdateOne, error)
 }
 
 type DividendRequester interface {
-	Name() string
+	Name() string // Agent Name
 	DividendRequest(ctx context.Context, ticker string, start, end time.Time) ([]*ent.DividendCreate, []time.Time, error)
 }
 
 type SplitRequester interface {
-	Name() string
+	Name() string // Agent Name
 	SplitRequest(ctx context.Context, ticker string, start, end time.Time) ([]*ent.SplitCreate, []time.Time, error)
 }
 
 type MarketHoursRequester interface {
-	Name() string
+	Name() string // Agent Name
 	MarketHoursRequest(ctx context.Context, start, end time.Time) ([]*ent.MarketHoursCreate, []time.Time, error)
 }

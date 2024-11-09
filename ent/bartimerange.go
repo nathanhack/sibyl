@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/bartimerange"
 	"github.com/nathanhack/sibyl/ent/interval"
@@ -31,7 +32,8 @@ type BarTimeRange struct {
 	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BarTimeRangeQuery when eager-loading is set.
-	Edges BarTimeRangeEdges `json:"edges"`
+	Edges        BarTimeRangeEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // BarTimeRangeEdges holds the relations/edges for other nodes in the graph.
@@ -48,12 +50,10 @@ type BarTimeRangeEdges struct {
 // IntervalOrErr returns the Interval value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e BarTimeRangeEdges) IntervalOrErr() (*Interval, error) {
-	if e.loadedTypes[0] {
-		if e.Interval == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: interval.Label}
-		}
+	if e.Interval != nil {
 		return e.Interval, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: interval.Label}
 	}
 	return nil, &NotLoadedError{edge: "interval"}
 }
@@ -79,7 +79,7 @@ func (*BarTimeRange) scanValues(columns []string) ([]any, error) {
 		case bartimerange.FieldStart, bartimerange.FieldEnd, bartimerange.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type BarTimeRange", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -135,26 +135,34 @@ func (btr *BarTimeRange) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				btr.UpdateTime = value.Time
 			}
+		default:
+			btr.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the BarTimeRange.
+// This includes values selected through modifiers, order, etc.
+func (btr *BarTimeRange) Value(name string) (ent.Value, error) {
+	return btr.selectValues.Get(name)
+}
+
 // QueryInterval queries the "interval" edge of the BarTimeRange entity.
 func (btr *BarTimeRange) QueryInterval() *IntervalQuery {
-	return (&BarTimeRangeClient{config: btr.config}).QueryInterval(btr)
+	return NewBarTimeRangeClient(btr.config).QueryInterval(btr)
 }
 
 // QueryGroups queries the "groups" edge of the BarTimeRange entity.
 func (btr *BarTimeRange) QueryGroups() *BarGroupQuery {
-	return (&BarTimeRangeClient{config: btr.config}).QueryGroups(btr)
+	return NewBarTimeRangeClient(btr.config).QueryGroups(btr)
 }
 
 // Update returns a builder for updating this BarTimeRange.
 // Note that you need to call BarTimeRange.Unwrap() before calling this method if this BarTimeRange
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (btr *BarTimeRange) Update() *BarTimeRangeUpdateOne {
-	return (&BarTimeRangeClient{config: btr.config}).UpdateOne(btr)
+	return NewBarTimeRangeClient(btr.config).UpdateOne(btr)
 }
 
 // Unwrap unwraps the BarTimeRange entity that was returned from a transaction after it was closed,
@@ -196,9 +204,3 @@ func (btr *BarTimeRange) String() string {
 
 // BarTimeRanges is a parsable slice of BarTimeRange.
 type BarTimeRanges []*BarTimeRange
-
-func (btr BarTimeRanges) config(cfg config) {
-	for _i := range btr {
-		btr[_i].config = cfg
-	}
-}

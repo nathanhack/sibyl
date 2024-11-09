@@ -27,7 +27,7 @@ func (dsd *DataSourceDelete) Where(ps ...predicate.DataSource) *DataSourceDelete
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (dsd *DataSourceDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, DataSourceMutation](ctx, dsd.sqlExec, dsd.mutation, dsd.hooks)
+	return withHooks(ctx, dsd.sqlExec, dsd.mutation, dsd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (dsd *DataSourceDelete) ExecX(ctx context.Context) int {
 }
 
 func (dsd *DataSourceDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: datasource.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: datasource.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(datasource.Table, sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt))
 	if ps := dsd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type DataSourceDeleteOne struct {
 	dsd *DataSourceDelete
 }
 
+// Where appends a list predicates to the DataSourceDelete builder.
+func (dsdo *DataSourceDeleteOne) Where(ps ...predicate.DataSource) *DataSourceDeleteOne {
+	dsdo.dsd.mutation.Where(ps...)
+	return dsdo
+}
+
 // Exec executes the deletion query.
 func (dsdo *DataSourceDeleteOne) Exec(ctx context.Context) error {
 	n, err := dsdo.dsd.Exec(ctx)
@@ -84,5 +82,7 @@ func (dsdo *DataSourceDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (dsdo *DataSourceDeleteOne) ExecX(ctx context.Context) {
-	dsdo.dsd.ExecX(ctx)
+	if err := dsdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

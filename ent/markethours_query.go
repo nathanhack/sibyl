@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,11 +19,8 @@ import (
 // MarketHoursQuery is the builder for querying MarketHours entities.
 type MarketHoursQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
+	ctx            *QueryContext
+	order          []markethours.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.MarketHours
 	withMarketInfo *MarketInfoQuery
@@ -40,25 +38,25 @@ func (mhq *MarketHoursQuery) Where(ps ...predicate.MarketHours) *MarketHoursQuer
 
 // Limit the number of records to be returned by this query.
 func (mhq *MarketHoursQuery) Limit(limit int) *MarketHoursQuery {
-	mhq.limit = &limit
+	mhq.ctx.Limit = &limit
 	return mhq
 }
 
 // Offset to start from.
 func (mhq *MarketHoursQuery) Offset(offset int) *MarketHoursQuery {
-	mhq.offset = &offset
+	mhq.ctx.Offset = &offset
 	return mhq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (mhq *MarketHoursQuery) Unique(unique bool) *MarketHoursQuery {
-	mhq.unique = &unique
+	mhq.ctx.Unique = &unique
 	return mhq
 }
 
 // Order specifies how the records should be ordered.
-func (mhq *MarketHoursQuery) Order(o ...OrderFunc) *MarketHoursQuery {
+func (mhq *MarketHoursQuery) Order(o ...markethours.OrderOption) *MarketHoursQuery {
 	mhq.order = append(mhq.order, o...)
 	return mhq
 }
@@ -88,7 +86,7 @@ func (mhq *MarketHoursQuery) QueryMarketInfo() *MarketInfoQuery {
 // First returns the first MarketHours entity from the query.
 // Returns a *NotFoundError when no MarketHours was found.
 func (mhq *MarketHoursQuery) First(ctx context.Context) (*MarketHours, error) {
-	nodes, err := mhq.Limit(1).All(newQueryContext(ctx, TypeMarketHours, "First"))
+	nodes, err := mhq.Limit(1).All(setContextOp(ctx, mhq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (mhq *MarketHoursQuery) FirstX(ctx context.Context) *MarketHours {
 // Returns a *NotFoundError when no MarketHours ID was found.
 func (mhq *MarketHoursQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = mhq.Limit(1).IDs(newQueryContext(ctx, TypeMarketHours, "FirstID")); err != nil {
+	if ids, err = mhq.Limit(1).IDs(setContextOp(ctx, mhq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (mhq *MarketHoursQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one MarketHours entity is found.
 // Returns a *NotFoundError when no MarketHours entities are found.
 func (mhq *MarketHoursQuery) Only(ctx context.Context) (*MarketHours, error) {
-	nodes, err := mhq.Limit(2).All(newQueryContext(ctx, TypeMarketHours, "Only"))
+	nodes, err := mhq.Limit(2).All(setContextOp(ctx, mhq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (mhq *MarketHoursQuery) OnlyX(ctx context.Context) *MarketHours {
 // Returns a *NotFoundError when no entities are found.
 func (mhq *MarketHoursQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = mhq.Limit(2).IDs(newQueryContext(ctx, TypeMarketHours, "OnlyID")); err != nil {
+	if ids, err = mhq.Limit(2).IDs(setContextOp(ctx, mhq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (mhq *MarketHoursQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of MarketHoursSlice.
 func (mhq *MarketHoursQuery) All(ctx context.Context) ([]*MarketHours, error) {
-	ctx = newQueryContext(ctx, TypeMarketHours, "All")
+	ctx = setContextOp(ctx, mhq.ctx, ent.OpQueryAll)
 	if err := mhq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (mhq *MarketHoursQuery) AllX(ctx context.Context) []*MarketHours {
 }
 
 // IDs executes the query and returns a list of MarketHours IDs.
-func (mhq *MarketHoursQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeMarketHours, "IDs")
-	if err := mhq.Select(markethours.FieldID).Scan(ctx, &ids); err != nil {
+func (mhq *MarketHoursQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if mhq.ctx.Unique == nil && mhq.path != nil {
+		mhq.Unique(true)
+	}
+	ctx = setContextOp(ctx, mhq.ctx, ent.OpQueryIDs)
+	if err = mhq.Select(markethours.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (mhq *MarketHoursQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (mhq *MarketHoursQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeMarketHours, "Count")
+	ctx = setContextOp(ctx, mhq.ctx, ent.OpQueryCount)
 	if err := mhq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (mhq *MarketHoursQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (mhq *MarketHoursQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeMarketHours, "Exist")
+	ctx = setContextOp(ctx, mhq.ctx, ent.OpQueryExist)
 	switch _, err := mhq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (mhq *MarketHoursQuery) Clone() *MarketHoursQuery {
 	}
 	return &MarketHoursQuery{
 		config:         mhq.config,
-		limit:          mhq.limit,
-		offset:         mhq.offset,
-		order:          append([]OrderFunc{}, mhq.order...),
+		ctx:            mhq.ctx.Clone(),
+		order:          append([]markethours.OrderOption{}, mhq.order...),
 		inters:         append([]Interceptor{}, mhq.inters...),
 		predicates:     append([]predicate.MarketHours{}, mhq.predicates...),
 		withMarketInfo: mhq.withMarketInfo.Clone(),
 		// clone intermediate query.
-		sql:    mhq.sql.Clone(),
-		path:   mhq.path,
-		unique: mhq.unique,
+		sql:  mhq.sql.Clone(),
+		path: mhq.path,
 	}
 }
 
@@ -310,9 +308,9 @@ func (mhq *MarketHoursQuery) WithMarketInfo(opts ...func(*MarketInfoQuery)) *Mar
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (mhq *MarketHoursQuery) GroupBy(field string, fields ...string) *MarketHoursGroupBy {
-	mhq.fields = append([]string{field}, fields...)
+	mhq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &MarketHoursGroupBy{build: mhq}
-	grbuild.flds = &mhq.fields
+	grbuild.flds = &mhq.ctx.Fields
 	grbuild.label = markethours.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -331,10 +329,10 @@ func (mhq *MarketHoursQuery) GroupBy(field string, fields ...string) *MarketHour
 //		Select(markethours.FieldDate).
 //		Scan(ctx, &v)
 func (mhq *MarketHoursQuery) Select(fields ...string) *MarketHoursSelect {
-	mhq.fields = append(mhq.fields, fields...)
+	mhq.ctx.Fields = append(mhq.ctx.Fields, fields...)
 	sbuild := &MarketHoursSelect{MarketHoursQuery: mhq}
 	sbuild.label = markethours.Label
-	sbuild.flds, sbuild.scan = &mhq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &mhq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (mhq *MarketHoursQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range mhq.fields {
+	for _, f := range mhq.ctx.Fields {
 		if !markethours.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -424,6 +422,9 @@ func (mhq *MarketHoursQuery) loadMarketInfo(ctx context.Context, query *MarketIn
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(marketinfo.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -443,30 +444,22 @@ func (mhq *MarketHoursQuery) loadMarketInfo(ctx context.Context, query *MarketIn
 
 func (mhq *MarketHoursQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := mhq.querySpec()
-	_spec.Node.Columns = mhq.fields
-	if len(mhq.fields) > 0 {
-		_spec.Unique = mhq.unique != nil && *mhq.unique
+	_spec.Node.Columns = mhq.ctx.Fields
+	if len(mhq.ctx.Fields) > 0 {
+		_spec.Unique = mhq.ctx.Unique != nil && *mhq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, mhq.driver, _spec)
 }
 
 func (mhq *MarketHoursQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   markethours.Table,
-			Columns: markethours.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: markethours.FieldID,
-			},
-		},
-		From:   mhq.sql,
-		Unique: true,
-	}
-	if unique := mhq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(markethours.Table, markethours.Columns, sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt))
+	_spec.From = mhq.sql
+	if unique := mhq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if mhq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := mhq.fields; len(fields) > 0 {
+	if fields := mhq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, markethours.FieldID)
 		for i := range fields {
@@ -482,10 +475,10 @@ func (mhq *MarketHoursQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := mhq.limit; limit != nil {
+	if limit := mhq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := mhq.offset; offset != nil {
+	if offset := mhq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := mhq.order; len(ps) > 0 {
@@ -501,7 +494,7 @@ func (mhq *MarketHoursQuery) querySpec() *sqlgraph.QuerySpec {
 func (mhq *MarketHoursQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(mhq.driver.Dialect())
 	t1 := builder.Table(markethours.Table)
-	columns := mhq.fields
+	columns := mhq.ctx.Fields
 	if len(columns) == 0 {
 		columns = markethours.Columns
 	}
@@ -510,7 +503,7 @@ func (mhq *MarketHoursQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = mhq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if mhq.unique != nil && *mhq.unique {
+	if mhq.ctx.Unique != nil && *mhq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range mhq.predicates {
@@ -519,12 +512,12 @@ func (mhq *MarketHoursQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range mhq.order {
 		p(selector)
 	}
-	if offset := mhq.offset; offset != nil {
+	if offset := mhq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := mhq.limit; limit != nil {
+	if limit := mhq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -544,7 +537,7 @@ func (mhgb *MarketHoursGroupBy) Aggregate(fns ...AggregateFunc) *MarketHoursGrou
 
 // Scan applies the selector query and scans the result into the given value.
 func (mhgb *MarketHoursGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeMarketHours, "GroupBy")
+	ctx = setContextOp(ctx, mhgb.build.ctx, ent.OpQueryGroupBy)
 	if err := mhgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -592,7 +585,7 @@ func (mhs *MarketHoursSelect) Aggregate(fns ...AggregateFunc) *MarketHoursSelect
 
 // Scan applies the selector query and scans the result into the given value.
 func (mhs *MarketHoursSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeMarketHours, "Select")
+	ctx = setContextOp(ctx, mhs.ctx, ent.OpQuerySelect)
 	if err := mhs.prepareQuery(ctx); err != nil {
 		return err
 	}

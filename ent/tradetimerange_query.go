@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,11 +21,8 @@ import (
 // TradeTimeRangeQuery is the builder for querying TradeTimeRange entities.
 type TradeTimeRangeQuery struct {
 	config
-	limit        *int
-	offset       *int
-	unique       *bool
-	order        []OrderFunc
-	fields       []string
+	ctx          *QueryContext
+	order        []tradetimerange.OrderOption
 	inters       []Interceptor
 	predicates   []predicate.TradeTimeRange
 	withInterval *IntervalQuery
@@ -42,25 +40,25 @@ func (ttrq *TradeTimeRangeQuery) Where(ps ...predicate.TradeTimeRange) *TradeTim
 
 // Limit the number of records to be returned by this query.
 func (ttrq *TradeTimeRangeQuery) Limit(limit int) *TradeTimeRangeQuery {
-	ttrq.limit = &limit
+	ttrq.ctx.Limit = &limit
 	return ttrq
 }
 
 // Offset to start from.
 func (ttrq *TradeTimeRangeQuery) Offset(offset int) *TradeTimeRangeQuery {
-	ttrq.offset = &offset
+	ttrq.ctx.Offset = &offset
 	return ttrq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (ttrq *TradeTimeRangeQuery) Unique(unique bool) *TradeTimeRangeQuery {
-	ttrq.unique = &unique
+	ttrq.ctx.Unique = &unique
 	return ttrq
 }
 
 // Order specifies how the records should be ordered.
-func (ttrq *TradeTimeRangeQuery) Order(o ...OrderFunc) *TradeTimeRangeQuery {
+func (ttrq *TradeTimeRangeQuery) Order(o ...tradetimerange.OrderOption) *TradeTimeRangeQuery {
 	ttrq.order = append(ttrq.order, o...)
 	return ttrq
 }
@@ -112,7 +110,7 @@ func (ttrq *TradeTimeRangeQuery) QueryRecords() *TradeRecordQuery {
 // First returns the first TradeTimeRange entity from the query.
 // Returns a *NotFoundError when no TradeTimeRange was found.
 func (ttrq *TradeTimeRangeQuery) First(ctx context.Context) (*TradeTimeRange, error) {
-	nodes, err := ttrq.Limit(1).All(newQueryContext(ctx, TypeTradeTimeRange, "First"))
+	nodes, err := ttrq.Limit(1).All(setContextOp(ctx, ttrq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +133,7 @@ func (ttrq *TradeTimeRangeQuery) FirstX(ctx context.Context) *TradeTimeRange {
 // Returns a *NotFoundError when no TradeTimeRange ID was found.
 func (ttrq *TradeTimeRangeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ttrq.Limit(1).IDs(newQueryContext(ctx, TypeTradeTimeRange, "FirstID")); err != nil {
+	if ids, err = ttrq.Limit(1).IDs(setContextOp(ctx, ttrq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -158,7 +156,7 @@ func (ttrq *TradeTimeRangeQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one TradeTimeRange entity is found.
 // Returns a *NotFoundError when no TradeTimeRange entities are found.
 func (ttrq *TradeTimeRangeQuery) Only(ctx context.Context) (*TradeTimeRange, error) {
-	nodes, err := ttrq.Limit(2).All(newQueryContext(ctx, TypeTradeTimeRange, "Only"))
+	nodes, err := ttrq.Limit(2).All(setContextOp(ctx, ttrq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +184,7 @@ func (ttrq *TradeTimeRangeQuery) OnlyX(ctx context.Context) *TradeTimeRange {
 // Returns a *NotFoundError when no entities are found.
 func (ttrq *TradeTimeRangeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ttrq.Limit(2).IDs(newQueryContext(ctx, TypeTradeTimeRange, "OnlyID")); err != nil {
+	if ids, err = ttrq.Limit(2).IDs(setContextOp(ctx, ttrq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -211,7 +209,7 @@ func (ttrq *TradeTimeRangeQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of TradeTimeRanges.
 func (ttrq *TradeTimeRangeQuery) All(ctx context.Context) ([]*TradeTimeRange, error) {
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "All")
+	ctx = setContextOp(ctx, ttrq.ctx, ent.OpQueryAll)
 	if err := ttrq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -229,10 +227,12 @@ func (ttrq *TradeTimeRangeQuery) AllX(ctx context.Context) []*TradeTimeRange {
 }
 
 // IDs executes the query and returns a list of TradeTimeRange IDs.
-func (ttrq *TradeTimeRangeQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "IDs")
-	if err := ttrq.Select(tradetimerange.FieldID).Scan(ctx, &ids); err != nil {
+func (ttrq *TradeTimeRangeQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if ttrq.ctx.Unique == nil && ttrq.path != nil {
+		ttrq.Unique(true)
+	}
+	ctx = setContextOp(ctx, ttrq.ctx, ent.OpQueryIDs)
+	if err = ttrq.Select(tradetimerange.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -249,7 +249,7 @@ func (ttrq *TradeTimeRangeQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (ttrq *TradeTimeRangeQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "Count")
+	ctx = setContextOp(ctx, ttrq.ctx, ent.OpQueryCount)
 	if err := ttrq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +267,7 @@ func (ttrq *TradeTimeRangeQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (ttrq *TradeTimeRangeQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "Exist")
+	ctx = setContextOp(ctx, ttrq.ctx, ent.OpQueryExist)
 	switch _, err := ttrq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -295,17 +295,15 @@ func (ttrq *TradeTimeRangeQuery) Clone() *TradeTimeRangeQuery {
 	}
 	return &TradeTimeRangeQuery{
 		config:       ttrq.config,
-		limit:        ttrq.limit,
-		offset:       ttrq.offset,
-		order:        append([]OrderFunc{}, ttrq.order...),
+		ctx:          ttrq.ctx.Clone(),
+		order:        append([]tradetimerange.OrderOption{}, ttrq.order...),
 		inters:       append([]Interceptor{}, ttrq.inters...),
 		predicates:   append([]predicate.TradeTimeRange{}, ttrq.predicates...),
 		withInterval: ttrq.withInterval.Clone(),
 		withRecords:  ttrq.withRecords.Clone(),
 		// clone intermediate query.
-		sql:    ttrq.sql.Clone(),
-		path:   ttrq.path,
-		unique: ttrq.unique,
+		sql:  ttrq.sql.Clone(),
+		path: ttrq.path,
 	}
 }
 
@@ -346,9 +344,9 @@ func (ttrq *TradeTimeRangeQuery) WithRecords(opts ...func(*TradeRecordQuery)) *T
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (ttrq *TradeTimeRangeQuery) GroupBy(field string, fields ...string) *TradeTimeRangeGroupBy {
-	ttrq.fields = append([]string{field}, fields...)
+	ttrq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &TradeTimeRangeGroupBy{build: ttrq}
-	grbuild.flds = &ttrq.fields
+	grbuild.flds = &ttrq.ctx.Fields
 	grbuild.label = tradetimerange.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -367,10 +365,10 @@ func (ttrq *TradeTimeRangeQuery) GroupBy(field string, fields ...string) *TradeT
 //		Select(tradetimerange.FieldStart).
 //		Scan(ctx, &v)
 func (ttrq *TradeTimeRangeQuery) Select(fields ...string) *TradeTimeRangeSelect {
-	ttrq.fields = append(ttrq.fields, fields...)
+	ttrq.ctx.Fields = append(ttrq.ctx.Fields, fields...)
 	sbuild := &TradeTimeRangeSelect{TradeTimeRangeQuery: ttrq}
 	sbuild.label = tradetimerange.Label
-	sbuild.flds, sbuild.scan = &ttrq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &ttrq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -390,7 +388,7 @@ func (ttrq *TradeTimeRangeQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range ttrq.fields {
+	for _, f := range ttrq.ctx.Fields {
 		if !tradetimerange.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -458,6 +456,9 @@ func (ttrq *TradeTimeRangeQuery) loadInterval(ctx context.Context, query *Interv
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(interval.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -484,8 +485,11 @@ func (ttrq *TradeTimeRangeQuery) loadRecords(ctx context.Context, query *TradeRe
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(traderecord.FieldTimeRangeID)
+	}
 	query.Where(predicate.TradeRecord(func(s *sql.Selector) {
-		s.Where(sql.InValues(tradetimerange.RecordsColumn, fks...))
+		s.Where(sql.InValues(s.C(tradetimerange.RecordsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -495,7 +499,7 @@ func (ttrq *TradeTimeRangeQuery) loadRecords(ctx context.Context, query *TradeRe
 		fk := n.TimeRangeID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "time_range_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "time_range_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -504,36 +508,31 @@ func (ttrq *TradeTimeRangeQuery) loadRecords(ctx context.Context, query *TradeRe
 
 func (ttrq *TradeTimeRangeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := ttrq.querySpec()
-	_spec.Node.Columns = ttrq.fields
-	if len(ttrq.fields) > 0 {
-		_spec.Unique = ttrq.unique != nil && *ttrq.unique
+	_spec.Node.Columns = ttrq.ctx.Fields
+	if len(ttrq.ctx.Fields) > 0 {
+		_spec.Unique = ttrq.ctx.Unique != nil && *ttrq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, ttrq.driver, _spec)
 }
 
 func (ttrq *TradeTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   tradetimerange.Table,
-			Columns: tradetimerange.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradetimerange.FieldID,
-			},
-		},
-		From:   ttrq.sql,
-		Unique: true,
-	}
-	if unique := ttrq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(tradetimerange.Table, tradetimerange.Columns, sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt))
+	_spec.From = ttrq.sql
+	if unique := ttrq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if ttrq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := ttrq.fields; len(fields) > 0 {
+	if fields := ttrq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tradetimerange.FieldID)
 		for i := range fields {
 			if fields[i] != tradetimerange.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if ttrq.withInterval != nil {
+			_spec.Node.AddColumnOnce(tradetimerange.FieldIntervalID)
 		}
 	}
 	if ps := ttrq.predicates; len(ps) > 0 {
@@ -543,10 +542,10 @@ func (ttrq *TradeTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := ttrq.limit; limit != nil {
+	if limit := ttrq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := ttrq.offset; offset != nil {
+	if offset := ttrq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := ttrq.order; len(ps) > 0 {
@@ -562,7 +561,7 @@ func (ttrq *TradeTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
 func (ttrq *TradeTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(ttrq.driver.Dialect())
 	t1 := builder.Table(tradetimerange.Table)
-	columns := ttrq.fields
+	columns := ttrq.ctx.Fields
 	if len(columns) == 0 {
 		columns = tradetimerange.Columns
 	}
@@ -571,7 +570,7 @@ func (ttrq *TradeTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = ttrq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if ttrq.unique != nil && *ttrq.unique {
+	if ttrq.ctx.Unique != nil && *ttrq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range ttrq.predicates {
@@ -580,12 +579,12 @@ func (ttrq *TradeTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range ttrq.order {
 		p(selector)
 	}
-	if offset := ttrq.offset; offset != nil {
+	if offset := ttrq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := ttrq.limit; limit != nil {
+	if limit := ttrq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -605,7 +604,7 @@ func (ttrgb *TradeTimeRangeGroupBy) Aggregate(fns ...AggregateFunc) *TradeTimeRa
 
 // Scan applies the selector query and scans the result into the given value.
 func (ttrgb *TradeTimeRangeGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "GroupBy")
+	ctx = setContextOp(ctx, ttrgb.build.ctx, ent.OpQueryGroupBy)
 	if err := ttrgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -653,7 +652,7 @@ func (ttrs *TradeTimeRangeSelect) Aggregate(fns ...AggregateFunc) *TradeTimeRang
 
 // Scan applies the selector query and scans the result into the given value.
 func (ttrs *TradeTimeRangeSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeTimeRange, "Select")
+	ctx = setContextOp(ctx, ttrs.ctx, ent.OpQuerySelect)
 	if err := ttrs.prepareQuery(ctx); err != nil {
 		return err
 	}

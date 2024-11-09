@@ -184,11 +184,7 @@ func HasInterval() predicate.TradeTimeRange {
 // HasIntervalWith applies the HasEdge predicate on the "interval" edge with a given conditions (other predicates).
 func HasIntervalWith(preds ...predicate.Interval) predicate.TradeTimeRange {
 	return predicate.TradeTimeRange(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(IntervalInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, IntervalTable, IntervalColumn),
-		)
+		step := newIntervalStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -211,11 +207,7 @@ func HasRecords() predicate.TradeTimeRange {
 // HasRecordsWith applies the HasEdge predicate on the "records" edge with a given conditions (other predicates).
 func HasRecordsWith(preds ...predicate.TradeRecord) predicate.TradeTimeRange {
 	return predicate.TradeTimeRange(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(RecordsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RecordsTable, RecordsColumn),
-		)
+		step := newRecordsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -226,32 +218,15 @@ func HasRecordsWith(preds ...predicate.TradeRecord) predicate.TradeTimeRange {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.TradeTimeRange) predicate.TradeTimeRange {
-	return predicate.TradeTimeRange(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.TradeTimeRange(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.TradeTimeRange) predicate.TradeTimeRange {
-	return predicate.TradeTimeRange(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.TradeTimeRange(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.TradeTimeRange) predicate.TradeTimeRange {
-	return predicate.TradeTimeRange(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.TradeTimeRange(sql.NotPredicates(p))
 }

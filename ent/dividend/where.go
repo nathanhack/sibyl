@@ -55,9 +55,9 @@ func IDLTE(id int) predicate.Dividend {
 	return predicate.Dividend(sql.FieldLTE(FieldID, id))
 }
 
-// CashAmount applies equality check predicate on the "cash_amount" field. It's identical to CashAmountEQ.
-func CashAmount(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldEQ(FieldCashAmount, v))
+// Rate applies equality check predicate on the "rate" field. It's identical to RateEQ.
+func Rate(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldEQ(FieldRate, v))
 }
 
 // DeclarationDate applies equality check predicate on the "declaration_date" field. It's identical to DeclarationDateEQ.
@@ -70,11 +70,6 @@ func ExDividendDate(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldEQ(FieldExDividendDate, v))
 }
 
-// Frequency applies equality check predicate on the "frequency" field. It's identical to FrequencyEQ.
-func Frequency(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldEQ(FieldFrequency, v))
-}
-
 // RecordDate applies equality check predicate on the "record_date" field. It's identical to RecordDateEQ.
 func RecordDate(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldEQ(FieldRecordDate, v))
@@ -85,44 +80,44 @@ func PayDate(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldEQ(FieldPayDate, v))
 }
 
-// CashAmountEQ applies the EQ predicate on the "cash_amount" field.
-func CashAmountEQ(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldEQ(FieldCashAmount, v))
+// RateEQ applies the EQ predicate on the "rate" field.
+func RateEQ(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldEQ(FieldRate, v))
 }
 
-// CashAmountNEQ applies the NEQ predicate on the "cash_amount" field.
-func CashAmountNEQ(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNEQ(FieldCashAmount, v))
+// RateNEQ applies the NEQ predicate on the "rate" field.
+func RateNEQ(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldNEQ(FieldRate, v))
 }
 
-// CashAmountIn applies the In predicate on the "cash_amount" field.
-func CashAmountIn(vs ...float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldIn(FieldCashAmount, vs...))
+// RateIn applies the In predicate on the "rate" field.
+func RateIn(vs ...float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldIn(FieldRate, vs...))
 }
 
-// CashAmountNotIn applies the NotIn predicate on the "cash_amount" field.
-func CashAmountNotIn(vs ...float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNotIn(FieldCashAmount, vs...))
+// RateNotIn applies the NotIn predicate on the "rate" field.
+func RateNotIn(vs ...float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldNotIn(FieldRate, vs...))
 }
 
-// CashAmountGT applies the GT predicate on the "cash_amount" field.
-func CashAmountGT(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldGT(FieldCashAmount, v))
+// RateGT applies the GT predicate on the "rate" field.
+func RateGT(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldGT(FieldRate, v))
 }
 
-// CashAmountGTE applies the GTE predicate on the "cash_amount" field.
-func CashAmountGTE(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldGTE(FieldCashAmount, v))
+// RateGTE applies the GTE predicate on the "rate" field.
+func RateGTE(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldGTE(FieldRate, v))
 }
 
-// CashAmountLT applies the LT predicate on the "cash_amount" field.
-func CashAmountLT(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldLT(FieldCashAmount, v))
+// RateLT applies the LT predicate on the "rate" field.
+func RateLT(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldLT(FieldRate, v))
 }
 
-// CashAmountLTE applies the LTE predicate on the "cash_amount" field.
-func CashAmountLTE(v float64) predicate.Dividend {
-	return predicate.Dividend(sql.FieldLTE(FieldCashAmount, v))
+// RateLTE applies the LTE predicate on the "rate" field.
+func RateLTE(v float64) predicate.Dividend {
+	return predicate.Dividend(sql.FieldLTE(FieldRate, v))
 }
 
 // DeclarationDateEQ applies the EQ predicate on the "declaration_date" field.
@@ -165,26 +160,6 @@ func DeclarationDateLTE(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldLTE(FieldDeclarationDate, v))
 }
 
-// DividendTypeEQ applies the EQ predicate on the "dividend_type" field.
-func DividendTypeEQ(v DividendType) predicate.Dividend {
-	return predicate.Dividend(sql.FieldEQ(FieldDividendType, v))
-}
-
-// DividendTypeNEQ applies the NEQ predicate on the "dividend_type" field.
-func DividendTypeNEQ(v DividendType) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNEQ(FieldDividendType, v))
-}
-
-// DividendTypeIn applies the In predicate on the "dividend_type" field.
-func DividendTypeIn(vs ...DividendType) predicate.Dividend {
-	return predicate.Dividend(sql.FieldIn(FieldDividendType, vs...))
-}
-
-// DividendTypeNotIn applies the NotIn predicate on the "dividend_type" field.
-func DividendTypeNotIn(vs ...DividendType) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNotIn(FieldDividendType, vs...))
-}
-
 // ExDividendDateEQ applies the EQ predicate on the "ex_dividend_date" field.
 func ExDividendDateEQ(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldEQ(FieldExDividendDate, v))
@@ -223,46 +198,6 @@ func ExDividendDateLT(v time.Time) predicate.Dividend {
 // ExDividendDateLTE applies the LTE predicate on the "ex_dividend_date" field.
 func ExDividendDateLTE(v time.Time) predicate.Dividend {
 	return predicate.Dividend(sql.FieldLTE(FieldExDividendDate, v))
-}
-
-// FrequencyEQ applies the EQ predicate on the "frequency" field.
-func FrequencyEQ(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldEQ(FieldFrequency, v))
-}
-
-// FrequencyNEQ applies the NEQ predicate on the "frequency" field.
-func FrequencyNEQ(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNEQ(FieldFrequency, v))
-}
-
-// FrequencyIn applies the In predicate on the "frequency" field.
-func FrequencyIn(vs ...int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldIn(FieldFrequency, vs...))
-}
-
-// FrequencyNotIn applies the NotIn predicate on the "frequency" field.
-func FrequencyNotIn(vs ...int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldNotIn(FieldFrequency, vs...))
-}
-
-// FrequencyGT applies the GT predicate on the "frequency" field.
-func FrequencyGT(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldGT(FieldFrequency, v))
-}
-
-// FrequencyGTE applies the GTE predicate on the "frequency" field.
-func FrequencyGTE(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldGTE(FieldFrequency, v))
-}
-
-// FrequencyLT applies the LT predicate on the "frequency" field.
-func FrequencyLT(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldLT(FieldFrequency, v))
-}
-
-// FrequencyLTE applies the LTE predicate on the "frequency" field.
-func FrequencyLTE(v int) predicate.Dividend {
-	return predicate.Dividend(sql.FieldLTE(FieldFrequency, v))
 }
 
 // RecordDateEQ applies the EQ predicate on the "record_date" field.
@@ -359,11 +294,7 @@ func HasStock() predicate.Dividend {
 // HasStockWith applies the HasEdge predicate on the "stock" edge with a given conditions (other predicates).
 func HasStockWith(preds ...predicate.Entity) predicate.Dividend {
 	return predicate.Dividend(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(StockInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, StockTable, StockPrimaryKey...),
-		)
+		step := newStockStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -374,32 +305,15 @@ func HasStockWith(preds ...predicate.Entity) predicate.Dividend {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Dividend) predicate.Dividend {
-	return predicate.Dividend(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Dividend(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.Dividend) predicate.Dividend {
-	return predicate.Dividend(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Dividend(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.Dividend) predicate.Dividend {
-	return predicate.Dividend(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.Dividend(sql.NotPredicates(p))
 }

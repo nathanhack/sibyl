@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,11 +19,8 @@ import (
 // SplitQuery is the builder for querying Split entities.
 type SplitQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []split.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Split
 	withStock  *EntityQuery
@@ -40,25 +38,25 @@ func (sq *SplitQuery) Where(ps ...predicate.Split) *SplitQuery {
 
 // Limit the number of records to be returned by this query.
 func (sq *SplitQuery) Limit(limit int) *SplitQuery {
-	sq.limit = &limit
+	sq.ctx.Limit = &limit
 	return sq
 }
 
 // Offset to start from.
 func (sq *SplitQuery) Offset(offset int) *SplitQuery {
-	sq.offset = &offset
+	sq.ctx.Offset = &offset
 	return sq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (sq *SplitQuery) Unique(unique bool) *SplitQuery {
-	sq.unique = &unique
+	sq.ctx.Unique = &unique
 	return sq
 }
 
 // Order specifies how the records should be ordered.
-func (sq *SplitQuery) Order(o ...OrderFunc) *SplitQuery {
+func (sq *SplitQuery) Order(o ...split.OrderOption) *SplitQuery {
 	sq.order = append(sq.order, o...)
 	return sq
 }
@@ -88,7 +86,7 @@ func (sq *SplitQuery) QueryStock() *EntityQuery {
 // First returns the first Split entity from the query.
 // Returns a *NotFoundError when no Split was found.
 func (sq *SplitQuery) First(ctx context.Context) (*Split, error) {
-	nodes, err := sq.Limit(1).All(newQueryContext(ctx, TypeSplit, "First"))
+	nodes, err := sq.Limit(1).All(setContextOp(ctx, sq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (sq *SplitQuery) FirstX(ctx context.Context) *Split {
 // Returns a *NotFoundError when no Split ID was found.
 func (sq *SplitQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sq.Limit(1).IDs(newQueryContext(ctx, TypeSplit, "FirstID")); err != nil {
+	if ids, err = sq.Limit(1).IDs(setContextOp(ctx, sq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (sq *SplitQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Split entity is found.
 // Returns a *NotFoundError when no Split entities are found.
 func (sq *SplitQuery) Only(ctx context.Context) (*Split, error) {
-	nodes, err := sq.Limit(2).All(newQueryContext(ctx, TypeSplit, "Only"))
+	nodes, err := sq.Limit(2).All(setContextOp(ctx, sq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (sq *SplitQuery) OnlyX(ctx context.Context) *Split {
 // Returns a *NotFoundError when no entities are found.
 func (sq *SplitQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sq.Limit(2).IDs(newQueryContext(ctx, TypeSplit, "OnlyID")); err != nil {
+	if ids, err = sq.Limit(2).IDs(setContextOp(ctx, sq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (sq *SplitQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Splits.
 func (sq *SplitQuery) All(ctx context.Context) ([]*Split, error) {
-	ctx = newQueryContext(ctx, TypeSplit, "All")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryAll)
 	if err := sq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (sq *SplitQuery) AllX(ctx context.Context) []*Split {
 }
 
 // IDs executes the query and returns a list of Split IDs.
-func (sq *SplitQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeSplit, "IDs")
-	if err := sq.Select(split.FieldID).Scan(ctx, &ids); err != nil {
+func (sq *SplitQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if sq.ctx.Unique == nil && sq.path != nil {
+		sq.Unique(true)
+	}
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryIDs)
+	if err = sq.Select(split.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (sq *SplitQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (sq *SplitQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeSplit, "Count")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryCount)
 	if err := sq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (sq *SplitQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (sq *SplitQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeSplit, "Exist")
+	ctx = setContextOp(ctx, sq.ctx, ent.OpQueryExist)
 	switch _, err := sq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (sq *SplitQuery) Clone() *SplitQuery {
 	}
 	return &SplitQuery{
 		config:     sq.config,
-		limit:      sq.limit,
-		offset:     sq.offset,
-		order:      append([]OrderFunc{}, sq.order...),
+		ctx:        sq.ctx.Clone(),
+		order:      append([]split.OrderOption{}, sq.order...),
 		inters:     append([]Interceptor{}, sq.inters...),
 		predicates: append([]predicate.Split{}, sq.predicates...),
 		withStock:  sq.withStock.Clone(),
 		// clone intermediate query.
-		sql:    sq.sql.Clone(),
-		path:   sq.path,
-		unique: sq.unique,
+		sql:  sq.sql.Clone(),
+		path: sq.path,
 	}
 }
 
@@ -310,9 +308,9 @@ func (sq *SplitQuery) WithStock(opts ...func(*EntityQuery)) *SplitQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (sq *SplitQuery) GroupBy(field string, fields ...string) *SplitGroupBy {
-	sq.fields = append([]string{field}, fields...)
+	sq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &SplitGroupBy{build: sq}
-	grbuild.flds = &sq.fields
+	grbuild.flds = &sq.ctx.Fields
 	grbuild.label = split.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -331,10 +329,10 @@ func (sq *SplitQuery) GroupBy(field string, fields ...string) *SplitGroupBy {
 //		Select(split.FieldExecutionDate).
 //		Scan(ctx, &v)
 func (sq *SplitQuery) Select(fields ...string) *SplitSelect {
-	sq.fields = append(sq.fields, fields...)
+	sq.ctx.Fields = append(sq.ctx.Fields, fields...)
 	sbuild := &SplitSelect{SplitQuery: sq}
 	sbuild.label = split.Label
-	sbuild.flds, sbuild.scan = &sq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &sq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (sq *SplitQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range sq.fields {
+	for _, f := range sq.ctx.Fields {
 		if !split.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -424,6 +422,9 @@ func (sq *SplitQuery) loadStock(ctx context.Context, query *EntityQuery, nodes [
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(entity.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -443,30 +444,22 @@ func (sq *SplitQuery) loadStock(ctx context.Context, query *EntityQuery, nodes [
 
 func (sq *SplitQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := sq.querySpec()
-	_spec.Node.Columns = sq.fields
-	if len(sq.fields) > 0 {
-		_spec.Unique = sq.unique != nil && *sq.unique
+	_spec.Node.Columns = sq.ctx.Fields
+	if len(sq.ctx.Fields) > 0 {
+		_spec.Unique = sq.ctx.Unique != nil && *sq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, sq.driver, _spec)
 }
 
 func (sq *SplitQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   split.Table,
-			Columns: split.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: split.FieldID,
-			},
-		},
-		From:   sq.sql,
-		Unique: true,
-	}
-	if unique := sq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(split.Table, split.Columns, sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt))
+	_spec.From = sq.sql
+	if unique := sq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if sq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := sq.fields; len(fields) > 0 {
+	if fields := sq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, split.FieldID)
 		for i := range fields {
@@ -482,10 +475,10 @@ func (sq *SplitQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := sq.limit; limit != nil {
+	if limit := sq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := sq.offset; offset != nil {
+	if offset := sq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := sq.order; len(ps) > 0 {
@@ -501,7 +494,7 @@ func (sq *SplitQuery) querySpec() *sqlgraph.QuerySpec {
 func (sq *SplitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(sq.driver.Dialect())
 	t1 := builder.Table(split.Table)
-	columns := sq.fields
+	columns := sq.ctx.Fields
 	if len(columns) == 0 {
 		columns = split.Columns
 	}
@@ -510,7 +503,7 @@ func (sq *SplitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = sq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if sq.unique != nil && *sq.unique {
+	if sq.ctx.Unique != nil && *sq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range sq.predicates {
@@ -519,12 +512,12 @@ func (sq *SplitQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range sq.order {
 		p(selector)
 	}
-	if offset := sq.offset; offset != nil {
+	if offset := sq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := sq.limit; limit != nil {
+	if limit := sq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -544,7 +537,7 @@ func (sgb *SplitGroupBy) Aggregate(fns ...AggregateFunc) *SplitGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (sgb *SplitGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeSplit, "GroupBy")
+	ctx = setContextOp(ctx, sgb.build.ctx, ent.OpQueryGroupBy)
 	if err := sgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -592,7 +585,7 @@ func (ss *SplitSelect) Aggregate(fns ...AggregateFunc) *SplitSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ss *SplitSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeSplit, "Select")
+	ctx = setContextOp(ctx, ss.ctx, ent.OpQuerySelect)
 	if err := ss.prepareQuery(ctx); err != nil {
 		return err
 	}

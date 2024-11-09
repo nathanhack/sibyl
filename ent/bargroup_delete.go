@@ -27,7 +27,7 @@ func (bgd *BarGroupDelete) Where(ps ...predicate.BarGroup) *BarGroupDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (bgd *BarGroupDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, BarGroupMutation](ctx, bgd.sqlExec, bgd.mutation, bgd.hooks)
+	return withHooks(ctx, bgd.sqlExec, bgd.mutation, bgd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (bgd *BarGroupDelete) ExecX(ctx context.Context) int {
 }
 
 func (bgd *BarGroupDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: bargroup.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bargroup.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(bargroup.Table, sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt))
 	if ps := bgd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type BarGroupDeleteOne struct {
 	bgd *BarGroupDelete
 }
 
+// Where appends a list predicates to the BarGroupDelete builder.
+func (bgdo *BarGroupDeleteOne) Where(ps ...predicate.BarGroup) *BarGroupDeleteOne {
+	bgdo.bgd.mutation.Where(ps...)
+	return bgdo
+}
+
 // Exec executes the deletion query.
 func (bgdo *BarGroupDeleteOne) Exec(ctx context.Context) error {
 	n, err := bgdo.bgd.Exec(ctx)
@@ -84,5 +82,7 @@ func (bgdo *BarGroupDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (bgdo *BarGroupDeleteOne) ExecX(ctx context.Context) {
-	bgdo.bgd.ExecX(ctx)
+	if err := bgdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

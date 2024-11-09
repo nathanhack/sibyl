@@ -88,7 +88,7 @@ var dumpCmd = &cobra.Command{
 			return err
 		}
 
-		pool := threadpool.New(ctx, 3, len(entities))
+		pool := threadpool.New(ctx, 3)
 		errs := make([]error, 0)
 		mux := sync.Mutex{}
 		for _, entity := range entities {

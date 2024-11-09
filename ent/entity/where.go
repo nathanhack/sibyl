@@ -80,9 +80,14 @@ func ListDate(v time.Time) predicate.Entity {
 	return predicate.Entity(sql.FieldEQ(FieldListDate, v))
 }
 
-// Delisted applies equality check predicate on the "delisted" field. It's identical to DelistedEQ.
-func Delisted(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldEQ(FieldDelisted, v))
+// Options applies equality check predicate on the "options" field. It's identical to OptionsEQ.
+func Options(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldOptions, v))
+}
+
+// Tradable applies equality check predicate on the "tradable" field. It's identical to TradableEQ.
+func Tradable(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldTradable, v))
 }
 
 // ActiveEQ applies the EQ predicate on the "active" field.
@@ -330,54 +335,24 @@ func ListDateLTE(v time.Time) predicate.Entity {
 	return predicate.Entity(sql.FieldLTE(FieldListDate, v))
 }
 
-// DelistedEQ applies the EQ predicate on the "delisted" field.
-func DelistedEQ(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldEQ(FieldDelisted, v))
+// OptionsEQ applies the EQ predicate on the "options" field.
+func OptionsEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldOptions, v))
 }
 
-// DelistedNEQ applies the NEQ predicate on the "delisted" field.
-func DelistedNEQ(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldNEQ(FieldDelisted, v))
+// OptionsNEQ applies the NEQ predicate on the "options" field.
+func OptionsNEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldOptions, v))
 }
 
-// DelistedIn applies the In predicate on the "delisted" field.
-func DelistedIn(vs ...time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldIn(FieldDelisted, vs...))
+// TradableEQ applies the EQ predicate on the "tradable" field.
+func TradableEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldTradable, v))
 }
 
-// DelistedNotIn applies the NotIn predicate on the "delisted" field.
-func DelistedNotIn(vs ...time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldNotIn(FieldDelisted, vs...))
-}
-
-// DelistedGT applies the GT predicate on the "delisted" field.
-func DelistedGT(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldGT(FieldDelisted, v))
-}
-
-// DelistedGTE applies the GTE predicate on the "delisted" field.
-func DelistedGTE(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldGTE(FieldDelisted, v))
-}
-
-// DelistedLT applies the LT predicate on the "delisted" field.
-func DelistedLT(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldLT(FieldDelisted, v))
-}
-
-// DelistedLTE applies the LTE predicate on the "delisted" field.
-func DelistedLTE(v time.Time) predicate.Entity {
-	return predicate.Entity(sql.FieldLTE(FieldDelisted, v))
-}
-
-// DelistedIsNil applies the IsNil predicate on the "delisted" field.
-func DelistedIsNil() predicate.Entity {
-	return predicate.Entity(sql.FieldIsNull(FieldDelisted))
-}
-
-// DelistedNotNil applies the NotNil predicate on the "delisted" field.
-func DelistedNotNil() predicate.Entity {
-	return predicate.Entity(sql.FieldNotNull(FieldDelisted))
+// TradableNEQ applies the NEQ predicate on the "tradable" field.
+func TradableNEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldTradable, v))
 }
 
 // HasExchanges applies the HasEdge predicate on the "exchanges" edge.
@@ -394,11 +369,7 @@ func HasExchanges() predicate.Entity {
 // HasExchangesWith applies the HasEdge predicate on the "exchanges" edge with a given conditions (other predicates).
 func HasExchangesWith(preds ...predicate.Exchange) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ExchangesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ExchangesTable, ExchangesPrimaryKey...),
-		)
+		step := newExchangesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -421,11 +392,7 @@ func HasIntervals() predicate.Entity {
 // HasIntervalsWith applies the HasEdge predicate on the "intervals" edge with a given conditions (other predicates).
 func HasIntervalsWith(preds ...predicate.Interval) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(IntervalsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, IntervalsTable, IntervalsColumn),
-		)
+		step := newIntervalsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -448,11 +415,7 @@ func HasDividends() predicate.Entity {
 // HasDividendsWith applies the HasEdge predicate on the "dividends" edge with a given conditions (other predicates).
 func HasDividendsWith(preds ...predicate.Dividend) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(DividendsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, DividendsTable, DividendsPrimaryKey...),
-		)
+		step := newDividendsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -475,11 +438,7 @@ func HasSplits() predicate.Entity {
 // HasSplitsWith applies the HasEdge predicate on the "splits" edge with a given conditions (other predicates).
 func HasSplitsWith(preds ...predicate.Split) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SplitsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SplitsTable, SplitsColumn),
-		)
+		step := newSplitsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -502,11 +461,7 @@ func HasFinancials() predicate.Entity {
 // HasFinancialsWith applies the HasEdge predicate on the "financials" edge with a given conditions (other predicates).
 func HasFinancialsWith(preds ...predicate.Financial) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(FinancialsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, FinancialsTable, FinancialsPrimaryKey...),
-		)
+		step := newFinancialsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -517,32 +472,15 @@ func HasFinancialsWith(preds ...predicate.Financial) predicate.Entity {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Entity) predicate.Entity {
-	return predicate.Entity(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Entity(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.Entity) predicate.Entity {
-	return predicate.Entity(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.Entity(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.Entity) predicate.Entity {
-	return predicate.Entity(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.Entity(sql.NotPredicates(p))
 }

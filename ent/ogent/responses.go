@@ -709,11 +709,9 @@ func NewDividendCreate(e *ent.Dividend) *DividendCreate {
 	}
 	var ret DividendCreate
 	ret.ID = e.ID
-	ret.CashAmount = e.CashAmount
+	ret.Rate = e.Rate
 	ret.DeclarationDate = e.DeclarationDate
-	ret.DividendType = DividendCreateDividendType(e.DividendType)
 	ret.ExDividendDate = e.ExDividendDate
-	ret.Frequency = e.Frequency
 	ret.RecordDate = e.RecordDate
 	ret.PayDate = e.PayDate
 	return &ret
@@ -743,11 +741,9 @@ func NewDividendList(e *ent.Dividend) *DividendList {
 	}
 	var ret DividendList
 	ret.ID = e.ID
-	ret.CashAmount = e.CashAmount
+	ret.Rate = e.Rate
 	ret.DeclarationDate = e.DeclarationDate
-	ret.DividendType = DividendListDividendType(e.DividendType)
 	ret.ExDividendDate = e.ExDividendDate
-	ret.Frequency = e.Frequency
 	ret.RecordDate = e.RecordDate
 	ret.PayDate = e.PayDate
 	return &ret
@@ -777,11 +773,9 @@ func NewDividendRead(e *ent.Dividend) *DividendRead {
 	}
 	var ret DividendRead
 	ret.ID = e.ID
-	ret.CashAmount = e.CashAmount
+	ret.Rate = e.Rate
 	ret.DeclarationDate = e.DeclarationDate
-	ret.DividendType = DividendReadDividendType(e.DividendType)
 	ret.ExDividendDate = e.ExDividendDate
-	ret.Frequency = e.Frequency
 	ret.RecordDate = e.RecordDate
 	ret.PayDate = e.PayDate
 	return &ret
@@ -811,11 +805,9 @@ func NewDividendUpdate(e *ent.Dividend) *DividendUpdate {
 	}
 	var ret DividendUpdate
 	ret.ID = e.ID
-	ret.CashAmount = e.CashAmount
+	ret.Rate = e.Rate
 	ret.DeclarationDate = e.DeclarationDate
-	ret.DividendType = DividendUpdateDividendType(e.DividendType)
 	ret.ExDividendDate = e.ExDividendDate
-	ret.Frequency = e.Frequency
 	ret.RecordDate = e.RecordDate
 	ret.PayDate = e.PayDate
 	return &ret
@@ -850,10 +842,8 @@ func NewDividendStockList(e *ent.Entity) *DividendStockList {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -886,10 +876,8 @@ func NewEntityCreate(e *ent.Entity) *EntityCreate {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -922,10 +910,8 @@ func NewEntityList(e *ent.Entity) *EntityList {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -958,10 +944,8 @@ func NewEntityRead(e *ent.Entity) *EntityRead {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -994,10 +978,8 @@ func NewEntityUpdate(e *ent.Entity) *EntityUpdate {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -1025,11 +1007,9 @@ func NewEntityDividendsList(e *ent.Dividend) *EntityDividendsList {
 	}
 	var ret EntityDividendsList
 	ret.ID = e.ID
-	ret.CashAmount = e.CashAmount
+	ret.Rate = e.Rate
 	ret.DeclarationDate = e.DeclarationDate
-	ret.DividendType = EntityDividendsListDividendType(e.DividendType)
 	ret.ExDividendDate = e.ExDividendDate
-	ret.Frequency = e.Frequency
 	ret.RecordDate = e.RecordDate
 	ret.PayDate = e.PayDate
 	return &ret
@@ -1297,10 +1277,8 @@ func NewExchangeStocksList(e *ent.Entity) *ExchangeStocksList {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -1441,10 +1419,8 @@ func NewFinancialStockList(e *ent.Entity) *FinancialStockList {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -1663,10 +1639,8 @@ func NewIntervalStockRead(e *ent.Entity) *IntervalStockRead {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 
@@ -2144,10 +2118,8 @@ func NewSplitStockRead(e *ent.Entity) *SplitStockRead {
 	ret.Name = e.Name
 	ret.Description = e.Description
 	ret.ListDate = e.ListDate
-	ret.Delisted = OptDateTime{}
-	if e.Delisted != nil {
-		ret.Delisted.SetTo(*e.Delisted)
-	}
+	ret.Options = e.Options
+	ret.Tradable = e.Tradable
 	return &ret
 }
 

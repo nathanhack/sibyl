@@ -49,23 +49,37 @@ func (ec *EntityCreate) SetDescription(s string) *EntityCreate {
 	return ec
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (ec *EntityCreate) SetNillableDescription(s *string) *EntityCreate {
+	if s != nil {
+		ec.SetDescription(*s)
+	}
+	return ec
+}
+
 // SetListDate sets the "list_date" field.
 func (ec *EntityCreate) SetListDate(t time.Time) *EntityCreate {
 	ec.mutation.SetListDate(t)
 	return ec
 }
 
-// SetDelisted sets the "delisted" field.
-func (ec *EntityCreate) SetDelisted(t time.Time) *EntityCreate {
-	ec.mutation.SetDelisted(t)
+// SetNillableListDate sets the "list_date" field if the given value is not nil.
+func (ec *EntityCreate) SetNillableListDate(t *time.Time) *EntityCreate {
+	if t != nil {
+		ec.SetListDate(*t)
+	}
 	return ec
 }
 
-// SetNillableDelisted sets the "delisted" field if the given value is not nil.
-func (ec *EntityCreate) SetNillableDelisted(t *time.Time) *EntityCreate {
-	if t != nil {
-		ec.SetDelisted(*t)
-	}
+// SetOptions sets the "options" field.
+func (ec *EntityCreate) SetOptions(b bool) *EntityCreate {
+	ec.mutation.SetOptions(b)
+	return ec
+}
+
+// SetTradable sets the "tradable" field.
+func (ec *EntityCreate) SetTradable(b bool) *EntityCreate {
+	ec.mutation.SetTradable(b)
 	return ec
 }
 
@@ -151,7 +165,8 @@ func (ec *EntityCreate) Mutation() *EntityMutation {
 
 // Save creates the Entity in the database.
 func (ec *EntityCreate) Save(ctx context.Context) (*Entity, error) {
-	return withHooks[*Entity, EntityMutation](ctx, ec.sqlSave, ec.mutation, ec.hooks)
+	ec.defaults()
+	return withHooks(ctx, ec.sqlSave, ec.mutation, ec.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -173,6 +188,18 @@ func (ec *EntityCreate) Exec(ctx context.Context) error {
 func (ec *EntityCreate) ExecX(ctx context.Context) {
 	if err := ec.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (ec *EntityCreate) defaults() {
+	if _, ok := ec.mutation.Description(); !ok {
+		v := entity.DefaultDescription
+		ec.mutation.SetDescription(v)
+	}
+	if _, ok := ec.mutation.ListDate(); !ok {
+		v := entity.DefaultListDate
+		ec.mutation.SetListDate(v)
 	}
 }
 
@@ -208,6 +235,12 @@ func (ec *EntityCreate) check() error {
 	if _, ok := ec.mutation.ListDate(); !ok {
 		return &ValidationError{Name: "list_date", err: errors.New(`ent: missing required field "Entity.list_date"`)}
 	}
+	if _, ok := ec.mutation.Options(); !ok {
+		return &ValidationError{Name: "options", err: errors.New(`ent: missing required field "Entity.options"`)}
+	}
+	if _, ok := ec.mutation.Tradable(); !ok {
+		return &ValidationError{Name: "tradable", err: errors.New(`ent: missing required field "Entity.tradable"`)}
+	}
 	return nil
 }
 
@@ -232,13 +265,7 @@ func (ec *EntityCreate) sqlSave(ctx context.Context) (*Entity, error) {
 func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Entity{config: ec.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: entity.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: entity.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(entity.Table, sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt))
 	)
 	if value, ok := ec.mutation.Active(); ok {
 		_spec.SetField(entity.FieldActive, field.TypeBool, value)
@@ -260,9 +287,13 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 		_spec.SetField(entity.FieldListDate, field.TypeTime, value)
 		_node.ListDate = value
 	}
-	if value, ok := ec.mutation.Delisted(); ok {
-		_spec.SetField(entity.FieldDelisted, field.TypeTime, value)
-		_node.Delisted = &value
+	if value, ok := ec.mutation.Options(); ok {
+		_spec.SetField(entity.FieldOptions, field.TypeBool, value)
+		_node.Options = value
+	}
+	if value, ok := ec.mutation.Tradable(); ok {
+		_spec.SetField(entity.FieldTradable, field.TypeBool, value)
+		_node.Tradable = value
 	}
 	if nodes := ec.mutation.ExchangesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -272,10 +303,7 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -291,10 +319,7 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -310,10 +335,7 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -329,10 +351,7 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -348,10 +367,7 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -365,17 +381,22 @@ func (ec *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 // EntityCreateBulk is the builder for creating many Entity entities in bulk.
 type EntityCreateBulk struct {
 	config
+	err      error
 	builders []*EntityCreate
 }
 
 // Save creates the Entity entities in the database.
 func (ecb *EntityCreateBulk) Save(ctx context.Context) ([]*Entity, error) {
+	if ecb.err != nil {
+		return nil, ecb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(ecb.builders))
 	nodes := make([]*Entity, len(ecb.builders))
 	mutators := make([]Mutator, len(ecb.builders))
 	for i := range ecb.builders {
 		func(i int, root context.Context) {
 			builder := ecb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*EntityMutation)
 				if !ok {
@@ -385,8 +406,8 @@ func (ecb *EntityCreateBulk) Save(ctx context.Context) ([]*Entity, error) {
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, ecb.builders[i+1].mutation)
 				} else {

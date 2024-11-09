@@ -229,11 +229,7 @@ func HasTimeRange() predicate.TradeRecord {
 // HasTimeRangeWith applies the HasEdge predicate on the "time_range" edge with a given conditions (other predicates).
 func HasTimeRangeWith(preds ...predicate.TradeTimeRange) predicate.TradeRecord {
 	return predicate.TradeRecord(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TimeRangeInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TimeRangeTable, TimeRangeColumn),
-		)
+		step := newTimeRangeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -256,11 +252,7 @@ func HasConditions() predicate.TradeRecord {
 // HasConditionsWith applies the HasEdge predicate on the "conditions" edge with a given conditions (other predicates).
 func HasConditionsWith(preds ...predicate.TradeCondition) predicate.TradeRecord {
 	return predicate.TradeRecord(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ConditionsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ConditionsTable, ConditionsPrimaryKey...),
-		)
+		step := newConditionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -283,11 +275,7 @@ func HasCorrection() predicate.TradeRecord {
 // HasCorrectionWith applies the HasEdge predicate on the "correction" edge with a given conditions (other predicates).
 func HasCorrectionWith(preds ...predicate.TradeCorrection) predicate.TradeRecord {
 	return predicate.TradeRecord(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(CorrectionInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, CorrectionTable, CorrectionPrimaryKey...),
-		)
+		step := newCorrectionStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -310,11 +298,7 @@ func HasExchange() predicate.TradeRecord {
 // HasExchangeWith applies the HasEdge predicate on the "exchange" edge with a given conditions (other predicates).
 func HasExchangeWith(preds ...predicate.Exchange) predicate.TradeRecord {
 	return predicate.TradeRecord(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ExchangeInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ExchangeTable, ExchangeColumn),
-		)
+		step := newExchangeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -325,32 +309,15 @@ func HasExchangeWith(preds ...predicate.Exchange) predicate.TradeRecord {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.TradeRecord) predicate.TradeRecord {
-	return predicate.TradeRecord(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.TradeRecord(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.TradeRecord) predicate.TradeRecord {
-	return predicate.TradeRecord(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.TradeRecord(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.TradeRecord) predicate.TradeRecord {
-	return predicate.TradeRecord(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.TradeRecord(sql.NotPredicates(p))
 }

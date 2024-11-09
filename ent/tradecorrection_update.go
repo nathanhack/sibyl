@@ -34,6 +34,14 @@ func (tcu *TradeCorrectionUpdate) SetCorrection(s string) *TradeCorrectionUpdate
 	return tcu
 }
 
+// SetNillableCorrection sets the "correction" field if the given value is not nil.
+func (tcu *TradeCorrectionUpdate) SetNillableCorrection(s *string) *TradeCorrectionUpdate {
+	if s != nil {
+		tcu.SetCorrection(*s)
+	}
+	return tcu
+}
+
 // AddRecordIDs adds the "record" edge to the TradeRecord entity by IDs.
 func (tcu *TradeCorrectionUpdate) AddRecordIDs(ids ...int) *TradeCorrectionUpdate {
 	tcu.mutation.AddRecordIDs(ids...)
@@ -77,7 +85,7 @@ func (tcu *TradeCorrectionUpdate) RemoveRecord(t ...*TradeRecord) *TradeCorrecti
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (tcu *TradeCorrectionUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, TradeCorrectionMutation](ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
+	return withHooks(ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -103,16 +111,7 @@ func (tcu *TradeCorrectionUpdate) ExecX(ctx context.Context) {
 }
 
 func (tcu *TradeCorrectionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   tradecorrection.Table,
-			Columns: tradecorrection.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradecorrection.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(tradecorrection.Table, tradecorrection.Columns, sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt))
 	if ps := tcu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -131,10 +130,7 @@ func (tcu *TradeCorrectionUpdate) sqlSave(ctx context.Context) (n int, err error
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -147,10 +143,7 @@ func (tcu *TradeCorrectionUpdate) sqlSave(ctx context.Context) (n int, err error
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -166,10 +159,7 @@ func (tcu *TradeCorrectionUpdate) sqlSave(ctx context.Context) (n int, err error
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -200,6 +190,14 @@ type TradeCorrectionUpdateOne struct {
 // SetCorrection sets the "correction" field.
 func (tcuo *TradeCorrectionUpdateOne) SetCorrection(s string) *TradeCorrectionUpdateOne {
 	tcuo.mutation.SetCorrection(s)
+	return tcuo
+}
+
+// SetNillableCorrection sets the "correction" field if the given value is not nil.
+func (tcuo *TradeCorrectionUpdateOne) SetNillableCorrection(s *string) *TradeCorrectionUpdateOne {
+	if s != nil {
+		tcuo.SetCorrection(*s)
+	}
 	return tcuo
 }
 
@@ -244,6 +242,12 @@ func (tcuo *TradeCorrectionUpdateOne) RemoveRecord(t ...*TradeRecord) *TradeCorr
 	return tcuo.RemoveRecordIDs(ids...)
 }
 
+// Where appends a list predicates to the TradeCorrectionUpdate builder.
+func (tcuo *TradeCorrectionUpdateOne) Where(ps ...predicate.TradeCorrection) *TradeCorrectionUpdateOne {
+	tcuo.mutation.Where(ps...)
+	return tcuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (tcuo *TradeCorrectionUpdateOne) Select(field string, fields ...string) *TradeCorrectionUpdateOne {
@@ -253,7 +257,7 @@ func (tcuo *TradeCorrectionUpdateOne) Select(field string, fields ...string) *Tr
 
 // Save executes the query and returns the updated TradeCorrection entity.
 func (tcuo *TradeCorrectionUpdateOne) Save(ctx context.Context) (*TradeCorrection, error) {
-	return withHooks[*TradeCorrection, TradeCorrectionMutation](ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
+	return withHooks(ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -279,16 +283,7 @@ func (tcuo *TradeCorrectionUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (tcuo *TradeCorrectionUpdateOne) sqlSave(ctx context.Context) (_node *TradeCorrection, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   tradecorrection.Table,
-			Columns: tradecorrection.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradecorrection.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(tradecorrection.Table, tradecorrection.Columns, sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt))
 	id, ok := tcuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TradeCorrection.id" for update`)}
@@ -324,10 +319,7 @@ func (tcuo *TradeCorrectionUpdateOne) sqlSave(ctx context.Context) (_node *Trade
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -340,10 +332,7 @@ func (tcuo *TradeCorrectionUpdateOne) sqlSave(ctx context.Context) (_node *Trade
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -359,10 +348,7 @@ func (tcuo *TradeCorrectionUpdateOne) sqlSave(ctx context.Context) (_node *Trade
 			Columns: tradecorrection.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

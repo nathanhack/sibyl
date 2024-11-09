@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/exchange"
 )
@@ -23,6 +24,7 @@ type Exchange struct {
 	// The values are being populated by the ExchangeQuery when eager-loading is set.
 	Edges                 ExchangeEdges `json:"edges"`
 	trade_record_exchange *int
+	selectValues          sql.SelectValues
 }
 
 // ExchangeEdges holds the relations/edges for other nodes in the graph.
@@ -55,7 +57,7 @@ func (*Exchange) scanValues(columns []string) ([]any, error) {
 		case exchange.ForeignKeys[0]: // trade_record_exchange
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Exchange", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -94,21 +96,29 @@ func (e *Exchange) assignValues(columns []string, values []any) error {
 				e.trade_record_exchange = new(int)
 				*e.trade_record_exchange = int(value.Int64)
 			}
+		default:
+			e.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Exchange.
+// This includes values selected through modifiers, order, etc.
+func (e *Exchange) Value(name string) (ent.Value, error) {
+	return e.selectValues.Get(name)
+}
+
 // QueryStocks queries the "stocks" edge of the Exchange entity.
 func (e *Exchange) QueryStocks() *EntityQuery {
-	return (&ExchangeClient{config: e.config}).QueryStocks(e)
+	return NewExchangeClient(e.config).QueryStocks(e)
 }
 
 // Update returns a builder for updating this Exchange.
 // Note that you need to call Exchange.Unwrap() before calling this method if this Exchange
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (e *Exchange) Update() *ExchangeUpdateOne {
-	return (&ExchangeClient{config: e.config}).UpdateOne(e)
+	return NewExchangeClient(e.config).UpdateOne(e)
 }
 
 // Unwrap unwraps the Exchange entity that was returned from a transaction after it was closed,
@@ -138,9 +148,3 @@ func (e *Exchange) String() string {
 
 // Exchanges is a parsable slice of Exchange.
 type Exchanges []*Exchange
-
-func (e Exchanges) config(cfg config) {
-	for _i := range e {
-		e[_i].config = cfg
-	}
-}

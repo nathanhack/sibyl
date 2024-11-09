@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -22,11 +23,8 @@ import (
 // TradeRecordQuery is the builder for querying TradeRecord entities.
 type TradeRecordQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
+	ctx            *QueryContext
+	order          []traderecord.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.TradeRecord
 	withTimeRange  *TradeTimeRangeQuery
@@ -46,25 +44,25 @@ func (trq *TradeRecordQuery) Where(ps ...predicate.TradeRecord) *TradeRecordQuer
 
 // Limit the number of records to be returned by this query.
 func (trq *TradeRecordQuery) Limit(limit int) *TradeRecordQuery {
-	trq.limit = &limit
+	trq.ctx.Limit = &limit
 	return trq
 }
 
 // Offset to start from.
 func (trq *TradeRecordQuery) Offset(offset int) *TradeRecordQuery {
-	trq.offset = &offset
+	trq.ctx.Offset = &offset
 	return trq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (trq *TradeRecordQuery) Unique(unique bool) *TradeRecordQuery {
-	trq.unique = &unique
+	trq.ctx.Unique = &unique
 	return trq
 }
 
 // Order specifies how the records should be ordered.
-func (trq *TradeRecordQuery) Order(o ...OrderFunc) *TradeRecordQuery {
+func (trq *TradeRecordQuery) Order(o ...traderecord.OrderOption) *TradeRecordQuery {
 	trq.order = append(trq.order, o...)
 	return trq
 }
@@ -160,7 +158,7 @@ func (trq *TradeRecordQuery) QueryExchange() *ExchangeQuery {
 // First returns the first TradeRecord entity from the query.
 // Returns a *NotFoundError when no TradeRecord was found.
 func (trq *TradeRecordQuery) First(ctx context.Context) (*TradeRecord, error) {
-	nodes, err := trq.Limit(1).All(newQueryContext(ctx, TypeTradeRecord, "First"))
+	nodes, err := trq.Limit(1).All(setContextOp(ctx, trq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +181,7 @@ func (trq *TradeRecordQuery) FirstX(ctx context.Context) *TradeRecord {
 // Returns a *NotFoundError when no TradeRecord ID was found.
 func (trq *TradeRecordQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = trq.Limit(1).IDs(newQueryContext(ctx, TypeTradeRecord, "FirstID")); err != nil {
+	if ids, err = trq.Limit(1).IDs(setContextOp(ctx, trq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -206,7 +204,7 @@ func (trq *TradeRecordQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one TradeRecord entity is found.
 // Returns a *NotFoundError when no TradeRecord entities are found.
 func (trq *TradeRecordQuery) Only(ctx context.Context) (*TradeRecord, error) {
-	nodes, err := trq.Limit(2).All(newQueryContext(ctx, TypeTradeRecord, "Only"))
+	nodes, err := trq.Limit(2).All(setContextOp(ctx, trq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +232,7 @@ func (trq *TradeRecordQuery) OnlyX(ctx context.Context) *TradeRecord {
 // Returns a *NotFoundError when no entities are found.
 func (trq *TradeRecordQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = trq.Limit(2).IDs(newQueryContext(ctx, TypeTradeRecord, "OnlyID")); err != nil {
+	if ids, err = trq.Limit(2).IDs(setContextOp(ctx, trq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -259,7 +257,7 @@ func (trq *TradeRecordQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of TradeRecords.
 func (trq *TradeRecordQuery) All(ctx context.Context) ([]*TradeRecord, error) {
-	ctx = newQueryContext(ctx, TypeTradeRecord, "All")
+	ctx = setContextOp(ctx, trq.ctx, ent.OpQueryAll)
 	if err := trq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -277,10 +275,12 @@ func (trq *TradeRecordQuery) AllX(ctx context.Context) []*TradeRecord {
 }
 
 // IDs executes the query and returns a list of TradeRecord IDs.
-func (trq *TradeRecordQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeTradeRecord, "IDs")
-	if err := trq.Select(traderecord.FieldID).Scan(ctx, &ids); err != nil {
+func (trq *TradeRecordQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if trq.ctx.Unique == nil && trq.path != nil {
+		trq.Unique(true)
+	}
+	ctx = setContextOp(ctx, trq.ctx, ent.OpQueryIDs)
+	if err = trq.Select(traderecord.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -297,7 +297,7 @@ func (trq *TradeRecordQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (trq *TradeRecordQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeTradeRecord, "Count")
+	ctx = setContextOp(ctx, trq.ctx, ent.OpQueryCount)
 	if err := trq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -315,7 +315,7 @@ func (trq *TradeRecordQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (trq *TradeRecordQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeTradeRecord, "Exist")
+	ctx = setContextOp(ctx, trq.ctx, ent.OpQueryExist)
 	switch _, err := trq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -343,9 +343,8 @@ func (trq *TradeRecordQuery) Clone() *TradeRecordQuery {
 	}
 	return &TradeRecordQuery{
 		config:         trq.config,
-		limit:          trq.limit,
-		offset:         trq.offset,
-		order:          append([]OrderFunc{}, trq.order...),
+		ctx:            trq.ctx.Clone(),
+		order:          append([]traderecord.OrderOption{}, trq.order...),
 		inters:         append([]Interceptor{}, trq.inters...),
 		predicates:     append([]predicate.TradeRecord{}, trq.predicates...),
 		withTimeRange:  trq.withTimeRange.Clone(),
@@ -353,9 +352,8 @@ func (trq *TradeRecordQuery) Clone() *TradeRecordQuery {
 		withCorrection: trq.withCorrection.Clone(),
 		withExchange:   trq.withExchange.Clone(),
 		// clone intermediate query.
-		sql:    trq.sql.Clone(),
-		path:   trq.path,
-		unique: trq.unique,
+		sql:  trq.sql.Clone(),
+		path: trq.path,
 	}
 }
 
@@ -418,9 +416,9 @@ func (trq *TradeRecordQuery) WithExchange(opts ...func(*ExchangeQuery)) *TradeRe
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (trq *TradeRecordQuery) GroupBy(field string, fields ...string) *TradeRecordGroupBy {
-	trq.fields = append([]string{field}, fields...)
+	trq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &TradeRecordGroupBy{build: trq}
-	grbuild.flds = &trq.fields
+	grbuild.flds = &trq.ctx.Fields
 	grbuild.label = traderecord.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -439,10 +437,10 @@ func (trq *TradeRecordQuery) GroupBy(field string, fields ...string) *TradeRecor
 //		Select(traderecord.FieldPrice).
 //		Scan(ctx, &v)
 func (trq *TradeRecordQuery) Select(fields ...string) *TradeRecordSelect {
-	trq.fields = append(trq.fields, fields...)
+	trq.ctx.Fields = append(trq.ctx.Fields, fields...)
 	sbuild := &TradeRecordSelect{TradeRecordQuery: trq}
 	sbuild.label = traderecord.Label
-	sbuild.flds, sbuild.scan = &trq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &trq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -462,7 +460,7 @@ func (trq *TradeRecordQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range trq.fields {
+	for _, f := range trq.ctx.Fields {
 		if !traderecord.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -546,6 +544,9 @@ func (trq *TradeRecordQuery) loadTimeRange(ctx context.Context, query *TradeTime
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(tradetimerange.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -585,27 +586,30 @@ func (trq *TradeRecordQuery) loadConditions(ctx context.Context, query *TradeCon
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*TradeRecord]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*TradeRecord]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*TradeCondition](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -643,27 +647,30 @@ func (trq *TradeRecordQuery) loadCorrection(ctx context.Context, query *TradeCor
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*TradeRecord]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*TradeRecord]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*TradeCorrection](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -690,7 +697,7 @@ func (trq *TradeRecordQuery) loadExchange(ctx context.Context, query *ExchangeQu
 	}
 	query.withFKs = true
 	query.Where(predicate.Exchange(func(s *sql.Selector) {
-		s.Where(sql.InValues(traderecord.ExchangeColumn, fks...))
+		s.Where(sql.InValues(s.C(traderecord.ExchangeColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -703,7 +710,7 @@ func (trq *TradeRecordQuery) loadExchange(ctx context.Context, query *ExchangeQu
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "trade_record_exchange" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "trade_record_exchange" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -712,36 +719,31 @@ func (trq *TradeRecordQuery) loadExchange(ctx context.Context, query *ExchangeQu
 
 func (trq *TradeRecordQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := trq.querySpec()
-	_spec.Node.Columns = trq.fields
-	if len(trq.fields) > 0 {
-		_spec.Unique = trq.unique != nil && *trq.unique
+	_spec.Node.Columns = trq.ctx.Fields
+	if len(trq.ctx.Fields) > 0 {
+		_spec.Unique = trq.ctx.Unique != nil && *trq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, trq.driver, _spec)
 }
 
 func (trq *TradeRecordQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   traderecord.Table,
-			Columns: traderecord.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: traderecord.FieldID,
-			},
-		},
-		From:   trq.sql,
-		Unique: true,
-	}
-	if unique := trq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(traderecord.Table, traderecord.Columns, sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt))
+	_spec.From = trq.sql
+	if unique := trq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if trq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := trq.fields; len(fields) > 0 {
+	if fields := trq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, traderecord.FieldID)
 		for i := range fields {
 			if fields[i] != traderecord.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if trq.withTimeRange != nil {
+			_spec.Node.AddColumnOnce(traderecord.FieldTimeRangeID)
 		}
 	}
 	if ps := trq.predicates; len(ps) > 0 {
@@ -751,10 +753,10 @@ func (trq *TradeRecordQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := trq.limit; limit != nil {
+	if limit := trq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := trq.offset; offset != nil {
+	if offset := trq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := trq.order; len(ps) > 0 {
@@ -770,7 +772,7 @@ func (trq *TradeRecordQuery) querySpec() *sqlgraph.QuerySpec {
 func (trq *TradeRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(trq.driver.Dialect())
 	t1 := builder.Table(traderecord.Table)
-	columns := trq.fields
+	columns := trq.ctx.Fields
 	if len(columns) == 0 {
 		columns = traderecord.Columns
 	}
@@ -779,7 +781,7 @@ func (trq *TradeRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = trq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if trq.unique != nil && *trq.unique {
+	if trq.ctx.Unique != nil && *trq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range trq.predicates {
@@ -788,12 +790,12 @@ func (trq *TradeRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range trq.order {
 		p(selector)
 	}
-	if offset := trq.offset; offset != nil {
+	if offset := trq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := trq.limit; limit != nil {
+	if limit := trq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -813,7 +815,7 @@ func (trgb *TradeRecordGroupBy) Aggregate(fns ...AggregateFunc) *TradeRecordGrou
 
 // Scan applies the selector query and scans the result into the given value.
 func (trgb *TradeRecordGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeRecord, "GroupBy")
+	ctx = setContextOp(ctx, trgb.build.ctx, ent.OpQueryGroupBy)
 	if err := trgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -861,7 +863,7 @@ func (trs *TradeRecordSelect) Aggregate(fns ...AggregateFunc) *TradeRecordSelect
 
 // Scan applies the selector query and scans the result into the given value.
 func (trs *TradeRecordSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeRecord, "Select")
+	ctx = setContextOp(ctx, trs.ctx, ent.OpQuerySelect)
 	if err := trs.prepareQuery(ctx); err != nil {
 		return err
 	}

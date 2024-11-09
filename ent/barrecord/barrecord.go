@@ -2,6 +2,11 @@
 
 package barrecord
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the barrecord type in the database.
 	Label = "bar_record"
@@ -65,4 +70,61 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the BarRecord queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByClose orders the results by the close field.
+func ByClose(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClose, opts...).ToFunc()
+}
+
+// ByHigh orders the results by the high field.
+func ByHigh(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldHigh, opts...).ToFunc()
+}
+
+// ByLow orders the results by the low field.
+func ByLow(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLow, opts...).ToFunc()
+}
+
+// ByOpen orders the results by the open field.
+func ByOpen(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOpen, opts...).ToFunc()
+}
+
+// ByTimestamp orders the results by the timestamp field.
+func ByTimestamp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimestamp, opts...).ToFunc()
+}
+
+// ByVolume orders the results by the volume field.
+func ByVolume(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVolume, opts...).ToFunc()
+}
+
+// ByTransactions orders the results by the transactions field.
+func ByTransactions(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTransactions, opts...).ToFunc()
+}
+
+// ByGroupField orders the results by group field.
+func ByGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGroupStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newGroupStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(GroupInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, GroupTable, GroupColumn),
+	)
 }

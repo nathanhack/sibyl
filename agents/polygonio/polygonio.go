@@ -10,7 +10,6 @@ import (
 	"github.com/nathanhack/sibyl/agents/internal/barresult"
 	"github.com/nathanhack/sibyl/ent"
 	"github.com/nathanhack/sibyl/ent/datasource"
-	"github.com/nathanhack/sibyl/ent/dividend"
 	"github.com/nathanhack/sibyl/ent/interval"
 	"github.com/sirupsen/logrus"
 
@@ -222,7 +221,7 @@ func (pio *Polygonio) EntitySearch(ctx context.Context, ticker string, limit int
 	return results, nil
 }
 
-func (pio *Polygonio) Entity(ctx context.Context, ticker string) (*ent.EntityCreate, error) {
+func (pio *Polygonio) EntityCreate(ctx context.Context, ticker string) (*ent.EntityCreate, error) {
 	params := models.GetTickerDetailsParams{
 		Ticker: ticker,
 	}
@@ -240,6 +239,34 @@ func (pio *Polygonio) Entity(ctx context.Context, ticker string) (*ent.EntityCre
 		SetName(res.Results.Name).
 		SetDescription(res.Results.Description).
 		SetListDate(time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.Local)), nil
+}
+
+func (pio *Polygonio) EntityCreateUpdate(ctx context.Context, current ...*ent.Entity) ([]*ent.EntityUpdateOne, error) {
+
+	updates := make([]*ent.EntityUpdateOne, 0, len(current))
+
+	for _, entity := range current {
+
+		params := models.GetTickerDetailsParams{
+			Ticker: entity.Ticker,
+		}
+
+		pio.rateLimit.Take()
+		res, err := pio.client.GetTickerDetails(ctx, &params)
+		if err != nil {
+			return nil, err
+		}
+
+		d := time.Time(res.Results.ListDate)
+		updates = append(updates,
+			pio.ent.Entity.UpdateOne(entity).
+				SetActive(res.Results.Active).
+				SetDescription(res.Results.Description).
+				SetListDate(time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.Local)),
+		)
+
+	}
+	return updates, nil
 }
 
 func (pio *Polygonio) DividendRequest(ctx context.Context, ticker string, start, end time.Time) (results []*ent.DividendCreate, payDates []time.Time, err error) {
@@ -313,13 +340,11 @@ func (pio *Polygonio) DividendRequest(ctx context.Context, ticker string, start,
 			}
 
 			results = append(results, pio.ent.Dividend.Create().
-				SetCashAmount(d.data.CashAmount).
+				SetRate(d.data.CashAmount).
 				SetDeclarationDate(declarationDate).
 				SetExDividendDate(exDividendDate).
-				SetFrequency(int(d.data.Frequency)).
 				SetPayDate(payDate).
-				SetRecordDate(recordDate).
-				SetDividendType(dividend.DividendType(d.data.DividendType)), //the types came from Polygon.io so a straight case is fine
+				SetRecordDate(recordDate),
 			)
 			payDates = append(payDates, payDate)
 		case <-done.Done():

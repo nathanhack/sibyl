@@ -55,7 +55,7 @@ func (mic *MarketInfoCreate) Mutation() *MarketInfoMutation {
 
 // Save creates the MarketInfo in the database.
 func (mic *MarketInfoCreate) Save(ctx context.Context) (*MarketInfo, error) {
-	return withHooks[*MarketInfo, MarketInfoMutation](ctx, mic.sqlSave, mic.mutation, mic.hooks)
+	return withHooks(ctx, mic.sqlSave, mic.mutation, mic.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -112,13 +112,7 @@ func (mic *MarketInfoCreate) sqlSave(ctx context.Context) (*MarketInfo, error) {
 func (mic *MarketInfoCreate) createSpec() (*MarketInfo, *sqlgraph.CreateSpec) {
 	var (
 		_node = &MarketInfo{config: mic.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: marketinfo.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: marketinfo.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(marketinfo.Table, sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt))
 	)
 	if value, ok := mic.mutation.HoursStart(); ok {
 		_spec.SetField(marketinfo.FieldHoursStart, field.TypeTime, value)
@@ -136,10 +130,7 @@ func (mic *MarketInfoCreate) createSpec() (*MarketInfo, *sqlgraph.CreateSpec) {
 			Columns: []string{marketinfo.HoursColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: markethours.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -153,11 +144,15 @@ func (mic *MarketInfoCreate) createSpec() (*MarketInfo, *sqlgraph.CreateSpec) {
 // MarketInfoCreateBulk is the builder for creating many MarketInfo entities in bulk.
 type MarketInfoCreateBulk struct {
 	config
+	err      error
 	builders []*MarketInfoCreate
 }
 
 // Save creates the MarketInfo entities in the database.
 func (micb *MarketInfoCreateBulk) Save(ctx context.Context) ([]*MarketInfo, error) {
+	if micb.err != nil {
+		return nil, micb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(micb.builders))
 	nodes := make([]*MarketInfo, len(micb.builders))
 	mutators := make([]Mutator, len(micb.builders))
@@ -173,8 +168,8 @@ func (micb *MarketInfoCreateBulk) Save(ctx context.Context) ([]*MarketInfo, erro
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, micb.builders[i+1].mutation)
 				} else {

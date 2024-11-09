@@ -27,7 +27,7 @@ func (ed *ExchangeDelete) Where(ps ...predicate.Exchange) *ExchangeDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (ed *ExchangeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, ExchangeMutation](ctx, ed.sqlExec, ed.mutation, ed.hooks)
+	return withHooks(ctx, ed.sqlExec, ed.mutation, ed.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (ed *ExchangeDelete) ExecX(ctx context.Context) int {
 }
 
 func (ed *ExchangeDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: exchange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: exchange.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(exchange.Table, sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt))
 	if ps := ed.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type ExchangeDeleteOne struct {
 	ed *ExchangeDelete
 }
 
+// Where appends a list predicates to the ExchangeDelete builder.
+func (edo *ExchangeDeleteOne) Where(ps ...predicate.Exchange) *ExchangeDeleteOne {
+	edo.ed.mutation.Where(ps...)
+	return edo
+}
+
 // Exec executes the deletion query.
 func (edo *ExchangeDeleteOne) Exec(ctx context.Context) error {
 	n, err := edo.ed.Exec(ctx)
@@ -84,5 +82,7 @@ func (edo *ExchangeDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (edo *ExchangeDeleteOne) ExecX(ctx context.Context) {
-	edo.ed.ExecX(ctx)
+	if err := edo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

@@ -36,9 +36,25 @@ func (bgu *BarGroupUpdate) SetFirst(t time.Time) *BarGroupUpdate {
 	return bgu
 }
 
+// SetNillableFirst sets the "first" field if the given value is not nil.
+func (bgu *BarGroupUpdate) SetNillableFirst(t *time.Time) *BarGroupUpdate {
+	if t != nil {
+		bgu.SetFirst(*t)
+	}
+	return bgu
+}
+
 // SetLast sets the "last" field.
 func (bgu *BarGroupUpdate) SetLast(t time.Time) *BarGroupUpdate {
 	bgu.mutation.SetLast(t)
+	return bgu
+}
+
+// SetNillableLast sets the "last" field if the given value is not nil.
+func (bgu *BarGroupUpdate) SetNillableLast(t *time.Time) *BarGroupUpdate {
+	if t != nil {
+		bgu.SetLast(*t)
+	}
 	return bgu
 }
 
@@ -46,6 +62,14 @@ func (bgu *BarGroupUpdate) SetLast(t time.Time) *BarGroupUpdate {
 func (bgu *BarGroupUpdate) SetCount(i int) *BarGroupUpdate {
 	bgu.mutation.ResetCount()
 	bgu.mutation.SetCount(i)
+	return bgu
+}
+
+// SetNillableCount sets the "count" field if the given value is not nil.
+func (bgu *BarGroupUpdate) SetNillableCount(i *int) *BarGroupUpdate {
+	if i != nil {
+		bgu.SetCount(*i)
+	}
 	return bgu
 }
 
@@ -58,6 +82,14 @@ func (bgu *BarGroupUpdate) AddCount(i int) *BarGroupUpdate {
 // SetTimeRangeID sets the "time_range_id" field.
 func (bgu *BarGroupUpdate) SetTimeRangeID(i int) *BarGroupUpdate {
 	bgu.mutation.SetTimeRangeID(i)
+	return bgu
+}
+
+// SetNillableTimeRangeID sets the "time_range_id" field if the given value is not nil.
+func (bgu *BarGroupUpdate) SetNillableTimeRangeID(i *int) *BarGroupUpdate {
+	if i != nil {
+		bgu.SetTimeRangeID(*i)
+	}
 	return bgu
 }
 
@@ -115,7 +147,7 @@ func (bgu *BarGroupUpdate) RemoveRecords(b ...*BarRecord) *BarGroupUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (bgu *BarGroupUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, BarGroupMutation](ctx, bgu.sqlSave, bgu.mutation, bgu.hooks)
+	return withHooks(ctx, bgu.sqlSave, bgu.mutation, bgu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -142,7 +174,7 @@ func (bgu *BarGroupUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (bgu *BarGroupUpdate) check() error {
-	if _, ok := bgu.mutation.TimeRangeID(); bgu.mutation.TimeRangeCleared() && !ok {
+	if bgu.mutation.TimeRangeCleared() && len(bgu.mutation.TimeRangeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "BarGroup.time_range"`)
 	}
 	return nil
@@ -152,16 +184,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := bgu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   bargroup.Table,
-			Columns: bargroup.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bargroup.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(bargroup.Table, bargroup.Columns, sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt))
 	if ps := bgu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -189,10 +212,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{bargroup.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -205,10 +225,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{bargroup.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -224,10 +241,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -240,10 +254,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -259,10 +270,7 @@ func (bgu *BarGroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -296,9 +304,25 @@ func (bguo *BarGroupUpdateOne) SetFirst(t time.Time) *BarGroupUpdateOne {
 	return bguo
 }
 
+// SetNillableFirst sets the "first" field if the given value is not nil.
+func (bguo *BarGroupUpdateOne) SetNillableFirst(t *time.Time) *BarGroupUpdateOne {
+	if t != nil {
+		bguo.SetFirst(*t)
+	}
+	return bguo
+}
+
 // SetLast sets the "last" field.
 func (bguo *BarGroupUpdateOne) SetLast(t time.Time) *BarGroupUpdateOne {
 	bguo.mutation.SetLast(t)
+	return bguo
+}
+
+// SetNillableLast sets the "last" field if the given value is not nil.
+func (bguo *BarGroupUpdateOne) SetNillableLast(t *time.Time) *BarGroupUpdateOne {
+	if t != nil {
+		bguo.SetLast(*t)
+	}
 	return bguo
 }
 
@@ -306,6 +330,14 @@ func (bguo *BarGroupUpdateOne) SetLast(t time.Time) *BarGroupUpdateOne {
 func (bguo *BarGroupUpdateOne) SetCount(i int) *BarGroupUpdateOne {
 	bguo.mutation.ResetCount()
 	bguo.mutation.SetCount(i)
+	return bguo
+}
+
+// SetNillableCount sets the "count" field if the given value is not nil.
+func (bguo *BarGroupUpdateOne) SetNillableCount(i *int) *BarGroupUpdateOne {
+	if i != nil {
+		bguo.SetCount(*i)
+	}
 	return bguo
 }
 
@@ -318,6 +350,14 @@ func (bguo *BarGroupUpdateOne) AddCount(i int) *BarGroupUpdateOne {
 // SetTimeRangeID sets the "time_range_id" field.
 func (bguo *BarGroupUpdateOne) SetTimeRangeID(i int) *BarGroupUpdateOne {
 	bguo.mutation.SetTimeRangeID(i)
+	return bguo
+}
+
+// SetNillableTimeRangeID sets the "time_range_id" field if the given value is not nil.
+func (bguo *BarGroupUpdateOne) SetNillableTimeRangeID(i *int) *BarGroupUpdateOne {
+	if i != nil {
+		bguo.SetTimeRangeID(*i)
+	}
 	return bguo
 }
 
@@ -373,6 +413,12 @@ func (bguo *BarGroupUpdateOne) RemoveRecords(b ...*BarRecord) *BarGroupUpdateOne
 	return bguo.RemoveRecordIDs(ids...)
 }
 
+// Where appends a list predicates to the BarGroupUpdate builder.
+func (bguo *BarGroupUpdateOne) Where(ps ...predicate.BarGroup) *BarGroupUpdateOne {
+	bguo.mutation.Where(ps...)
+	return bguo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (bguo *BarGroupUpdateOne) Select(field string, fields ...string) *BarGroupUpdateOne {
@@ -382,7 +428,7 @@ func (bguo *BarGroupUpdateOne) Select(field string, fields ...string) *BarGroupU
 
 // Save executes the query and returns the updated BarGroup entity.
 func (bguo *BarGroupUpdateOne) Save(ctx context.Context) (*BarGroup, error) {
-	return withHooks[*BarGroup, BarGroupMutation](ctx, bguo.sqlSave, bguo.mutation, bguo.hooks)
+	return withHooks(ctx, bguo.sqlSave, bguo.mutation, bguo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -409,7 +455,7 @@ func (bguo *BarGroupUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (bguo *BarGroupUpdateOne) check() error {
-	if _, ok := bguo.mutation.TimeRangeID(); bguo.mutation.TimeRangeCleared() && !ok {
+	if bguo.mutation.TimeRangeCleared() && len(bguo.mutation.TimeRangeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "BarGroup.time_range"`)
 	}
 	return nil
@@ -419,16 +465,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 	if err := bguo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   bargroup.Table,
-			Columns: bargroup.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bargroup.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(bargroup.Table, bargroup.Columns, sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt))
 	id, ok := bguo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "BarGroup.id" for update`)}
@@ -473,10 +510,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 			Columns: []string{bargroup.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -489,10 +523,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 			Columns: []string{bargroup.TimeRangeColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -508,10 +539,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -524,10 +552,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -543,10 +568,7 @@ func (bguo *BarGroupUpdateOne) sqlSave(ctx context.Context) (_node *BarGroup, er
 			Columns: []string{bargroup.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: barrecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(barrecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

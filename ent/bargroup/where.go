@@ -229,11 +229,7 @@ func HasTimeRange() predicate.BarGroup {
 // HasTimeRangeWith applies the HasEdge predicate on the "time_range" edge with a given conditions (other predicates).
 func HasTimeRangeWith(preds ...predicate.BarTimeRange) predicate.BarGroup {
 	return predicate.BarGroup(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TimeRangeInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TimeRangeTable, TimeRangeColumn),
-		)
+		step := newTimeRangeStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -256,11 +252,7 @@ func HasRecords() predicate.BarGroup {
 // HasRecordsWith applies the HasEdge predicate on the "records" edge with a given conditions (other predicates).
 func HasRecordsWith(preds ...predicate.BarRecord) predicate.BarGroup {
 	return predicate.BarGroup(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(RecordsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, RecordsTable, RecordsColumn),
-		)
+		step := newRecordsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -271,32 +263,15 @@ func HasRecordsWith(preds ...predicate.BarRecord) predicate.BarGroup {
 
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.BarGroup) predicate.BarGroup {
-	return predicate.BarGroup(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for _, p := range predicates {
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.BarGroup(sql.AndPredicates(predicates...))
 }
 
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.BarGroup) predicate.BarGroup {
-	return predicate.BarGroup(func(s *sql.Selector) {
-		s1 := s.Clone().SetP(nil)
-		for i, p := range predicates {
-			if i > 0 {
-				s1.Or()
-			}
-			p(s1)
-		}
-		s.Where(s1.P())
-	})
+	return predicate.BarGroup(sql.OrPredicates(predicates...))
 }
 
 // Not applies the not operator on the given predicate.
 func Not(p predicate.BarGroup) predicate.BarGroup {
-	return predicate.BarGroup(func(s *sql.Selector) {
-		p(s.Not())
-	})
+	return predicate.BarGroup(sql.NotPredicates(p))
 }

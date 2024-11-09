@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,11 +20,8 @@ import (
 // ExchangeQuery is the builder for querying Exchange entities.
 type ExchangeQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []exchange.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Exchange
 	withStocks *EntityQuery
@@ -41,25 +39,25 @@ func (eq *ExchangeQuery) Where(ps ...predicate.Exchange) *ExchangeQuery {
 
 // Limit the number of records to be returned by this query.
 func (eq *ExchangeQuery) Limit(limit int) *ExchangeQuery {
-	eq.limit = &limit
+	eq.ctx.Limit = &limit
 	return eq
 }
 
 // Offset to start from.
 func (eq *ExchangeQuery) Offset(offset int) *ExchangeQuery {
-	eq.offset = &offset
+	eq.ctx.Offset = &offset
 	return eq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (eq *ExchangeQuery) Unique(unique bool) *ExchangeQuery {
-	eq.unique = &unique
+	eq.ctx.Unique = &unique
 	return eq
 }
 
 // Order specifies how the records should be ordered.
-func (eq *ExchangeQuery) Order(o ...OrderFunc) *ExchangeQuery {
+func (eq *ExchangeQuery) Order(o ...exchange.OrderOption) *ExchangeQuery {
 	eq.order = append(eq.order, o...)
 	return eq
 }
@@ -89,7 +87,7 @@ func (eq *ExchangeQuery) QueryStocks() *EntityQuery {
 // First returns the first Exchange entity from the query.
 // Returns a *NotFoundError when no Exchange was found.
 func (eq *ExchangeQuery) First(ctx context.Context) (*Exchange, error) {
-	nodes, err := eq.Limit(1).All(newQueryContext(ctx, TypeExchange, "First"))
+	nodes, err := eq.Limit(1).All(setContextOp(ctx, eq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +110,7 @@ func (eq *ExchangeQuery) FirstX(ctx context.Context) *Exchange {
 // Returns a *NotFoundError when no Exchange ID was found.
 func (eq *ExchangeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = eq.Limit(1).IDs(newQueryContext(ctx, TypeExchange, "FirstID")); err != nil {
+	if ids, err = eq.Limit(1).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -135,7 +133,7 @@ func (eq *ExchangeQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Exchange entity is found.
 // Returns a *NotFoundError when no Exchange entities are found.
 func (eq *ExchangeQuery) Only(ctx context.Context) (*Exchange, error) {
-	nodes, err := eq.Limit(2).All(newQueryContext(ctx, TypeExchange, "Only"))
+	nodes, err := eq.Limit(2).All(setContextOp(ctx, eq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +161,7 @@ func (eq *ExchangeQuery) OnlyX(ctx context.Context) *Exchange {
 // Returns a *NotFoundError when no entities are found.
 func (eq *ExchangeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = eq.Limit(2).IDs(newQueryContext(ctx, TypeExchange, "OnlyID")); err != nil {
+	if ids, err = eq.Limit(2).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -188,7 +186,7 @@ func (eq *ExchangeQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Exchanges.
 func (eq *ExchangeQuery) All(ctx context.Context) ([]*Exchange, error) {
-	ctx = newQueryContext(ctx, TypeExchange, "All")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryAll)
 	if err := eq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -206,10 +204,12 @@ func (eq *ExchangeQuery) AllX(ctx context.Context) []*Exchange {
 }
 
 // IDs executes the query and returns a list of Exchange IDs.
-func (eq *ExchangeQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeExchange, "IDs")
-	if err := eq.Select(exchange.FieldID).Scan(ctx, &ids); err != nil {
+func (eq *ExchangeQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if eq.ctx.Unique == nil && eq.path != nil {
+		eq.Unique(true)
+	}
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryIDs)
+	if err = eq.Select(exchange.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -226,7 +226,7 @@ func (eq *ExchangeQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (eq *ExchangeQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeExchange, "Count")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryCount)
 	if err := eq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -244,7 +244,7 @@ func (eq *ExchangeQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (eq *ExchangeQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeExchange, "Exist")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryExist)
 	switch _, err := eq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -272,16 +272,14 @@ func (eq *ExchangeQuery) Clone() *ExchangeQuery {
 	}
 	return &ExchangeQuery{
 		config:     eq.config,
-		limit:      eq.limit,
-		offset:     eq.offset,
-		order:      append([]OrderFunc{}, eq.order...),
+		ctx:        eq.ctx.Clone(),
+		order:      append([]exchange.OrderOption{}, eq.order...),
 		inters:     append([]Interceptor{}, eq.inters...),
 		predicates: append([]predicate.Exchange{}, eq.predicates...),
 		withStocks: eq.withStocks.Clone(),
 		// clone intermediate query.
-		sql:    eq.sql.Clone(),
-		path:   eq.path,
-		unique: eq.unique,
+		sql:  eq.sql.Clone(),
+		path: eq.path,
 	}
 }
 
@@ -311,9 +309,9 @@ func (eq *ExchangeQuery) WithStocks(opts ...func(*EntityQuery)) *ExchangeQuery {
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (eq *ExchangeQuery) GroupBy(field string, fields ...string) *ExchangeGroupBy {
-	eq.fields = append([]string{field}, fields...)
+	eq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &ExchangeGroupBy{build: eq}
-	grbuild.flds = &eq.fields
+	grbuild.flds = &eq.ctx.Fields
 	grbuild.label = exchange.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -332,10 +330,10 @@ func (eq *ExchangeQuery) GroupBy(field string, fields ...string) *ExchangeGroupB
 //		Select(exchange.FieldCode).
 //		Scan(ctx, &v)
 func (eq *ExchangeQuery) Select(fields ...string) *ExchangeSelect {
-	eq.fields = append(eq.fields, fields...)
+	eq.ctx.Fields = append(eq.ctx.Fields, fields...)
 	sbuild := &ExchangeSelect{ExchangeQuery: eq}
 	sbuild.label = exchange.Label
-	sbuild.flds, sbuild.scan = &eq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &eq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -355,7 +353,7 @@ func (eq *ExchangeQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range eq.fields {
+	for _, f := range eq.ctx.Fields {
 		if !exchange.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -433,27 +431,30 @@ func (eq *ExchangeQuery) loadStocks(ctx context.Context, query *EntityQuery, nod
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Exchange]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Exchange]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Entity](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -471,30 +472,22 @@ func (eq *ExchangeQuery) loadStocks(ctx context.Context, query *EntityQuery, nod
 
 func (eq *ExchangeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := eq.querySpec()
-	_spec.Node.Columns = eq.fields
-	if len(eq.fields) > 0 {
-		_spec.Unique = eq.unique != nil && *eq.unique
+	_spec.Node.Columns = eq.ctx.Fields
+	if len(eq.ctx.Fields) > 0 {
+		_spec.Unique = eq.ctx.Unique != nil && *eq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, eq.driver, _spec)
 }
 
 func (eq *ExchangeQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   exchange.Table,
-			Columns: exchange.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: exchange.FieldID,
-			},
-		},
-		From:   eq.sql,
-		Unique: true,
-	}
-	if unique := eq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(exchange.Table, exchange.Columns, sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt))
+	_spec.From = eq.sql
+	if unique := eq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if eq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := eq.fields; len(fields) > 0 {
+	if fields := eq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, exchange.FieldID)
 		for i := range fields {
@@ -510,10 +503,10 @@ func (eq *ExchangeQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := eq.limit; limit != nil {
+	if limit := eq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := eq.offset; offset != nil {
+	if offset := eq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := eq.order; len(ps) > 0 {
@@ -529,7 +522,7 @@ func (eq *ExchangeQuery) querySpec() *sqlgraph.QuerySpec {
 func (eq *ExchangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(eq.driver.Dialect())
 	t1 := builder.Table(exchange.Table)
-	columns := eq.fields
+	columns := eq.ctx.Fields
 	if len(columns) == 0 {
 		columns = exchange.Columns
 	}
@@ -538,7 +531,7 @@ func (eq *ExchangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = eq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if eq.unique != nil && *eq.unique {
+	if eq.ctx.Unique != nil && *eq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range eq.predicates {
@@ -547,12 +540,12 @@ func (eq *ExchangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range eq.order {
 		p(selector)
 	}
-	if offset := eq.offset; offset != nil {
+	if offset := eq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := eq.limit; limit != nil {
+	if limit := eq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -572,7 +565,7 @@ func (egb *ExchangeGroupBy) Aggregate(fns ...AggregateFunc) *ExchangeGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (egb *ExchangeGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeExchange, "GroupBy")
+	ctx = setContextOp(ctx, egb.build.ctx, ent.OpQueryGroupBy)
 	if err := egb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -620,7 +613,7 @@ func (es *ExchangeSelect) Aggregate(fns ...AggregateFunc) *ExchangeSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (es *ExchangeSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeExchange, "Select")
+	ctx = setContextOp(ctx, es.ctx, ent.OpQuerySelect)
 	if err := es.prepareQuery(ctx); err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,11 +20,8 @@ import (
 // DividendQuery is the builder for querying Dividend entities.
 type DividendQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []dividend.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Dividend
 	withStock  *EntityQuery
@@ -40,25 +38,25 @@ func (dq *DividendQuery) Where(ps ...predicate.Dividend) *DividendQuery {
 
 // Limit the number of records to be returned by this query.
 func (dq *DividendQuery) Limit(limit int) *DividendQuery {
-	dq.limit = &limit
+	dq.ctx.Limit = &limit
 	return dq
 }
 
 // Offset to start from.
 func (dq *DividendQuery) Offset(offset int) *DividendQuery {
-	dq.offset = &offset
+	dq.ctx.Offset = &offset
 	return dq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (dq *DividendQuery) Unique(unique bool) *DividendQuery {
-	dq.unique = &unique
+	dq.ctx.Unique = &unique
 	return dq
 }
 
 // Order specifies how the records should be ordered.
-func (dq *DividendQuery) Order(o ...OrderFunc) *DividendQuery {
+func (dq *DividendQuery) Order(o ...dividend.OrderOption) *DividendQuery {
 	dq.order = append(dq.order, o...)
 	return dq
 }
@@ -88,7 +86,7 @@ func (dq *DividendQuery) QueryStock() *EntityQuery {
 // First returns the first Dividend entity from the query.
 // Returns a *NotFoundError when no Dividend was found.
 func (dq *DividendQuery) First(ctx context.Context) (*Dividend, error) {
-	nodes, err := dq.Limit(1).All(newQueryContext(ctx, TypeDividend, "First"))
+	nodes, err := dq.Limit(1).All(setContextOp(ctx, dq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (dq *DividendQuery) FirstX(ctx context.Context) *Dividend {
 // Returns a *NotFoundError when no Dividend ID was found.
 func (dq *DividendQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = dq.Limit(1).IDs(newQueryContext(ctx, TypeDividend, "FirstID")); err != nil {
+	if ids, err = dq.Limit(1).IDs(setContextOp(ctx, dq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (dq *DividendQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Dividend entity is found.
 // Returns a *NotFoundError when no Dividend entities are found.
 func (dq *DividendQuery) Only(ctx context.Context) (*Dividend, error) {
-	nodes, err := dq.Limit(2).All(newQueryContext(ctx, TypeDividend, "Only"))
+	nodes, err := dq.Limit(2).All(setContextOp(ctx, dq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (dq *DividendQuery) OnlyX(ctx context.Context) *Dividend {
 // Returns a *NotFoundError when no entities are found.
 func (dq *DividendQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = dq.Limit(2).IDs(newQueryContext(ctx, TypeDividend, "OnlyID")); err != nil {
+	if ids, err = dq.Limit(2).IDs(setContextOp(ctx, dq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (dq *DividendQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Dividends.
 func (dq *DividendQuery) All(ctx context.Context) ([]*Dividend, error) {
-	ctx = newQueryContext(ctx, TypeDividend, "All")
+	ctx = setContextOp(ctx, dq.ctx, ent.OpQueryAll)
 	if err := dq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (dq *DividendQuery) AllX(ctx context.Context) []*Dividend {
 }
 
 // IDs executes the query and returns a list of Dividend IDs.
-func (dq *DividendQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeDividend, "IDs")
-	if err := dq.Select(dividend.FieldID).Scan(ctx, &ids); err != nil {
+func (dq *DividendQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if dq.ctx.Unique == nil && dq.path != nil {
+		dq.Unique(true)
+	}
+	ctx = setContextOp(ctx, dq.ctx, ent.OpQueryIDs)
+	if err = dq.Select(dividend.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (dq *DividendQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (dq *DividendQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeDividend, "Count")
+	ctx = setContextOp(ctx, dq.ctx, ent.OpQueryCount)
 	if err := dq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (dq *DividendQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (dq *DividendQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeDividend, "Exist")
+	ctx = setContextOp(ctx, dq.ctx, ent.OpQueryExist)
 	switch _, err := dq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (dq *DividendQuery) Clone() *DividendQuery {
 	}
 	return &DividendQuery{
 		config:     dq.config,
-		limit:      dq.limit,
-		offset:     dq.offset,
-		order:      append([]OrderFunc{}, dq.order...),
+		ctx:        dq.ctx.Clone(),
+		order:      append([]dividend.OrderOption{}, dq.order...),
 		inters:     append([]Interceptor{}, dq.inters...),
 		predicates: append([]predicate.Dividend{}, dq.predicates...),
 		withStock:  dq.withStock.Clone(),
 		// clone intermediate query.
-		sql:    dq.sql.Clone(),
-		path:   dq.path,
-		unique: dq.unique,
+		sql:  dq.sql.Clone(),
+		path: dq.path,
 	}
 }
 
@@ -301,18 +299,18 @@ func (dq *DividendQuery) WithStock(opts ...func(*EntityQuery)) *DividendQuery {
 // Example:
 //
 //	var v []struct {
-//		CashAmount float64 `json:"cash_amount,omitempty"`
+//		Rate float64 `json:"rate,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Dividend.Query().
-//		GroupBy(dividend.FieldCashAmount).
+//		GroupBy(dividend.FieldRate).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (dq *DividendQuery) GroupBy(field string, fields ...string) *DividendGroupBy {
-	dq.fields = append([]string{field}, fields...)
+	dq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &DividendGroupBy{build: dq}
-	grbuild.flds = &dq.fields
+	grbuild.flds = &dq.ctx.Fields
 	grbuild.label = dividend.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -324,17 +322,17 @@ func (dq *DividendQuery) GroupBy(field string, fields ...string) *DividendGroupB
 // Example:
 //
 //	var v []struct {
-//		CashAmount float64 `json:"cash_amount,omitempty"`
+//		Rate float64 `json:"rate,omitempty"`
 //	}
 //
 //	client.Dividend.Query().
-//		Select(dividend.FieldCashAmount).
+//		Select(dividend.FieldRate).
 //		Scan(ctx, &v)
 func (dq *DividendQuery) Select(fields ...string) *DividendSelect {
-	dq.fields = append(dq.fields, fields...)
+	dq.ctx.Fields = append(dq.ctx.Fields, fields...)
 	sbuild := &DividendSelect{DividendQuery: dq}
 	sbuild.label = dividend.Label
-	sbuild.flds, sbuild.scan = &dq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &dq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (dq *DividendQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range dq.fields {
+	for _, f := range dq.ctx.Fields {
 		if !dividend.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -428,27 +426,30 @@ func (dq *DividendQuery) loadStock(ctx context.Context, query *EntityQuery, node
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Dividend]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Dividend]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Entity](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -466,30 +467,22 @@ func (dq *DividendQuery) loadStock(ctx context.Context, query *EntityQuery, node
 
 func (dq *DividendQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := dq.querySpec()
-	_spec.Node.Columns = dq.fields
-	if len(dq.fields) > 0 {
-		_spec.Unique = dq.unique != nil && *dq.unique
+	_spec.Node.Columns = dq.ctx.Fields
+	if len(dq.ctx.Fields) > 0 {
+		_spec.Unique = dq.ctx.Unique != nil && *dq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, dq.driver, _spec)
 }
 
 func (dq *DividendQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   dividend.Table,
-			Columns: dividend.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: dividend.FieldID,
-			},
-		},
-		From:   dq.sql,
-		Unique: true,
-	}
-	if unique := dq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(dividend.Table, dividend.Columns, sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt))
+	_spec.From = dq.sql
+	if unique := dq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if dq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := dq.fields; len(fields) > 0 {
+	if fields := dq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, dividend.FieldID)
 		for i := range fields {
@@ -505,10 +498,10 @@ func (dq *DividendQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := dq.limit; limit != nil {
+	if limit := dq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := dq.offset; offset != nil {
+	if offset := dq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := dq.order; len(ps) > 0 {
@@ -524,7 +517,7 @@ func (dq *DividendQuery) querySpec() *sqlgraph.QuerySpec {
 func (dq *DividendQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(dq.driver.Dialect())
 	t1 := builder.Table(dividend.Table)
-	columns := dq.fields
+	columns := dq.ctx.Fields
 	if len(columns) == 0 {
 		columns = dividend.Columns
 	}
@@ -533,7 +526,7 @@ func (dq *DividendQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = dq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if dq.unique != nil && *dq.unique {
+	if dq.ctx.Unique != nil && *dq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range dq.predicates {
@@ -542,12 +535,12 @@ func (dq *DividendQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range dq.order {
 		p(selector)
 	}
-	if offset := dq.offset; offset != nil {
+	if offset := dq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := dq.limit; limit != nil {
+	if limit := dq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -567,7 +560,7 @@ func (dgb *DividendGroupBy) Aggregate(fns ...AggregateFunc) *DividendGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (dgb *DividendGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeDividend, "GroupBy")
+	ctx = setContextOp(ctx, dgb.build.ctx, ent.OpQueryGroupBy)
 	if err := dgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -615,7 +608,7 @@ func (ds *DividendSelect) Aggregate(fns ...AggregateFunc) *DividendSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (ds *DividendSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeDividend, "Select")
+	ctx = setContextOp(ctx, ds.ctx, ent.OpQuerySelect)
 	if err := ds.prepareQuery(ctx); err != nil {
 		return err
 	}

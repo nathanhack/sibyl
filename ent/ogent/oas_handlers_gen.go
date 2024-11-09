@@ -9,6 +9,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/middleware"
@@ -24,6 +25,8 @@ import (
 func (s *Server) handleAddTickerRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("addTicker"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/entities/add/{ticker}"),
 	}
 
 	// Start a span for this request.
@@ -124,6 +127,8 @@ func (s *Server) handleAddTickerRequest(args [1]string, w http.ResponseWriter, r
 func (s *Server) handleCreateBarGroupRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createBarGroup"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups"),
 	}
 
 	// Start a span for this request.
@@ -224,6 +229,8 @@ func (s *Server) handleCreateBarGroupRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleCreateBarRecordRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createBarRecord"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/bar-records"),
 	}
 
 	// Start a span for this request.
@@ -324,6 +331,8 @@ func (s *Server) handleCreateBarRecordRequest(args [0]string, w http.ResponseWri
 func (s *Server) handleCreateBarTimeRangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createBarTimeRange"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges"),
 	}
 
 	// Start a span for this request.
@@ -424,6 +433,8 @@ func (s *Server) handleCreateBarTimeRangeRequest(args [0]string, w http.Response
 func (s *Server) handleCreateDataSourceRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createDataSource"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/data-sources"),
 	}
 
 	// Start a span for this request.
@@ -524,6 +535,8 @@ func (s *Server) handleCreateDataSourceRequest(args [0]string, w http.ResponseWr
 func (s *Server) handleCreateDividendRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createDividend"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/dividends"),
 	}
 
 	// Start a span for this request.
@@ -624,6 +637,8 @@ func (s *Server) handleCreateDividendRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleCreateEntityRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createEntity"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/entities"),
 	}
 
 	// Start a span for this request.
@@ -724,6 +739,8 @@ func (s *Server) handleCreateEntityRequest(args [0]string, w http.ResponseWriter
 func (s *Server) handleCreateExchangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createExchange"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/exchanges"),
 	}
 
 	// Start a span for this request.
@@ -824,6 +841,8 @@ func (s *Server) handleCreateExchangeRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleCreateFinancialRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createFinancial"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/financials"),
 	}
 
 	// Start a span for this request.
@@ -924,6 +943,8 @@ func (s *Server) handleCreateFinancialRequest(args [0]string, w http.ResponseWri
 func (s *Server) handleCreateIntervalRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createInterval"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/intervals"),
 	}
 
 	// Start a span for this request.
@@ -1024,6 +1045,8 @@ func (s *Server) handleCreateIntervalRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleCreateMarketHoursRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createMarketHours"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/market-hours"),
 	}
 
 	// Start a span for this request.
@@ -1124,6 +1147,8 @@ func (s *Server) handleCreateMarketHoursRequest(args [0]string, w http.ResponseW
 func (s *Server) handleCreateMarketInfoRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createMarketInfo"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/market-infos"),
 	}
 
 	// Start a span for this request.
@@ -1224,6 +1249,8 @@ func (s *Server) handleCreateMarketInfoRequest(args [0]string, w http.ResponseWr
 func (s *Server) handleCreateSplitRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createSplit"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/splits"),
 	}
 
 	// Start a span for this request.
@@ -1324,6 +1351,8 @@ func (s *Server) handleCreateSplitRequest(args [0]string, w http.ResponseWriter,
 func (s *Server) handleCreateTradeConditionRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createTradeCondition"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions"),
 	}
 
 	// Start a span for this request.
@@ -1424,6 +1453,8 @@ func (s *Server) handleCreateTradeConditionRequest(args [0]string, w http.Respon
 func (s *Server) handleCreateTradeCorrectionRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createTradeCorrection"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections"),
 	}
 
 	// Start a span for this request.
@@ -1524,6 +1555,8 @@ func (s *Server) handleCreateTradeCorrectionRequest(args [0]string, w http.Respo
 func (s *Server) handleCreateTradeRecordRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createTradeRecord"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/trade-records"),
 	}
 
 	// Start a span for this request.
@@ -1624,6 +1657,8 @@ func (s *Server) handleCreateTradeRecordRequest(args [0]string, w http.ResponseW
 func (s *Server) handleCreateTradeTimeRangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createTradeTimeRange"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges"),
 	}
 
 	// Start a span for this request.
@@ -1724,6 +1759,8 @@ func (s *Server) handleCreateTradeTimeRangeRequest(args [0]string, w http.Respon
 func (s *Server) handleDeleteBarGroupRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteBarGroup"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups/{id}"),
 	}
 
 	// Start a span for this request.
@@ -1824,6 +1861,8 @@ func (s *Server) handleDeleteBarGroupRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleDeleteBarRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteBarRecord"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/bar-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -1924,6 +1963,8 @@ func (s *Server) handleDeleteBarRecordRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleDeleteBarTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteBarTimeRange"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2024,6 +2065,8 @@ func (s *Server) handleDeleteBarTimeRangeRequest(args [1]string, w http.Response
 func (s *Server) handleDeleteDataSourceRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteDataSource"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/data-sources/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2124,6 +2167,8 @@ func (s *Server) handleDeleteDataSourceRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleDeleteDividendRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteDividend"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/dividends/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2224,6 +2269,8 @@ func (s *Server) handleDeleteDividendRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleDeleteEntityRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteEntity"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2324,6 +2371,8 @@ func (s *Server) handleDeleteEntityRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleDeleteExchangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteExchange"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/exchanges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2424,6 +2473,8 @@ func (s *Server) handleDeleteExchangeRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleDeleteFinancialRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteFinancial"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/financials/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2524,6 +2575,8 @@ func (s *Server) handleDeleteFinancialRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleDeleteIntervalRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteInterval"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2624,6 +2677,8 @@ func (s *Server) handleDeleteIntervalRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleDeleteMarketHoursRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteMarketHours"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/market-hours/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2724,6 +2779,8 @@ func (s *Server) handleDeleteMarketHoursRequest(args [1]string, w http.ResponseW
 func (s *Server) handleDeleteMarketInfoRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteMarketInfo"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/market-infos/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2824,6 +2881,8 @@ func (s *Server) handleDeleteMarketInfoRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleDeleteSplitRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteSplit"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/splits/{id}"),
 	}
 
 	// Start a span for this request.
@@ -2924,6 +2983,8 @@ func (s *Server) handleDeleteSplitRequest(args [1]string, w http.ResponseWriter,
 func (s *Server) handleDeleteTradeConditionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteTradeCondition"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions/{id}"),
 	}
 
 	// Start a span for this request.
@@ -3024,6 +3085,8 @@ func (s *Server) handleDeleteTradeConditionRequest(args [1]string, w http.Respon
 func (s *Server) handleDeleteTradeCorrectionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteTradeCorrection"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections/{id}"),
 	}
 
 	// Start a span for this request.
@@ -3124,6 +3187,8 @@ func (s *Server) handleDeleteTradeCorrectionRequest(args [1]string, w http.Respo
 func (s *Server) handleDeleteTradeRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteTradeRecord"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -3224,6 +3289,8 @@ func (s *Server) handleDeleteTradeRecordRequest(args [1]string, w http.ResponseW
 func (s *Server) handleDeleteTradeTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("deleteTradeTimeRange"),
+		semconv.HTTPMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -3324,6 +3391,8 @@ func (s *Server) handleDeleteTradeTimeRangeRequest(args [1]string, w http.Respon
 func (s *Server) handleListBarGroupRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listBarGroup"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups"),
 	}
 
 	// Start a span for this request.
@@ -3428,6 +3497,8 @@ func (s *Server) handleListBarGroupRequest(args [0]string, w http.ResponseWriter
 func (s *Server) handleListBarGroupRecordsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listBarGroupRecords"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups/{id}/records"),
 	}
 
 	// Start a span for this request.
@@ -3536,6 +3607,8 @@ func (s *Server) handleListBarGroupRecordsRequest(args [1]string, w http.Respons
 func (s *Server) handleListBarRecordRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listBarRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-records"),
 	}
 
 	// Start a span for this request.
@@ -3640,6 +3713,8 @@ func (s *Server) handleListBarRecordRequest(args [0]string, w http.ResponseWrite
 func (s *Server) handleListBarTimeRangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listBarTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges"),
 	}
 
 	// Start a span for this request.
@@ -3744,6 +3819,8 @@ func (s *Server) handleListBarTimeRangeRequest(args [0]string, w http.ResponseWr
 func (s *Server) handleListBarTimeRangeGroupsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listBarTimeRangeGroups"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges/{id}/groups"),
 	}
 
 	// Start a span for this request.
@@ -3852,6 +3929,8 @@ func (s *Server) handleListBarTimeRangeGroupsRequest(args [1]string, w http.Resp
 func (s *Server) handleListDataSourceRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listDataSource"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/data-sources"),
 	}
 
 	// Start a span for this request.
@@ -3956,6 +4035,8 @@ func (s *Server) handleListDataSourceRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleListDataSourceIntervalsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listDataSourceIntervals"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/data-sources/{id}/intervals"),
 	}
 
 	// Start a span for this request.
@@ -4064,6 +4145,8 @@ func (s *Server) handleListDataSourceIntervalsRequest(args [1]string, w http.Res
 func (s *Server) handleListDividendRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listDividend"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/dividends"),
 	}
 
 	// Start a span for this request.
@@ -4168,6 +4251,8 @@ func (s *Server) handleListDividendRequest(args [0]string, w http.ResponseWriter
 func (s *Server) handleListDividendStockRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listDividendStock"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/dividends/{id}/stock"),
 	}
 
 	// Start a span for this request.
@@ -4276,6 +4361,8 @@ func (s *Server) handleListDividendStockRequest(args [1]string, w http.ResponseW
 func (s *Server) handleListEntityRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntity"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities"),
 	}
 
 	// Start a span for this request.
@@ -4380,6 +4467,8 @@ func (s *Server) handleListEntityRequest(args [0]string, w http.ResponseWriter, 
 func (s *Server) handleListEntityDividendsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntityDividends"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}/dividends"),
 	}
 
 	// Start a span for this request.
@@ -4488,6 +4577,8 @@ func (s *Server) handleListEntityDividendsRequest(args [1]string, w http.Respons
 func (s *Server) handleListEntityExchangesRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntityExchanges"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}/exchanges"),
 	}
 
 	// Start a span for this request.
@@ -4596,6 +4687,8 @@ func (s *Server) handleListEntityExchangesRequest(args [1]string, w http.Respons
 func (s *Server) handleListEntityFinancialsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntityFinancials"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}/financials"),
 	}
 
 	// Start a span for this request.
@@ -4704,6 +4797,8 @@ func (s *Server) handleListEntityFinancialsRequest(args [1]string, w http.Respon
 func (s *Server) handleListEntityIntervalsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntityIntervals"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}/intervals"),
 	}
 
 	// Start a span for this request.
@@ -4812,6 +4907,8 @@ func (s *Server) handleListEntityIntervalsRequest(args [1]string, w http.Respons
 func (s *Server) handleListEntitySplitsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listEntitySplits"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}/splits"),
 	}
 
 	// Start a span for this request.
@@ -4920,6 +5017,8 @@ func (s *Server) handleListEntitySplitsRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleListExchangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listExchange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/exchanges"),
 	}
 
 	// Start a span for this request.
@@ -5024,6 +5123,8 @@ func (s *Server) handleListExchangeRequest(args [0]string, w http.ResponseWriter
 func (s *Server) handleListExchangeStocksRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listExchangeStocks"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/exchanges/{id}/stocks"),
 	}
 
 	// Start a span for this request.
@@ -5132,6 +5233,8 @@ func (s *Server) handleListExchangeStocksRequest(args [1]string, w http.Response
 func (s *Server) handleListFinancialRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listFinancial"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/financials"),
 	}
 
 	// Start a span for this request.
@@ -5236,6 +5339,8 @@ func (s *Server) handleListFinancialRequest(args [0]string, w http.ResponseWrite
 func (s *Server) handleListFinancialStockRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listFinancialStock"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/financials/{id}/stock"),
 	}
 
 	// Start a span for this request.
@@ -5344,6 +5449,8 @@ func (s *Server) handleListFinancialStockRequest(args [1]string, w http.Response
 func (s *Server) handleListIntervalRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listInterval"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals"),
 	}
 
 	// Start a span for this request.
@@ -5448,6 +5555,8 @@ func (s *Server) handleListIntervalRequest(args [0]string, w http.ResponseWriter
 func (s *Server) handleListIntervalBarsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listIntervalBars"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}/bars"),
 	}
 
 	// Start a span for this request.
@@ -5556,6 +5665,8 @@ func (s *Server) handleListIntervalBarsRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleListIntervalTradesRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listIntervalTrades"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}/trades"),
 	}
 
 	// Start a span for this request.
@@ -5664,6 +5775,8 @@ func (s *Server) handleListIntervalTradesRequest(args [1]string, w http.Response
 func (s *Server) handleListMarketHoursRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listMarketHours"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-hours"),
 	}
 
 	// Start a span for this request.
@@ -5768,6 +5881,8 @@ func (s *Server) handleListMarketHoursRequest(args [0]string, w http.ResponseWri
 func (s *Server) handleListMarketInfoRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listMarketInfo"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-infos"),
 	}
 
 	// Start a span for this request.
@@ -5872,6 +5987,8 @@ func (s *Server) handleListMarketInfoRequest(args [0]string, w http.ResponseWrit
 func (s *Server) handleListMarketInfoHoursRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listMarketInfoHours"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-infos/{id}/hours"),
 	}
 
 	// Start a span for this request.
@@ -5980,6 +6097,8 @@ func (s *Server) handleListMarketInfoHoursRequest(args [1]string, w http.Respons
 func (s *Server) handleListSplitRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listSplit"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/splits"),
 	}
 
 	// Start a span for this request.
@@ -6084,6 +6203,8 @@ func (s *Server) handleListSplitRequest(args [0]string, w http.ResponseWriter, r
 func (s *Server) handleListTradeConditionRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeCondition"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions"),
 	}
 
 	// Start a span for this request.
@@ -6188,6 +6309,8 @@ func (s *Server) handleListTradeConditionRequest(args [0]string, w http.Response
 func (s *Server) handleListTradeConditionRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeConditionRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions/{id}/record"),
 	}
 
 	// Start a span for this request.
@@ -6296,6 +6419,8 @@ func (s *Server) handleListTradeConditionRecordRequest(args [1]string, w http.Re
 func (s *Server) handleListTradeCorrectionRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeCorrection"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections"),
 	}
 
 	// Start a span for this request.
@@ -6400,6 +6525,8 @@ func (s *Server) handleListTradeCorrectionRequest(args [0]string, w http.Respons
 func (s *Server) handleListTradeCorrectionRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeCorrectionRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections/{id}/record"),
 	}
 
 	// Start a span for this request.
@@ -6508,6 +6635,8 @@ func (s *Server) handleListTradeCorrectionRecordRequest(args [1]string, w http.R
 func (s *Server) handleListTradeRecordRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records"),
 	}
 
 	// Start a span for this request.
@@ -6612,6 +6741,8 @@ func (s *Server) handleListTradeRecordRequest(args [0]string, w http.ResponseWri
 func (s *Server) handleListTradeRecordConditionsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeRecordConditions"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}/conditions"),
 	}
 
 	// Start a span for this request.
@@ -6720,6 +6851,8 @@ func (s *Server) handleListTradeRecordConditionsRequest(args [1]string, w http.R
 func (s *Server) handleListTradeRecordCorrectionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeRecordCorrection"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}/correction"),
 	}
 
 	// Start a span for this request.
@@ -6828,6 +6961,8 @@ func (s *Server) handleListTradeRecordCorrectionRequest(args [1]string, w http.R
 func (s *Server) handleListTradeRecordExchangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeRecordExchange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}/exchange"),
 	}
 
 	// Start a span for this request.
@@ -6936,6 +7071,8 @@ func (s *Server) handleListTradeRecordExchangeRequest(args [1]string, w http.Res
 func (s *Server) handleListTradeTimeRangeRequest(args [0]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges"),
 	}
 
 	// Start a span for this request.
@@ -7040,6 +7177,8 @@ func (s *Server) handleListTradeTimeRangeRequest(args [0]string, w http.Response
 func (s *Server) handleListTradeTimeRangeRecordsRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("listTradeTimeRangeRecords"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges/{id}/records"),
 	}
 
 	// Start a span for this request.
@@ -7148,6 +7287,8 @@ func (s *Server) handleListTradeTimeRangeRecordsRequest(args [1]string, w http.R
 func (s *Server) handleReadBarGroupRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarGroup"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups/{id}"),
 	}
 
 	// Start a span for this request.
@@ -7248,6 +7389,8 @@ func (s *Server) handleReadBarGroupRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleReadBarGroupTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarGroupTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups/{id}/time-range"),
 	}
 
 	// Start a span for this request.
@@ -7348,6 +7491,8 @@ func (s *Server) handleReadBarGroupTimeRangeRequest(args [1]string, w http.Respo
 func (s *Server) handleReadBarRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -7448,6 +7593,8 @@ func (s *Server) handleReadBarRecordRequest(args [1]string, w http.ResponseWrite
 func (s *Server) handleReadBarRecordGroupRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarRecordGroup"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-records/{id}/group"),
 	}
 
 	// Start a span for this request.
@@ -7548,6 +7695,8 @@ func (s *Server) handleReadBarRecordGroupRequest(args [1]string, w http.Response
 func (s *Server) handleReadBarTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -7648,6 +7797,8 @@ func (s *Server) handleReadBarTimeRangeRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleReadBarTimeRangeIntervalRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readBarTimeRangeInterval"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges/{id}/interval"),
 	}
 
 	// Start a span for this request.
@@ -7748,6 +7899,8 @@ func (s *Server) handleReadBarTimeRangeIntervalRequest(args [1]string, w http.Re
 func (s *Server) handleReadDataSourceRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readDataSource"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/data-sources/{id}"),
 	}
 
 	// Start a span for this request.
@@ -7848,6 +8001,8 @@ func (s *Server) handleReadDataSourceRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleReadDividendRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readDividend"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/dividends/{id}"),
 	}
 
 	// Start a span for this request.
@@ -7948,6 +8103,8 @@ func (s *Server) handleReadDividendRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleReadEntityRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readEntity"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8048,6 +8205,8 @@ func (s *Server) handleReadEntityRequest(args [1]string, w http.ResponseWriter, 
 func (s *Server) handleReadExchangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readExchange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/exchanges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8148,6 +8307,8 @@ func (s *Server) handleReadExchangeRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleReadFinancialRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readFinancial"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/financials/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8248,6 +8409,8 @@ func (s *Server) handleReadFinancialRequest(args [1]string, w http.ResponseWrite
 func (s *Server) handleReadIntervalRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readInterval"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8348,6 +8511,8 @@ func (s *Server) handleReadIntervalRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleReadIntervalDataSourceRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readIntervalDataSource"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}/data-source"),
 	}
 
 	// Start a span for this request.
@@ -8448,6 +8613,8 @@ func (s *Server) handleReadIntervalDataSourceRequest(args [1]string, w http.Resp
 func (s *Server) handleReadIntervalStockRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readIntervalStock"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}/stock"),
 	}
 
 	// Start a span for this request.
@@ -8548,6 +8715,8 @@ func (s *Server) handleReadIntervalStockRequest(args [1]string, w http.ResponseW
 func (s *Server) handleReadMarketHoursRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readMarketHours"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-hours/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8648,6 +8817,8 @@ func (s *Server) handleReadMarketHoursRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleReadMarketHoursMarketInfoRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readMarketHoursMarketInfo"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-hours/{id}/market-info"),
 	}
 
 	// Start a span for this request.
@@ -8748,6 +8919,8 @@ func (s *Server) handleReadMarketHoursMarketInfoRequest(args [1]string, w http.R
 func (s *Server) handleReadMarketInfoRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readMarketInfo"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/market-infos/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8848,6 +9021,8 @@ func (s *Server) handleReadMarketInfoRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleReadSplitRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readSplit"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/splits/{id}"),
 	}
 
 	// Start a span for this request.
@@ -8948,6 +9123,8 @@ func (s *Server) handleReadSplitRequest(args [1]string, w http.ResponseWriter, r
 func (s *Server) handleReadSplitStockRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readSplitStock"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/splits/{id}/stock"),
 	}
 
 	// Start a span for this request.
@@ -9048,6 +9225,8 @@ func (s *Server) handleReadSplitStockRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleReadTradeConditionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeCondition"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9148,6 +9327,8 @@ func (s *Server) handleReadTradeConditionRequest(args [1]string, w http.Response
 func (s *Server) handleReadTradeCorrectionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeCorrection"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9248,6 +9429,8 @@ func (s *Server) handleReadTradeCorrectionRequest(args [1]string, w http.Respons
 func (s *Server) handleReadTradeRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeRecord"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9348,6 +9531,8 @@ func (s *Server) handleReadTradeRecordRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleReadTradeRecordTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeRecordTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}/time-range"),
 	}
 
 	// Start a span for this request.
@@ -9448,6 +9633,8 @@ func (s *Server) handleReadTradeRecordTimeRangeRequest(args [1]string, w http.Re
 func (s *Server) handleReadTradeTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeTimeRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9548,6 +9735,8 @@ func (s *Server) handleReadTradeTimeRangeRequest(args [1]string, w http.Response
 func (s *Server) handleReadTradeTimeRangeIntervalRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readTradeTimeRangeInterval"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges/{id}/interval"),
 	}
 
 	// Start a span for this request.
@@ -9648,6 +9837,8 @@ func (s *Server) handleReadTradeTimeRangeIntervalRequest(args [1]string, w http.
 func (s *Server) handleSearchTickerRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTicker"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/rest/search/{ticker}"),
 	}
 
 	// Start a span for this request.
@@ -9748,6 +9939,8 @@ func (s *Server) handleSearchTickerRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleUpdateBarGroupRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateBarGroup"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/bar-groups/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9863,6 +10056,8 @@ func (s *Server) handleUpdateBarGroupRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleUpdateBarRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateBarRecord"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/bar-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -9978,6 +10173,8 @@ func (s *Server) handleUpdateBarRecordRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleUpdateBarTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateBarTimeRange"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/bar-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10093,6 +10290,8 @@ func (s *Server) handleUpdateBarTimeRangeRequest(args [1]string, w http.Response
 func (s *Server) handleUpdateDataSourceRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateDataSource"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/data-sources/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10208,6 +10407,8 @@ func (s *Server) handleUpdateDataSourceRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleUpdateDividendRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateDividend"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/dividends/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10323,6 +10524,8 @@ func (s *Server) handleUpdateDividendRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleUpdateEntityRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateEntity"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/entities/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10438,6 +10641,8 @@ func (s *Server) handleUpdateEntityRequest(args [1]string, w http.ResponseWriter
 func (s *Server) handleUpdateExchangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateExchange"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/exchanges/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10553,6 +10758,8 @@ func (s *Server) handleUpdateExchangeRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleUpdateFinancialRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateFinancial"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/financials/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10668,6 +10875,8 @@ func (s *Server) handleUpdateFinancialRequest(args [1]string, w http.ResponseWri
 func (s *Server) handleUpdateIntervalRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateInterval"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/intervals/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10783,6 +10992,8 @@ func (s *Server) handleUpdateIntervalRequest(args [1]string, w http.ResponseWrit
 func (s *Server) handleUpdateMarketHoursRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateMarketHours"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/market-hours/{id}"),
 	}
 
 	// Start a span for this request.
@@ -10898,6 +11109,8 @@ func (s *Server) handleUpdateMarketHoursRequest(args [1]string, w http.ResponseW
 func (s *Server) handleUpdateMarketInfoRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateMarketInfo"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/market-infos/{id}"),
 	}
 
 	// Start a span for this request.
@@ -11013,6 +11226,8 @@ func (s *Server) handleUpdateMarketInfoRequest(args [1]string, w http.ResponseWr
 func (s *Server) handleUpdateSplitRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateSplit"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/splits/{id}"),
 	}
 
 	// Start a span for this request.
@@ -11128,6 +11343,8 @@ func (s *Server) handleUpdateSplitRequest(args [1]string, w http.ResponseWriter,
 func (s *Server) handleUpdateTradeConditionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateTradeCondition"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/trade-conditions/{id}"),
 	}
 
 	// Start a span for this request.
@@ -11243,6 +11460,8 @@ func (s *Server) handleUpdateTradeConditionRequest(args [1]string, w http.Respon
 func (s *Server) handleUpdateTradeCorrectionRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateTradeCorrection"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/trade-corrections/{id}"),
 	}
 
 	// Start a span for this request.
@@ -11358,6 +11577,8 @@ func (s *Server) handleUpdateTradeCorrectionRequest(args [1]string, w http.Respo
 func (s *Server) handleUpdateTradeRecordRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateTradeRecord"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/trade-records/{id}"),
 	}
 
 	// Start a span for this request.
@@ -11473,6 +11694,8 @@ func (s *Server) handleUpdateTradeRecordRequest(args [1]string, w http.ResponseW
 func (s *Server) handleUpdateTradeTimeRangeRequest(args [1]string, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("updateTradeTimeRange"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/rest/trade-time-ranges/{id}"),
 	}
 
 	// Start a span for this request.

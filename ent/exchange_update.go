@@ -34,9 +34,25 @@ func (eu *ExchangeUpdate) SetCode(s string) *ExchangeUpdate {
 	return eu
 }
 
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (eu *ExchangeUpdate) SetNillableCode(s *string) *ExchangeUpdate {
+	if s != nil {
+		eu.SetCode(*s)
+	}
+	return eu
+}
+
 // SetName sets the "name" field.
 func (eu *ExchangeUpdate) SetName(s string) *ExchangeUpdate {
 	eu.mutation.SetName(s)
+	return eu
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (eu *ExchangeUpdate) SetNillableName(s *string) *ExchangeUpdate {
+	if s != nil {
+		eu.SetName(*s)
+	}
 	return eu
 }
 
@@ -83,7 +99,7 @@ func (eu *ExchangeUpdate) RemoveStocks(e ...*Entity) *ExchangeUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (eu *ExchangeUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, ExchangeMutation](ctx, eu.sqlSave, eu.mutation, eu.hooks)
+	return withHooks(ctx, eu.sqlSave, eu.mutation, eu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -109,16 +125,7 @@ func (eu *ExchangeUpdate) ExecX(ctx context.Context) {
 }
 
 func (eu *ExchangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   exchange.Table,
-			Columns: exchange.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: exchange.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(exchange.Table, exchange.Columns, sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt))
 	if ps := eu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -140,10 +147,7 @@ func (eu *ExchangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -156,10 +160,7 @@ func (eu *ExchangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -175,10 +176,7 @@ func (eu *ExchangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -212,9 +210,25 @@ func (euo *ExchangeUpdateOne) SetCode(s string) *ExchangeUpdateOne {
 	return euo
 }
 
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (euo *ExchangeUpdateOne) SetNillableCode(s *string) *ExchangeUpdateOne {
+	if s != nil {
+		euo.SetCode(*s)
+	}
+	return euo
+}
+
 // SetName sets the "name" field.
 func (euo *ExchangeUpdateOne) SetName(s string) *ExchangeUpdateOne {
 	euo.mutation.SetName(s)
+	return euo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (euo *ExchangeUpdateOne) SetNillableName(s *string) *ExchangeUpdateOne {
+	if s != nil {
+		euo.SetName(*s)
+	}
 	return euo
 }
 
@@ -259,6 +273,12 @@ func (euo *ExchangeUpdateOne) RemoveStocks(e ...*Entity) *ExchangeUpdateOne {
 	return euo.RemoveStockIDs(ids...)
 }
 
+// Where appends a list predicates to the ExchangeUpdate builder.
+func (euo *ExchangeUpdateOne) Where(ps ...predicate.Exchange) *ExchangeUpdateOne {
+	euo.mutation.Where(ps...)
+	return euo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (euo *ExchangeUpdateOne) Select(field string, fields ...string) *ExchangeUpdateOne {
@@ -268,7 +288,7 @@ func (euo *ExchangeUpdateOne) Select(field string, fields ...string) *ExchangeUp
 
 // Save executes the query and returns the updated Exchange entity.
 func (euo *ExchangeUpdateOne) Save(ctx context.Context) (*Exchange, error) {
-	return withHooks[*Exchange, ExchangeMutation](ctx, euo.sqlSave, euo.mutation, euo.hooks)
+	return withHooks(ctx, euo.sqlSave, euo.mutation, euo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -294,16 +314,7 @@ func (euo *ExchangeUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (euo *ExchangeUpdateOne) sqlSave(ctx context.Context) (_node *Exchange, err error) {
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   exchange.Table,
-			Columns: exchange.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: exchange.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(exchange.Table, exchange.Columns, sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt))
 	id, ok := euo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Exchange.id" for update`)}
@@ -342,10 +353,7 @@ func (euo *ExchangeUpdateOne) sqlSave(ctx context.Context) (_node *Exchange, err
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -358,10 +366,7 @@ func (euo *ExchangeUpdateOne) sqlSave(ctx context.Context) (_node *Exchange, err
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -377,10 +382,7 @@ func (euo *ExchangeUpdateOne) sqlSave(ctx context.Context) (_node *Exchange, err
 			Columns: exchange.StocksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

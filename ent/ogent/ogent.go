@@ -977,11 +977,9 @@ func (h *OgentHandler) ListDataSourceIntervals(ctx context.Context, params ListD
 func (h *OgentHandler) CreateDividend(ctx context.Context, req *CreateDividendReq) (CreateDividendRes, error) {
 	b := h.client.Dividend.Create()
 	// Add all fields.
-	b.SetCashAmount(req.CashAmount)
+	b.SetRate(req.Rate)
 	b.SetDeclarationDate(req.DeclarationDate)
-	b.SetDividendType(dividend.DividendType(req.DividendType))
 	b.SetExDividendDate(req.ExDividendDate)
-	b.SetFrequency(req.Frequency)
 	b.SetRecordDate(req.RecordDate)
 	b.SetPayDate(req.PayDate)
 	// Add all edges.
@@ -1047,20 +1045,14 @@ func (h *OgentHandler) ReadDividend(ctx context.Context, params ReadDividendPara
 func (h *OgentHandler) UpdateDividend(ctx context.Context, req *UpdateDividendReq, params UpdateDividendParams) (UpdateDividendRes, error) {
 	b := h.client.Dividend.UpdateOneID(params.ID)
 	// Add all fields.
-	if v, ok := req.CashAmount.Get(); ok {
-		b.SetCashAmount(v)
+	if v, ok := req.Rate.Get(); ok {
+		b.SetRate(v)
 	}
 	if v, ok := req.DeclarationDate.Get(); ok {
 		b.SetDeclarationDate(v)
 	}
-	if v, ok := req.DividendType.Get(); ok {
-		b.SetDividendType(dividend.DividendType(v))
-	}
 	if v, ok := req.ExDividendDate.Get(); ok {
 		b.SetExDividendDate(v)
-	}
-	if v, ok := req.Frequency.Get(); ok {
-		b.SetFrequency(v)
 	}
 	if v, ok := req.RecordDate.Get(); ok {
 		b.SetRecordDate(v)
@@ -1211,9 +1203,8 @@ func (h *OgentHandler) CreateEntity(ctx context.Context, req *CreateEntityReq) (
 	b.SetName(req.Name)
 	b.SetDescription(req.Description)
 	b.SetListDate(req.ListDate)
-	if v, ok := req.Delisted.Get(); ok {
-		b.SetDelisted(v)
-	}
+	b.SetOptions(req.Options)
+	b.SetTradable(req.Tradable)
 	// Add all edges.
 	b.AddExchangeIDs(req.Exchanges...)
 	b.AddIntervalIDs(req.Intervals...)
@@ -1296,8 +1287,11 @@ func (h *OgentHandler) UpdateEntity(ctx context.Context, req *UpdateEntityReq, p
 	if v, ok := req.ListDate.Get(); ok {
 		b.SetListDate(v)
 	}
-	if v, ok := req.Delisted.Get(); ok {
-		b.SetDelisted(v)
+	if v, ok := req.Options.Get(); ok {
+		b.SetOptions(v)
+	}
+	if v, ok := req.Tradable.Get(); ok {
+		b.SetTradable(v)
 	}
 	// Add all edges.
 	if req.Exchanges != nil {

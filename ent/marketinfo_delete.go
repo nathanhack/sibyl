@@ -27,7 +27,7 @@ func (mid *MarketInfoDelete) Where(ps ...predicate.MarketInfo) *MarketInfoDelete
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (mid *MarketInfoDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, MarketInfoMutation](ctx, mid.sqlExec, mid.mutation, mid.hooks)
+	return withHooks(ctx, mid.sqlExec, mid.mutation, mid.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (mid *MarketInfoDelete) ExecX(ctx context.Context) int {
 }
 
 func (mid *MarketInfoDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: marketinfo.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: marketinfo.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(marketinfo.Table, sqlgraph.NewFieldSpec(marketinfo.FieldID, field.TypeInt))
 	if ps := mid.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type MarketInfoDeleteOne struct {
 	mid *MarketInfoDelete
 }
 
+// Where appends a list predicates to the MarketInfoDelete builder.
+func (mido *MarketInfoDeleteOne) Where(ps ...predicate.MarketInfo) *MarketInfoDeleteOne {
+	mido.mid.mutation.Where(ps...)
+	return mido
+}
+
 // Exec executes the deletion query.
 func (mido *MarketInfoDeleteOne) Exec(ctx context.Context) error {
 	n, err := mido.mid.Exec(ctx)
@@ -84,5 +82,7 @@ func (mido *MarketInfoDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (mido *MarketInfoDeleteOne) ExecX(ctx context.Context) {
-	mido.mid.ExecX(ctx)
+	if err := mido.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

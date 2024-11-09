@@ -4,6 +4,9 @@ package interval
 
 import (
 	"fmt"
+
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -107,4 +110,102 @@ func IntervalValidator(i Interval) error {
 	default:
 		return fmt.Errorf("interval: invalid enum value for interval field: %q", i)
 	}
+}
+
+// OrderOption defines the ordering options for the Interval queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByActive orders the results by the active field.
+func ByActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActive, opts...).ToFunc()
+}
+
+// ByInterval orders the results by the interval field.
+func ByInterval(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInterval, opts...).ToFunc()
+}
+
+// ByStockID orders the results by the stock_id field.
+func ByStockID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStockID, opts...).ToFunc()
+}
+
+// ByDataSourceID orders the results by the data_source_id field.
+func ByDataSourceID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDataSourceID, opts...).ToFunc()
+}
+
+// ByDataSourceField orders the results by data_source field.
+func ByDataSourceField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDataSourceStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByStockField orders the results by stock field.
+func ByStockField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStockStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByBarsCount orders the results by bars count.
+func ByBarsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBarsStep(), opts...)
+	}
+}
+
+// ByBars orders the results by bars terms.
+func ByBars(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBarsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTradesCount orders the results by trades count.
+func ByTradesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTradesStep(), opts...)
+	}
+}
+
+// ByTrades orders the results by trades terms.
+func ByTrades(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTradesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newDataSourceStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DataSourceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DataSourceTable, DataSourceColumn),
+	)
+}
+func newStockStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StockInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, StockTable, StockColumn),
+	)
+}
+func newBarsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BarsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BarsTable, BarsColumn),
+	)
+}
+func newTradesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TradesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TradesTable, TradesColumn),
+	)
 }

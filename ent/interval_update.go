@@ -51,15 +51,39 @@ func (iu *IntervalUpdate) SetInterval(i interval.Interval) *IntervalUpdate {
 	return iu
 }
 
+// SetNillableInterval sets the "interval" field if the given value is not nil.
+func (iu *IntervalUpdate) SetNillableInterval(i *interval.Interval) *IntervalUpdate {
+	if i != nil {
+		iu.SetInterval(*i)
+	}
+	return iu
+}
+
 // SetStockID sets the "stock_id" field.
 func (iu *IntervalUpdate) SetStockID(i int) *IntervalUpdate {
 	iu.mutation.SetStockID(i)
 	return iu
 }
 
+// SetNillableStockID sets the "stock_id" field if the given value is not nil.
+func (iu *IntervalUpdate) SetNillableStockID(i *int) *IntervalUpdate {
+	if i != nil {
+		iu.SetStockID(*i)
+	}
+	return iu
+}
+
 // SetDataSourceID sets the "data_source_id" field.
 func (iu *IntervalUpdate) SetDataSourceID(i int) *IntervalUpdate {
 	iu.mutation.SetDataSourceID(i)
+	return iu
+}
+
+// SetNillableDataSourceID sets the "data_source_id" field if the given value is not nil.
+func (iu *IntervalUpdate) SetNillableDataSourceID(i *int) *IntervalUpdate {
+	if i != nil {
+		iu.SetDataSourceID(*i)
+	}
 	return iu
 }
 
@@ -164,7 +188,7 @@ func (iu *IntervalUpdate) RemoveTrades(t ...*TradeTimeRange) *IntervalUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (iu *IntervalUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, IntervalMutation](ctx, iu.sqlSave, iu.mutation, iu.hooks)
+	return withHooks(ctx, iu.sqlSave, iu.mutation, iu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -196,10 +220,10 @@ func (iu *IntervalUpdate) check() error {
 			return &ValidationError{Name: "interval", err: fmt.Errorf(`ent: validator failed for field "Interval.interval": %w`, err)}
 		}
 	}
-	if _, ok := iu.mutation.DataSourceID(); iu.mutation.DataSourceCleared() && !ok {
+	if iu.mutation.DataSourceCleared() && len(iu.mutation.DataSourceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Interval.data_source"`)
 	}
-	if _, ok := iu.mutation.StockID(); iu.mutation.StockCleared() && !ok {
+	if iu.mutation.StockCleared() && len(iu.mutation.StockIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Interval.stock"`)
 	}
 	return nil
@@ -209,16 +233,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := iu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   interval.Table,
-			Columns: interval.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: interval.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(interval.Table, interval.Columns, sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt))
 	if ps := iu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -240,10 +255,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.DataSourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: datasource.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -256,10 +268,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.DataSourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: datasource.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -275,10 +284,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -291,10 +297,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -310,10 +313,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -326,10 +326,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -345,10 +342,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -364,10 +358,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -380,10 +371,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -399,10 +387,7 @@ func (iu *IntervalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -450,15 +435,39 @@ func (iuo *IntervalUpdateOne) SetInterval(i interval.Interval) *IntervalUpdateOn
 	return iuo
 }
 
+// SetNillableInterval sets the "interval" field if the given value is not nil.
+func (iuo *IntervalUpdateOne) SetNillableInterval(i *interval.Interval) *IntervalUpdateOne {
+	if i != nil {
+		iuo.SetInterval(*i)
+	}
+	return iuo
+}
+
 // SetStockID sets the "stock_id" field.
 func (iuo *IntervalUpdateOne) SetStockID(i int) *IntervalUpdateOne {
 	iuo.mutation.SetStockID(i)
 	return iuo
 }
 
+// SetNillableStockID sets the "stock_id" field if the given value is not nil.
+func (iuo *IntervalUpdateOne) SetNillableStockID(i *int) *IntervalUpdateOne {
+	if i != nil {
+		iuo.SetStockID(*i)
+	}
+	return iuo
+}
+
 // SetDataSourceID sets the "data_source_id" field.
 func (iuo *IntervalUpdateOne) SetDataSourceID(i int) *IntervalUpdateOne {
 	iuo.mutation.SetDataSourceID(i)
+	return iuo
+}
+
+// SetNillableDataSourceID sets the "data_source_id" field if the given value is not nil.
+func (iuo *IntervalUpdateOne) SetNillableDataSourceID(i *int) *IntervalUpdateOne {
+	if i != nil {
+		iuo.SetDataSourceID(*i)
+	}
 	return iuo
 }
 
@@ -561,6 +570,12 @@ func (iuo *IntervalUpdateOne) RemoveTrades(t ...*TradeTimeRange) *IntervalUpdate
 	return iuo.RemoveTradeIDs(ids...)
 }
 
+// Where appends a list predicates to the IntervalUpdate builder.
+func (iuo *IntervalUpdateOne) Where(ps ...predicate.Interval) *IntervalUpdateOne {
+	iuo.mutation.Where(ps...)
+	return iuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (iuo *IntervalUpdateOne) Select(field string, fields ...string) *IntervalUpdateOne {
@@ -570,7 +585,7 @@ func (iuo *IntervalUpdateOne) Select(field string, fields ...string) *IntervalUp
 
 // Save executes the query and returns the updated Interval entity.
 func (iuo *IntervalUpdateOne) Save(ctx context.Context) (*Interval, error) {
-	return withHooks[*Interval, IntervalMutation](ctx, iuo.sqlSave, iuo.mutation, iuo.hooks)
+	return withHooks(ctx, iuo.sqlSave, iuo.mutation, iuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -602,10 +617,10 @@ func (iuo *IntervalUpdateOne) check() error {
 			return &ValidationError{Name: "interval", err: fmt.Errorf(`ent: validator failed for field "Interval.interval": %w`, err)}
 		}
 	}
-	if _, ok := iuo.mutation.DataSourceID(); iuo.mutation.DataSourceCleared() && !ok {
+	if iuo.mutation.DataSourceCleared() && len(iuo.mutation.DataSourceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Interval.data_source"`)
 	}
-	if _, ok := iuo.mutation.StockID(); iuo.mutation.StockCleared() && !ok {
+	if iuo.mutation.StockCleared() && len(iuo.mutation.StockIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Interval.stock"`)
 	}
 	return nil
@@ -615,16 +630,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 	if err := iuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   interval.Table,
-			Columns: interval.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: interval.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(interval.Table, interval.Columns, sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt))
 	id, ok := iuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Interval.id" for update`)}
@@ -663,10 +669,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.DataSourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: datasource.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -679,10 +682,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.DataSourceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: datasource.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -698,10 +698,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -714,10 +711,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.StockColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -733,10 +727,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -749,10 +740,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -768,10 +756,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.BarsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bartimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -787,10 +772,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -803,10 +785,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -822,10 +801,7 @@ func (iuo *IntervalUpdateOne) sqlSave(ctx context.Context) (_node *Interval, err
 			Columns: []string{interval.TradesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: tradetimerange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

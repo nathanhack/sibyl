@@ -4451,8 +4451,8 @@ func (s *CreateDividendReq) Encode(e *jx.Encoder) {
 func (s *CreateDividendReq) encodeFields(e *jx.Encoder) {
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -4461,18 +4461,8 @@ func (s *CreateDividendReq) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -4496,15 +4486,13 @@ func (s *CreateDividendReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateDividendReq = [8]string{
-	0: "cash_amount",
+var jsonFieldsNameOfCreateDividendReq = [6]string{
+	0: "rate",
 	1: "declaration_date",
-	2: "dividend_type",
-	3: "ex_dividend_date",
-	4: "frequency",
-	5: "record_date",
-	6: "pay_date",
-	7: "stock",
+	2: "ex_dividend_date",
+	3: "record_date",
+	4: "pay_date",
+	5: "stock",
 }
 
 // Decode decodes CreateDividendReq from json.
@@ -4516,17 +4504,17 @@ func (s *CreateDividendReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 1
@@ -4540,18 +4528,8 @@ func (s *CreateDividendReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -4562,20 +4540,8 @@ func (s *CreateDividendReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 4
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -4587,7 +4553,7 @@ func (s *CreateDividendReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -4627,7 +4593,7 @@ func (s *CreateDividendReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01111111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4673,50 +4639,6 @@ func (s *CreateDividendReq) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes CreateDividendReqDividendType as json.
-func (s CreateDividendReqDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes CreateDividendReqDividendType from json.
-func (s *CreateDividendReqDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode CreateDividendReqDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch CreateDividendReqDividendType(v) {
-	case CreateDividendReqDividendTypeCD:
-		*s = CreateDividendReqDividendTypeCD
-	case CreateDividendReqDividendTypeSC:
-		*s = CreateDividendReqDividendTypeSC
-	case CreateDividendReqDividendTypeLT:
-		*s = CreateDividendReqDividendTypeLT
-	case CreateDividendReqDividendTypeST:
-		*s = CreateDividendReqDividendTypeST
-	default:
-		*s = CreateDividendReqDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s CreateDividendReqDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *CreateDividendReqDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *CreateEntityReq) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -4752,10 +4674,14 @@ func (s *CreateEntityReq) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 	{
 		if s.Exchanges != nil {
@@ -4809,18 +4735,19 @@ func (s *CreateEntityReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateEntityReq = [11]string{
+var jsonFieldsNameOfCreateEntityReq = [12]string{
 	0:  "active",
 	1:  "ticker",
 	2:  "name",
 	3:  "description",
 	4:  "list_date",
-	5:  "delisted",
-	6:  "exchanges",
-	7:  "intervals",
-	8:  "dividends",
-	9:  "splits",
-	10: "financials",
+	5:  "options",
+	6:  "tradable",
+	7:  "exchanges",
+	8:  "intervals",
+	9:  "dividends",
+	10: "splits",
+	11: "financials",
 }
 
 // Decode decodes CreateEntityReq from json.
@@ -4892,15 +4819,29 @@ func (s *CreateEntityReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 6
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		case "exchanges":
 			if err := func() error {
@@ -5007,7 +4948,7 @@ func (s *CreateEntityReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b00011111,
+		0b01111111,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -7466,8 +7407,8 @@ func (s *DividendCreate) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -7476,18 +7417,8 @@ func (s *DividendCreate) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -7501,15 +7432,13 @@ func (s *DividendCreate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDividendCreate = [8]string{
+var jsonFieldsNameOfDividendCreate = [6]string{
 	0: "id",
-	1: "cash_amount",
+	1: "rate",
 	2: "declaration_date",
-	3: "dividend_type",
-	4: "ex_dividend_date",
-	5: "frequency",
-	6: "record_date",
-	7: "pay_date",
+	3: "ex_dividend_date",
+	4: "record_date",
+	5: "pay_date",
 }
 
 // Decode decodes DividendCreate from json.
@@ -7533,17 +7462,17 @@ func (s *DividendCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 2
@@ -7557,18 +7486,8 @@ func (s *DividendCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -7579,20 +7498,8 @@ func (s *DividendCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 5
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -7604,7 +7511,7 @@ func (s *DividendCreate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -7625,7 +7532,7 @@ func (s *DividendCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11111111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -7671,50 +7578,6 @@ func (s *DividendCreate) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes DividendCreateDividendType as json.
-func (s DividendCreateDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes DividendCreateDividendType from json.
-func (s *DividendCreateDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DividendCreateDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch DividendCreateDividendType(v) {
-	case DividendCreateDividendTypeCD:
-		*s = DividendCreateDividendTypeCD
-	case DividendCreateDividendTypeSC:
-		*s = DividendCreateDividendTypeSC
-	case DividendCreateDividendTypeLT:
-		*s = DividendCreateDividendTypeLT
-	case DividendCreateDividendTypeST:
-		*s = DividendCreateDividendTypeST
-	default:
-		*s = DividendCreateDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s DividendCreateDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DividendCreateDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *DividendList) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -7731,8 +7594,8 @@ func (s *DividendList) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -7741,18 +7604,8 @@ func (s *DividendList) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -7766,15 +7619,13 @@ func (s *DividendList) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDividendList = [8]string{
+var jsonFieldsNameOfDividendList = [6]string{
 	0: "id",
-	1: "cash_amount",
+	1: "rate",
 	2: "declaration_date",
-	3: "dividend_type",
-	4: "ex_dividend_date",
-	5: "frequency",
-	6: "record_date",
-	7: "pay_date",
+	3: "ex_dividend_date",
+	4: "record_date",
+	5: "pay_date",
 }
 
 // Decode decodes DividendList from json.
@@ -7798,17 +7649,17 @@ func (s *DividendList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 2
@@ -7822,18 +7673,8 @@ func (s *DividendList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -7844,20 +7685,8 @@ func (s *DividendList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 5
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -7869,7 +7698,7 @@ func (s *DividendList) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -7890,7 +7719,7 @@ func (s *DividendList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11111111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -7936,50 +7765,6 @@ func (s *DividendList) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes DividendListDividendType as json.
-func (s DividendListDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes DividendListDividendType from json.
-func (s *DividendListDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DividendListDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch DividendListDividendType(v) {
-	case DividendListDividendTypeCD:
-		*s = DividendListDividendTypeCD
-	case DividendListDividendTypeSC:
-		*s = DividendListDividendTypeSC
-	case DividendListDividendTypeLT:
-		*s = DividendListDividendTypeLT
-	case DividendListDividendTypeST:
-		*s = DividendListDividendTypeST
-	default:
-		*s = DividendListDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s DividendListDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DividendListDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *DividendRead) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -7996,8 +7781,8 @@ func (s *DividendRead) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -8006,18 +7791,8 @@ func (s *DividendRead) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -8031,15 +7806,13 @@ func (s *DividendRead) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDividendRead = [8]string{
+var jsonFieldsNameOfDividendRead = [6]string{
 	0: "id",
-	1: "cash_amount",
+	1: "rate",
 	2: "declaration_date",
-	3: "dividend_type",
-	4: "ex_dividend_date",
-	5: "frequency",
-	6: "record_date",
-	7: "pay_date",
+	3: "ex_dividend_date",
+	4: "record_date",
+	5: "pay_date",
 }
 
 // Decode decodes DividendRead from json.
@@ -8063,17 +7836,17 @@ func (s *DividendRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 2
@@ -8087,18 +7860,8 @@ func (s *DividendRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -8109,20 +7872,8 @@ func (s *DividendRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 5
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -8134,7 +7885,7 @@ func (s *DividendRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -8155,7 +7906,7 @@ func (s *DividendRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11111111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8201,50 +7952,6 @@ func (s *DividendRead) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes DividendReadDividendType as json.
-func (s DividendReadDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes DividendReadDividendType from json.
-func (s *DividendReadDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DividendReadDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch DividendReadDividendType(v) {
-	case DividendReadDividendTypeCD:
-		*s = DividendReadDividendTypeCD
-	case DividendReadDividendTypeSC:
-		*s = DividendReadDividendTypeSC
-	case DividendReadDividendTypeLT:
-		*s = DividendReadDividendTypeLT
-	case DividendReadDividendTypeST:
-		*s = DividendReadDividendTypeST
-	default:
-		*s = DividendReadDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s DividendReadDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DividendReadDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *DividendStockList) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -8285,21 +7992,26 @@ func (s *DividendStockList) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfDividendStockList = [7]string{
+var jsonFieldsNameOfDividendStockList = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes DividendStockList from json.
@@ -8383,15 +8095,29 @@ func (s *DividendStockList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -8403,7 +8129,7 @@ func (s *DividendStockList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8465,8 +8191,8 @@ func (s *DividendUpdate) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -8475,18 +8201,8 @@ func (s *DividendUpdate) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -8500,15 +8216,13 @@ func (s *DividendUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfDividendUpdate = [8]string{
+var jsonFieldsNameOfDividendUpdate = [6]string{
 	0: "id",
-	1: "cash_amount",
+	1: "rate",
 	2: "declaration_date",
-	3: "dividend_type",
-	4: "ex_dividend_date",
-	5: "frequency",
-	6: "record_date",
-	7: "pay_date",
+	3: "ex_dividend_date",
+	4: "record_date",
+	5: "pay_date",
 }
 
 // Decode decodes DividendUpdate from json.
@@ -8532,17 +8246,17 @@ func (s *DividendUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 2
@@ -8556,18 +8270,8 @@ func (s *DividendUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -8578,20 +8282,8 @@ func (s *DividendUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 5
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -8603,7 +8295,7 @@ func (s *DividendUpdate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -8624,7 +8316,7 @@ func (s *DividendUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11111111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8670,50 +8362,6 @@ func (s *DividendUpdate) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes DividendUpdateDividendType as json.
-func (s DividendUpdateDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes DividendUpdateDividendType from json.
-func (s *DividendUpdateDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode DividendUpdateDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch DividendUpdateDividendType(v) {
-	case DividendUpdateDividendTypeCD:
-		*s = DividendUpdateDividendTypeCD
-	case DividendUpdateDividendTypeSC:
-		*s = DividendUpdateDividendTypeSC
-	case DividendUpdateDividendTypeLT:
-		*s = DividendUpdateDividendTypeLT
-	case DividendUpdateDividendTypeST:
-		*s = DividendUpdateDividendTypeST
-	default:
-		*s = DividendUpdateDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s DividendUpdateDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *DividendUpdateDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *EntityCreate) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -8754,21 +8402,26 @@ func (s *EntityCreate) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfEntityCreate = [7]string{
+var jsonFieldsNameOfEntityCreate = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes EntityCreate from json.
@@ -8852,15 +8505,29 @@ func (s *EntityCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -8872,7 +8539,7 @@ func (s *EntityCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8934,8 +8601,8 @@ func (s *EntityDividendsList) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("cash_amount")
-		e.Float64(s.CashAmount)
+		e.FieldStart("rate")
+		e.Float64(s.Rate)
 	}
 	{
 
@@ -8944,18 +8611,8 @@ func (s *EntityDividendsList) encodeFields(e *jx.Encoder) {
 	}
 	{
 
-		e.FieldStart("dividend_type")
-		s.DividendType.Encode(e)
-	}
-	{
-
 		e.FieldStart("ex_dividend_date")
 		json.EncodeDateTime(e, s.ExDividendDate)
-	}
-	{
-
-		e.FieldStart("frequency")
-		e.Int(s.Frequency)
 	}
 	{
 
@@ -8969,15 +8626,13 @@ func (s *EntityDividendsList) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfEntityDividendsList = [8]string{
+var jsonFieldsNameOfEntityDividendsList = [6]string{
 	0: "id",
-	1: "cash_amount",
+	1: "rate",
 	2: "declaration_date",
-	3: "dividend_type",
-	4: "ex_dividend_date",
-	5: "frequency",
-	6: "record_date",
-	7: "pay_date",
+	3: "ex_dividend_date",
+	4: "record_date",
+	5: "pay_date",
 }
 
 // Decode decodes EntityDividendsList from json.
@@ -9001,17 +8656,17 @@ func (s *EntityDividendsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
 			}
-		case "cash_amount":
+		case "rate":
 			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
-				s.CashAmount = float64(v)
+				s.Rate = float64(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			requiredBitSet[0] |= 1 << 2
@@ -9025,18 +8680,8 @@ func (s *EntityDividendsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.ExDividendDate = v
@@ -9047,20 +8692,8 @@ func (s *EntityDividendsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
 			}
-		case "frequency":
-			requiredBitSet[0] |= 1 << 5
-			if err := func() error {
-				v, err := d.Int()
-				s.Frequency = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
-			}
 		case "record_date":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.RecordDate = v
@@ -9072,7 +8705,7 @@ func (s *EntityDividendsList) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"record_date\"")
 			}
 		case "pay_date":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.PayDate = v
@@ -9093,7 +8726,7 @@ func (s *EntityDividendsList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11111111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -9135,50 +8768,6 @@ func (s *EntityDividendsList) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *EntityDividendsList) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes EntityDividendsListDividendType as json.
-func (s EntityDividendsListDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes EntityDividendsListDividendType from json.
-func (s *EntityDividendsListDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode EntityDividendsListDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch EntityDividendsListDividendType(v) {
-	case EntityDividendsListDividendTypeCD:
-		*s = EntityDividendsListDividendTypeCD
-	case EntityDividendsListDividendTypeSC:
-		*s = EntityDividendsListDividendTypeSC
-	case EntityDividendsListDividendTypeLT:
-		*s = EntityDividendsListDividendTypeLT
-	case EntityDividendsListDividendTypeST:
-		*s = EntityDividendsListDividendTypeST
-	default:
-		*s = EntityDividendsListDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s EntityDividendsListDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *EntityDividendsListDividendType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -9666,21 +9255,26 @@ func (s *EntityList) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfEntityList = [7]string{
+var jsonFieldsNameOfEntityList = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes EntityList from json.
@@ -9764,15 +9358,29 @@ func (s *EntityList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -9784,7 +9392,7 @@ func (s *EntityList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -9870,21 +9478,26 @@ func (s *EntityRead) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfEntityRead = [7]string{
+var jsonFieldsNameOfEntityRead = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes EntityRead from json.
@@ -9968,15 +9581,29 @@ func (s *EntityRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -9988,7 +9615,7 @@ func (s *EntityRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -10225,21 +9852,26 @@ func (s *EntityUpdate) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfEntityUpdate = [7]string{
+var jsonFieldsNameOfEntityUpdate = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes EntityUpdate from json.
@@ -10323,15 +9955,29 @@ func (s *EntityUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -10343,7 +9989,7 @@ func (s *EntityUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -10828,21 +10474,26 @@ func (s *ExchangeStocksList) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfExchangeStocksList = [7]string{
+var jsonFieldsNameOfExchangeStocksList = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes ExchangeStocksList from json.
@@ -10926,15 +10577,29 @@ func (s *ExchangeStocksList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -10946,7 +10611,7 @@ func (s *ExchangeStocksList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -11456,21 +11121,26 @@ func (s *FinancialStockList) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfFinancialStockList = [7]string{
+var jsonFieldsNameOfFinancialStockList = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes FinancialStockList from json.
@@ -11554,15 +11224,29 @@ func (s *FinancialStockList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -11574,7 +11258,7 @@ func (s *FinancialStockList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -12777,21 +12461,26 @@ func (s *IntervalStockRead) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfIntervalStockRead = [7]string{
+var jsonFieldsNameOfIntervalStockRead = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes IntervalStockRead from json.
@@ -12875,15 +12564,29 @@ func (s *IntervalStockRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -12895,7 +12598,7 @@ func (s *IntervalStockRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -16768,39 +16471,6 @@ func (s *OptUpdateBarTimeRangeReqStatus) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes UpdateDividendReqDividendType as json.
-func (o OptUpdateDividendReqDividendType) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	e.Str(string(o.Value))
-}
-
-// Decode decodes UpdateDividendReqDividendType from json.
-func (o *OptUpdateDividendReqDividendType) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptUpdateDividendReqDividendType to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptUpdateDividendReqDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptUpdateDividendReqDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes UpdateIntervalReqInterval as json.
 func (o OptUpdateIntervalReqInterval) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -18125,21 +17795,26 @@ func (s *SplitStockRead) encodeFields(e *jx.Encoder) {
 		json.EncodeDateTime(e, s.ListDate)
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
-		}
+
+		e.FieldStart("options")
+		e.Bool(s.Options)
+	}
+	{
+
+		e.FieldStart("tradable")
+		e.Bool(s.Tradable)
 	}
 }
 
-var jsonFieldsNameOfSplitStockRead = [7]string{
+var jsonFieldsNameOfSplitStockRead = [8]string{
 	0: "id",
 	1: "active",
 	2: "ticker",
 	3: "name",
 	4: "description",
 	5: "list_date",
-	6: "delisted",
+	6: "options",
+	7: "tradable",
 }
 
 // Decode decodes SplitStockRead from json.
@@ -18223,15 +17898,29 @@ func (s *SplitStockRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				v, err := d.Bool()
+				s.Options = bool(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Bool()
+				s.Tradable = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		default:
 			return d.Skip()
@@ -18243,7 +17932,7 @@ func (s *SplitStockRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -22577,9 +22266,9 @@ func (s *UpdateDividendReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *UpdateDividendReq) encodeFields(e *jx.Encoder) {
 	{
-		if s.CashAmount.Set {
-			e.FieldStart("cash_amount")
-			s.CashAmount.Encode(e)
+		if s.Rate.Set {
+			e.FieldStart("rate")
+			s.Rate.Encode(e)
 		}
 	}
 	{
@@ -22589,21 +22278,9 @@ func (s *UpdateDividendReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.DividendType.Set {
-			e.FieldStart("dividend_type")
-			s.DividendType.Encode(e)
-		}
-	}
-	{
 		if s.ExDividendDate.Set {
 			e.FieldStart("ex_dividend_date")
 			s.ExDividendDate.Encode(e, json.EncodeDateTime)
-		}
-	}
-	{
-		if s.Frequency.Set {
-			e.FieldStart("frequency")
-			s.Frequency.Encode(e)
 		}
 	}
 	{
@@ -22630,15 +22307,13 @@ func (s *UpdateDividendReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateDividendReq = [8]string{
-	0: "cash_amount",
+var jsonFieldsNameOfUpdateDividendReq = [6]string{
+	0: "rate",
 	1: "declaration_date",
-	2: "dividend_type",
-	3: "ex_dividend_date",
-	4: "frequency",
-	5: "record_date",
-	6: "pay_date",
-	7: "stock",
+	2: "ex_dividend_date",
+	3: "record_date",
+	4: "pay_date",
+	5: "stock",
 }
 
 // Decode decodes UpdateDividendReq from json.
@@ -22649,15 +22324,15 @@ func (s *UpdateDividendReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "cash_amount":
+		case "rate":
 			if err := func() error {
-				s.CashAmount.Reset()
-				if err := s.CashAmount.Decode(d); err != nil {
+				s.Rate.Reset()
+				if err := s.Rate.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"cash_amount\"")
+				return errors.Wrap(err, "decode field \"rate\"")
 			}
 		case "declaration_date":
 			if err := func() error {
@@ -22669,16 +22344,6 @@ func (s *UpdateDividendReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"declaration_date\"")
 			}
-		case "dividend_type":
-			if err := func() error {
-				s.DividendType.Reset()
-				if err := s.DividendType.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"dividend_type\"")
-			}
 		case "ex_dividend_date":
 			if err := func() error {
 				s.ExDividendDate.Reset()
@@ -22688,16 +22353,6 @@ func (s *UpdateDividendReq) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ex_dividend_date\"")
-			}
-		case "frequency":
-			if err := func() error {
-				s.Frequency.Reset()
-				if err := s.Frequency.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"frequency\"")
 			}
 		case "record_date":
 			if err := func() error {
@@ -22762,50 +22417,6 @@ func (s *UpdateDividendReq) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes UpdateDividendReqDividendType as json.
-func (s UpdateDividendReqDividendType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes UpdateDividendReqDividendType from json.
-func (s *UpdateDividendReqDividendType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode UpdateDividendReqDividendType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch UpdateDividendReqDividendType(v) {
-	case UpdateDividendReqDividendTypeCD:
-		*s = UpdateDividendReqDividendTypeCD
-	case UpdateDividendReqDividendTypeSC:
-		*s = UpdateDividendReqDividendTypeSC
-	case UpdateDividendReqDividendTypeLT:
-		*s = UpdateDividendReqDividendTypeLT
-	case UpdateDividendReqDividendTypeST:
-		*s = UpdateDividendReqDividendTypeST
-	default:
-		*s = UpdateDividendReqDividendType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s UpdateDividendReqDividendType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *UpdateDividendReqDividendType) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *UpdateEntityReq) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -22846,9 +22457,15 @@ func (s *UpdateEntityReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Delisted.Set {
-			e.FieldStart("delisted")
-			s.Delisted.Encode(e, json.EncodeDateTime)
+		if s.Options.Set {
+			e.FieldStart("options")
+			s.Options.Encode(e)
+		}
+	}
+	{
+		if s.Tradable.Set {
+			e.FieldStart("tradable")
+			s.Tradable.Encode(e)
 		}
 	}
 	{
@@ -22903,18 +22520,19 @@ func (s *UpdateEntityReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateEntityReq = [11]string{
+var jsonFieldsNameOfUpdateEntityReq = [12]string{
 	0:  "active",
 	1:  "ticker",
 	2:  "name",
 	3:  "description",
 	4:  "list_date",
-	5:  "delisted",
-	6:  "exchanges",
-	7:  "intervals",
-	8:  "dividends",
-	9:  "splits",
-	10: "financials",
+	5:  "options",
+	6:  "tradable",
+	7:  "exchanges",
+	8:  "intervals",
+	9:  "dividends",
+	10: "splits",
+	11: "financials",
 }
 
 // Decode decodes UpdateEntityReq from json.
@@ -22975,15 +22593,25 @@ func (s *UpdateEntityReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"list_date\"")
 			}
-		case "delisted":
+		case "options":
 			if err := func() error {
-				s.Delisted.Reset()
-				if err := s.Delisted.Decode(d, json.DecodeDateTime); err != nil {
+				s.Options.Reset()
+				if err := s.Options.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"delisted\"")
+				return errors.Wrap(err, "decode field \"options\"")
+			}
+		case "tradable":
+			if err := func() error {
+				s.Tradable.Reset()
+				if err := s.Tradable.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tradable\"")
 			}
 		case "exchanges":
 			if err := func() error {

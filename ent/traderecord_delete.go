@@ -27,7 +27,7 @@ func (trd *TradeRecordDelete) Where(ps ...predicate.TradeRecord) *TradeRecordDel
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (trd *TradeRecordDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, TradeRecordMutation](ctx, trd.sqlExec, trd.mutation, trd.hooks)
+	return withHooks(ctx, trd.sqlExec, trd.mutation, trd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (trd *TradeRecordDelete) ExecX(ctx context.Context) int {
 }
 
 func (trd *TradeRecordDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: traderecord.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: traderecord.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(traderecord.Table, sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt))
 	if ps := trd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type TradeRecordDeleteOne struct {
 	trd *TradeRecordDelete
 }
 
+// Where appends a list predicates to the TradeRecordDelete builder.
+func (trdo *TradeRecordDeleteOne) Where(ps ...predicate.TradeRecord) *TradeRecordDeleteOne {
+	trdo.trd.mutation.Where(ps...)
+	return trdo
+}
+
 // Exec executes the deletion query.
 func (trdo *TradeRecordDeleteOne) Exec(ctx context.Context) error {
 	n, err := trdo.trd.Exec(ctx)
@@ -84,5 +82,7 @@ func (trdo *TradeRecordDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (trdo *TradeRecordDeleteOne) ExecX(ctx context.Context) {
-	trdo.trd.ExecX(ctx)
+	if err := trdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

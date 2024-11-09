@@ -14,6 +14,7 @@ import (
 	"github.com/nathanhack/sibyl/ent/datasource"
 	"github.com/nathanhack/sibyl/ent/entity"
 	"github.com/nathanhack/sibyl/ent/interval"
+	"github.com/nathanhack/threadpool"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,105 +47,120 @@ func Grabber(ctx context.Context, client *ent.Client, agent agents.BarRequester,
 			continue
 		}
 
+		pool := threadpool.New(ctx, 5)
 		for _, stock := range stocks {
-			//we start off with a timerange that is the intersection of the stocks' listed date to today and what agent
+			// we start off with a timerange that is the intersection of the stocks' listed date to today and what agent
 			// can give us for the plan
+			select {
+			case <-ctx.Done():
+				break
+			default:
+			}
+			thisStock := stock
+			pool.Add(func() {
+				stockRunner(ctx, client, agent, thisStock)
+			})
+		}
 
-			for _, intervalValue := range []interval.Interval{
-				interval.Interval1min,
-				interval.IntervalDaily,
-				interval.IntervalMonthly,
-				interval.IntervalYearly} {
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
+		pool.Wait()
+	}
+}
 
-				stockInterval, err := stock.QueryIntervals().Where(
-					interval.ActiveEQ(true),
-					interval.IntervalEQ(intervalValue),
-					interval.HasDataSourceWith(datasource.ID(agent.DataSourceId())),
-				).Only(ctx)
-				if err != nil {
-					switch err.(type) {
-					case *ent.NotFoundError:
-					default:
-						logrus.Warnf("Bars.Grabber(%v):%v", agent.Name(), err)
-					}
-					continue
-				}
+func stockRunner(ctx context.Context, client *ent.Client, agent agents.BarRequester, stock *ent.Entity) {
 
-				//we clean the interval because we want to make accurate requests
-				err = clean(ctx, client, stockInterval)
-				if err != nil {
-					//we need to log this.. but not let it keep us from requesting new data
-					logrus.Errorf("Bars.Grabber(%v): clean error for %v (%v): %v", agent.Name(), stock.Ticker, intervalValue, err)
-				}
+	for _, intervalValue := range []interval.Interval{
+		interval.Interval1min,
+		interval.IntervalDaily,
+		interval.IntervalMonthly,
+		interval.IntervalYearly} {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 
-				s, e := agent.MaxTimeRange(intervalValue)
-				agentInterval := internal.TimeInterval{Start: truncateTime(s, intervalValue), End: truncateTime(e, intervalValue)}
-				historyInterval := createInterval(stock.ListDate, intervalValue)
-				mainTimeRange := internal.IntervalIntersection(historyInterval, agentInterval)
-				timeranges, err := stockInterval.QueryBars().All(ctx)
-				if err != nil {
-					switch err.(type) {
-					case *ent.NotFoundError:
-					default:
-						logrus.Warnf("Bars.Grabber(%v): QueryBars error: %v", agent.Name(), err)
-					}
-					continue
-				}
+		stockInterval, err := stock.QueryIntervals().Where(
+			interval.ActiveEQ(true),
+			interval.IntervalEQ(intervalValue),
+			interval.HasDataSourceWith(datasource.ID(agent.DataSourceId())),
+		).Only(ctx)
+		if err != nil {
+			switch err.(type) {
+			case *ent.NotFoundError:
+			default:
+				logrus.Warnf("Bars.Grabber(%v/%v):%v", agent.Name(), stock.Ticker, err)
+			}
+			continue
+		}
 
-				//now get all the timeranges from the interval and
-				// remove them from the mainTimerange that will requested
-				for _, t := range timeranges {
-					mainTimeRange = internal.IntervalDifferenceSlice(mainTimeRange, internal.TimeInterval{
-						Start: t.Start,
-						End:   t.End,
-					})
-				}
+		// we clean the interval because we want to make accurate requests
+		err = clean(ctx, client, stockInterval)
+		if err != nil {
+			//we need to log this.. but not let it keep us from requesting new data
+			logrus.Errorf("Bars.Grabber(%v/%v): clean error for %v (%v): %v", agent.Name(), stock.Ticker, stock.Ticker, intervalValue, err)
+		}
 
-				//now we have some set of timeranges in mainTimerange
-				// now put in the request to download the data
-				for _, t := range mainTimeRange {
-					results, err := agent.BarRequest(ctx, stock.Ticker, intervalValue, t.Start, t.End)
-					if err != nil {
-						logrus.Errorf("Bars.Grabber(%v): BarHistoryRequest req: %v", agent.Name(), err)
-						continue
-					}
+		s, e := agent.MaxTimeRange(intervalValue)
+		agentInterval := internal.TimeInterval{Start: truncateTime(s, intervalValue), End: truncateTime(e, intervalValue)}
+		historyInterval := createInterval(stock.ListDate, intervalValue)
+		mainTimeRange := internal.IntervalIntersection(historyInterval, agentInterval)
+		timeranges, err := stockInterval.QueryBars().All(ctx)
+		if err != nil {
+			switch err.(type) {
+			case *ent.NotFoundError:
+			default:
+				logrus.Warnf("Bars.Grabber(%v/%v): QueryBars error: %v", agent.Name(), stock.Ticker, err)
+			}
+			continue
+		}
 
-					limitedCtx, limitedCancel := context.WithTimeout(ctx, 10*time.Minute)
-					err = processResults(limitedCtx, agent.Name(), client, stockInterval, results)
-					limitedCancel()
-					if err != nil {
-						logrus.Errorf("Bars.Grabber(%v): Process: %v", agent.Name(), err)
-					}
-				}
+		// now get all the timeranges from the interval and
+		// remove them from the mainTimerange that will requested
+		for _, t := range timeranges {
+			mainTimeRange = internal.IntervalDifferenceSlice(mainTimeRange, internal.TimeInterval{
+				Start: t.Start,
+				End:   t.End,
+			})
+		}
 
-				needsConsolidating, err := stockInterval.QueryBars().
-					Where(bartimerange.StatusIn(bartimerange.StatusClean)).
-					Exist(ctx)
-				if err != nil {
-					logrus.Errorf("Bars.Grabber(%v): query before consolidating: %v", agent.Name(), err)
-					continue
-				}
+		// now we have some set of timeranges in mainTimerange
+		// now put in the request to download the data
+		for _, t := range mainTimeRange {
+			results, err := agent.BarRequest(ctx, stock.Ticker, intervalValue, t.Start, t.End)
+			if err != nil {
+				logrus.Errorf("Bars.Grabber(%v/%v): BarHistoryRequest req: %v", agent.Name(), stock.Ticker, err)
+				continue
+			}
 
-				if needsConsolidating {
-					//We want to get rid of duplication by consolidating BarTimeRange and BarGroups and making sure we
-					// have unique BarRecords so we consolidate
-					logrus.Debugf("Bars.Grabber(%v): consolidating", agent.Name())
-					limitedCtx, limitedCancel := context.WithTimeout(ctx, 10*time.Minute)
-					err = consolidate(limitedCtx, client, stockInterval)
-					limitedCancel()
-					if err != nil {
-						err = errors.Wrapf(err, "consolidate error for %v (%v) : %v", stock.Ticker, stockInterval.Interval, err)
-						logrus.Errorf("Bars.Grabber(%v): consolidate: %v", agent.Name(), err)
-					}
-				}
-				logrus.Infof("Bars.Grabber(%v): %v (%v): done", agent.Name(), stock.Ticker, intervalValue)
+			limitedCtx, limitedCancel := context.WithTimeout(ctx, 10*time.Minute)
+			err = processResults(limitedCtx, agent.Name(), client, stockInterval, results)
+			limitedCancel()
+			if err != nil {
+				logrus.Errorf("Bars.Grabber(%v/%v): Process: %v", agent.Name(), stock.Name, err)
 			}
 		}
+
+		needsConsolidating, err := stockInterval.QueryBars().
+			Where(bartimerange.StatusIn(bartimerange.StatusClean)).
+			Exist(ctx)
+		if err != nil {
+			logrus.Errorf("Bars.Grabber(%v/%v): query before consolidating: %v", agent.Name(), stock.Ticker, err)
+			continue
+		}
+
+		if needsConsolidating {
+			//We want to get rid of duplication by consolidating BarTimeRange and BarGroups and making sure we
+			// have unique BarRecords so we consolidate
+			logrus.Debugf("Bars.Grabber(%v/%v): consolidating", agent.Name(), stock.Ticker)
+			limitedCtx, limitedCancel := context.WithTimeout(ctx, 10*time.Minute)
+			err = consolidate(limitedCtx, client, stockInterval)
+			limitedCancel()
+			if err != nil {
+				err = errors.Wrapf(err, "%v consolidate error: %v", stockInterval.Interval, err)
+				logrus.Errorf("Bars.Grabber(%v/%v): consolidate: %v", agent.Name(), stock.Ticker, err)
+			}
+		}
+		logrus.Infof("Bars.Grabber(%v/%v): done getting %v bars", agent.Name(), stock.Ticker, intervalValue)
 	}
 }
 
@@ -175,7 +191,7 @@ func addTimeRange(ctx context.Context, client *ent.Client, stockIntervalID int, 
 	for _, g := range result.BarGroups {
 		g.SetTimeRangeID(barTimeRange.ID)
 	}
-	delta := 65535/9 - 1
+	delta := 65535/9 - 1 // mysql only allows 65535 place holders in one sql
 	//make the BarGroups
 	barGroups := make([]*ent.BarGroup, 0, len(result.BarGroups))
 	for i := 0; i < len(result.BarGroups); i += delta {
@@ -195,7 +211,6 @@ func addTimeRange(ctx context.Context, client *ent.Client, stockIntervalID int, 
 	for i, g := range barGroups {
 		for _, b := range result.Bars[i] {
 			b.SetGroupID(g.ID)
-
 		}
 		records = append(records, result.Bars[i]...)
 	}
@@ -235,19 +250,19 @@ func processResults(ctx context.Context, agentName string, client *ent.Client, s
 
 	//the goal of this function is to insert new data
 
-	logrus.Debugf("Bars.Grabber(%v): initial add %v bars {%v,%v}", agentName, result.BarCount, result.IntervalStart.Local(), result.IntervalEnd.Local())
+	logrus.Debugf("Bars.Grabber(%v/%v): initial add %v bars {%v,%v}", agentName, result.Ticker, result.BarCount, result.IntervalStart.Local(), result.IntervalEnd.Local())
 	bar, err := addTimeRange(ctx, client, stockInterval.ID, result)
 	if err != nil {
 		return errors.Wrapf(err, "addTimeRange error for %v (%v)", result.Ticker, result.Interval)
 	}
 
-	logrus.Debugf("Bars.Grabber(%v): cleaning bar:%v", agentName, bar)
+	logrus.Debugf("Bars.Grabber(%v/%v): cleaning bar:%v", agentName, result.Ticker, bar)
 	err = cleanBarTimeRange(ctx, client, bar)
 	if err != nil {
 		return errors.Wrapf(err, "cleanBarTimeRange error for %v (%v)", result.Ticker, result.Interval)
 	}
 
-	logrus.Debugf("Bars.Grabber(%v): processResults done %v (%v)", agentName, result.Ticker, result.Interval)
+	logrus.Debugf("Bars.Grabber(%v/%v): %v processResults done ", agentName, result.Ticker, result.Interval)
 	return nil
 }
 

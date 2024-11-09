@@ -67,7 +67,7 @@ func (ttrc *TradeTimeRangeCreate) Mutation() *TradeTimeRangeMutation {
 
 // Save creates the TradeTimeRange in the database.
 func (ttrc *TradeTimeRangeCreate) Save(ctx context.Context) (*TradeTimeRange, error) {
-	return withHooks[*TradeTimeRange, TradeTimeRangeMutation](ctx, ttrc.sqlSave, ttrc.mutation, ttrc.hooks)
+	return withHooks(ctx, ttrc.sqlSave, ttrc.mutation, ttrc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -103,7 +103,7 @@ func (ttrc *TradeTimeRangeCreate) check() error {
 	if _, ok := ttrc.mutation.IntervalID(); !ok {
 		return &ValidationError{Name: "interval_id", err: errors.New(`ent: missing required field "TradeTimeRange.interval_id"`)}
 	}
-	if _, ok := ttrc.mutation.IntervalID(); !ok {
+	if len(ttrc.mutation.IntervalIDs()) == 0 {
 		return &ValidationError{Name: "interval", err: errors.New(`ent: missing required edge "TradeTimeRange.interval"`)}
 	}
 	return nil
@@ -130,13 +130,7 @@ func (ttrc *TradeTimeRangeCreate) sqlSave(ctx context.Context) (*TradeTimeRange,
 func (ttrc *TradeTimeRangeCreate) createSpec() (*TradeTimeRange, *sqlgraph.CreateSpec) {
 	var (
 		_node = &TradeTimeRange{config: ttrc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: tradetimerange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradetimerange.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(tradetimerange.Table, sqlgraph.NewFieldSpec(tradetimerange.FieldID, field.TypeInt))
 	)
 	if value, ok := ttrc.mutation.Start(); ok {
 		_spec.SetField(tradetimerange.FieldStart, field.TypeTime, value)
@@ -154,10 +148,7 @@ func (ttrc *TradeTimeRangeCreate) createSpec() (*TradeTimeRange, *sqlgraph.Creat
 			Columns: []string{tradetimerange.IntervalColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -174,10 +165,7 @@ func (ttrc *TradeTimeRangeCreate) createSpec() (*TradeTimeRange, *sqlgraph.Creat
 			Columns: []string{tradetimerange.RecordsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -191,11 +179,15 @@ func (ttrc *TradeTimeRangeCreate) createSpec() (*TradeTimeRange, *sqlgraph.Creat
 // TradeTimeRangeCreateBulk is the builder for creating many TradeTimeRange entities in bulk.
 type TradeTimeRangeCreateBulk struct {
 	config
+	err      error
 	builders []*TradeTimeRangeCreate
 }
 
 // Save creates the TradeTimeRange entities in the database.
 func (ttrcb *TradeTimeRangeCreateBulk) Save(ctx context.Context) ([]*TradeTimeRange, error) {
+	if ttrcb.err != nil {
+		return nil, ttrcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(ttrcb.builders))
 	nodes := make([]*TradeTimeRange, len(ttrcb.builders))
 	mutators := make([]Mutator, len(ttrcb.builders))
@@ -211,8 +203,8 @@ func (ttrcb *TradeTimeRangeCreateBulk) Save(ctx context.Context) ([]*TradeTimeRa
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, ttrcb.builders[i+1].mutation)
 				} else {

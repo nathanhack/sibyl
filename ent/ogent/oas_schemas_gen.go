@@ -1923,19 +1923,17 @@ func (s *CreateDataSourceReq) SetIntervals(val []int) {
 }
 
 type CreateDividendReq struct {
-	CashAmount      float64                       `json:"cash_amount"`
-	DeclarationDate time.Time                     `json:"declaration_date"`
-	DividendType    CreateDividendReqDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                     `json:"ex_dividend_date"`
-	Frequency       int                           `json:"frequency"`
-	RecordDate      time.Time                     `json:"record_date"`
-	PayDate         time.Time                     `json:"pay_date"`
-	Stock           []int                         `json:"stock"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
+	Stock           []int     `json:"stock"`
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *CreateDividendReq) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *CreateDividendReq) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -1943,19 +1941,9 @@ func (s *CreateDividendReq) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *CreateDividendReq) GetDividendType() CreateDividendReqDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *CreateDividendReq) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *CreateDividendReq) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -1973,9 +1961,9 @@ func (s *CreateDividendReq) GetStock() []int {
 	return s.Stock
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *CreateDividendReq) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *CreateDividendReq) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -1983,19 +1971,9 @@ func (s *CreateDividendReq) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *CreateDividendReq) SetDividendType(val CreateDividendReqDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *CreateDividendReq) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *CreateDividendReq) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -2013,63 +1991,19 @@ func (s *CreateDividendReq) SetStock(val []int) {
 	s.Stock = val
 }
 
-type CreateDividendReqDividendType string
-
-const (
-	CreateDividendReqDividendTypeCD CreateDividendReqDividendType = "CD"
-	CreateDividendReqDividendTypeSC CreateDividendReqDividendType = "SC"
-	CreateDividendReqDividendTypeLT CreateDividendReqDividendType = "LT"
-	CreateDividendReqDividendTypeST CreateDividendReqDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s CreateDividendReqDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case CreateDividendReqDividendTypeCD:
-		return []byte(s), nil
-	case CreateDividendReqDividendTypeSC:
-		return []byte(s), nil
-	case CreateDividendReqDividendTypeLT:
-		return []byte(s), nil
-	case CreateDividendReqDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *CreateDividendReqDividendType) UnmarshalText(data []byte) error {
-	switch CreateDividendReqDividendType(data) {
-	case CreateDividendReqDividendTypeCD:
-		*s = CreateDividendReqDividendTypeCD
-		return nil
-	case CreateDividendReqDividendTypeSC:
-		*s = CreateDividendReqDividendTypeSC
-		return nil
-	case CreateDividendReqDividendTypeLT:
-		*s = CreateDividendReqDividendTypeLT
-		return nil
-	case CreateDividendReqDividendTypeST:
-		*s = CreateDividendReqDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 type CreateEntityReq struct {
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
-	Exchanges   []int       `json:"exchanges"`
-	Intervals   []int       `json:"intervals"`
-	Dividends   []int       `json:"dividends"`
-	Splits      []int       `json:"splits"`
-	Financials  []int       `json:"financials"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
+	Exchanges   []int     `json:"exchanges"`
+	Intervals   []int     `json:"intervals"`
+	Dividends   []int     `json:"dividends"`
+	Splits      []int     `json:"splits"`
+	Financials  []int     `json:"financials"`
 }
 
 // GetActive returns the value of Active.
@@ -2097,9 +2031,14 @@ func (s *CreateEntityReq) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *CreateEntityReq) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *CreateEntityReq) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *CreateEntityReq) GetTradable() bool {
+	return s.Tradable
 }
 
 // GetExchanges returns the value of Exchanges.
@@ -2152,9 +2091,14 @@ func (s *CreateEntityReq) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *CreateEntityReq) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *CreateEntityReq) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *CreateEntityReq) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 // SetExchanges sets the value of Exchanges.
@@ -3049,14 +2993,12 @@ func (*DeleteTradeTimeRangeNoContent) deleteTradeTimeRangeRes() {}
 
 // Ref: #/components/schemas/DividendCreate
 type DividendCreate struct {
-	ID              int                        `json:"id"`
-	CashAmount      float64                    `json:"cash_amount"`
-	DeclarationDate time.Time                  `json:"declaration_date"`
-	DividendType    DividendCreateDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                  `json:"ex_dividend_date"`
-	Frequency       int                        `json:"frequency"`
-	RecordDate      time.Time                  `json:"record_date"`
-	PayDate         time.Time                  `json:"pay_date"`
+	ID              int       `json:"id"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
 }
 
 // GetID returns the value of ID.
@@ -3064,9 +3006,9 @@ func (s *DividendCreate) GetID() int {
 	return s.ID
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *DividendCreate) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *DividendCreate) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -3074,19 +3016,9 @@ func (s *DividendCreate) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *DividendCreate) GetDividendType() DividendCreateDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *DividendCreate) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *DividendCreate) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -3104,9 +3036,9 @@ func (s *DividendCreate) SetID(val int) {
 	s.ID = val
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *DividendCreate) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *DividendCreate) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -3114,19 +3046,9 @@ func (s *DividendCreate) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *DividendCreate) SetDividendType(val DividendCreateDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *DividendCreate) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *DividendCreate) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -3141,61 +3063,14 @@ func (s *DividendCreate) SetPayDate(val time.Time) {
 
 func (*DividendCreate) createDividendRes() {}
 
-type DividendCreateDividendType string
-
-const (
-	DividendCreateDividendTypeCD DividendCreateDividendType = "CD"
-	DividendCreateDividendTypeSC DividendCreateDividendType = "SC"
-	DividendCreateDividendTypeLT DividendCreateDividendType = "LT"
-	DividendCreateDividendTypeST DividendCreateDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s DividendCreateDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case DividendCreateDividendTypeCD:
-		return []byte(s), nil
-	case DividendCreateDividendTypeSC:
-		return []byte(s), nil
-	case DividendCreateDividendTypeLT:
-		return []byte(s), nil
-	case DividendCreateDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *DividendCreateDividendType) UnmarshalText(data []byte) error {
-	switch DividendCreateDividendType(data) {
-	case DividendCreateDividendTypeCD:
-		*s = DividendCreateDividendTypeCD
-		return nil
-	case DividendCreateDividendTypeSC:
-		*s = DividendCreateDividendTypeSC
-		return nil
-	case DividendCreateDividendTypeLT:
-		*s = DividendCreateDividendTypeLT
-		return nil
-	case DividendCreateDividendTypeST:
-		*s = DividendCreateDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Ref: #/components/schemas/DividendList
 type DividendList struct {
-	ID              int                      `json:"id"`
-	CashAmount      float64                  `json:"cash_amount"`
-	DeclarationDate time.Time                `json:"declaration_date"`
-	DividendType    DividendListDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                `json:"ex_dividend_date"`
-	Frequency       int                      `json:"frequency"`
-	RecordDate      time.Time                `json:"record_date"`
-	PayDate         time.Time                `json:"pay_date"`
+	ID              int       `json:"id"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
 }
 
 // GetID returns the value of ID.
@@ -3203,9 +3078,9 @@ func (s *DividendList) GetID() int {
 	return s.ID
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *DividendList) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *DividendList) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -3213,19 +3088,9 @@ func (s *DividendList) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *DividendList) GetDividendType() DividendListDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *DividendList) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *DividendList) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -3243,9 +3108,9 @@ func (s *DividendList) SetID(val int) {
 	s.ID = val
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *DividendList) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *DividendList) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -3253,19 +3118,9 @@ func (s *DividendList) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *DividendList) SetDividendType(val DividendListDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *DividendList) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *DividendList) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -3278,61 +3133,14 @@ func (s *DividendList) SetPayDate(val time.Time) {
 	s.PayDate = val
 }
 
-type DividendListDividendType string
-
-const (
-	DividendListDividendTypeCD DividendListDividendType = "CD"
-	DividendListDividendTypeSC DividendListDividendType = "SC"
-	DividendListDividendTypeLT DividendListDividendType = "LT"
-	DividendListDividendTypeST DividendListDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s DividendListDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case DividendListDividendTypeCD:
-		return []byte(s), nil
-	case DividendListDividendTypeSC:
-		return []byte(s), nil
-	case DividendListDividendTypeLT:
-		return []byte(s), nil
-	case DividendListDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *DividendListDividendType) UnmarshalText(data []byte) error {
-	switch DividendListDividendType(data) {
-	case DividendListDividendTypeCD:
-		*s = DividendListDividendTypeCD
-		return nil
-	case DividendListDividendTypeSC:
-		*s = DividendListDividendTypeSC
-		return nil
-	case DividendListDividendTypeLT:
-		*s = DividendListDividendTypeLT
-		return nil
-	case DividendListDividendTypeST:
-		*s = DividendListDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Ref: #/components/schemas/DividendRead
 type DividendRead struct {
-	ID              int                      `json:"id"`
-	CashAmount      float64                  `json:"cash_amount"`
-	DeclarationDate time.Time                `json:"declaration_date"`
-	DividendType    DividendReadDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                `json:"ex_dividend_date"`
-	Frequency       int                      `json:"frequency"`
-	RecordDate      time.Time                `json:"record_date"`
-	PayDate         time.Time                `json:"pay_date"`
+	ID              int       `json:"id"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
 }
 
 // GetID returns the value of ID.
@@ -3340,9 +3148,9 @@ func (s *DividendRead) GetID() int {
 	return s.ID
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *DividendRead) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *DividendRead) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -3350,19 +3158,9 @@ func (s *DividendRead) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *DividendRead) GetDividendType() DividendReadDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *DividendRead) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *DividendRead) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -3380,9 +3178,9 @@ func (s *DividendRead) SetID(val int) {
 	s.ID = val
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *DividendRead) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *DividendRead) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -3390,19 +3188,9 @@ func (s *DividendRead) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *DividendRead) SetDividendType(val DividendReadDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *DividendRead) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *DividendRead) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -3417,60 +3205,16 @@ func (s *DividendRead) SetPayDate(val time.Time) {
 
 func (*DividendRead) readDividendRes() {}
 
-type DividendReadDividendType string
-
-const (
-	DividendReadDividendTypeCD DividendReadDividendType = "CD"
-	DividendReadDividendTypeSC DividendReadDividendType = "SC"
-	DividendReadDividendTypeLT DividendReadDividendType = "LT"
-	DividendReadDividendTypeST DividendReadDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s DividendReadDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case DividendReadDividendTypeCD:
-		return []byte(s), nil
-	case DividendReadDividendTypeSC:
-		return []byte(s), nil
-	case DividendReadDividendTypeLT:
-		return []byte(s), nil
-	case DividendReadDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *DividendReadDividendType) UnmarshalText(data []byte) error {
-	switch DividendReadDividendType(data) {
-	case DividendReadDividendTypeCD:
-		*s = DividendReadDividendTypeCD
-		return nil
-	case DividendReadDividendTypeSC:
-		*s = DividendReadDividendTypeSC
-		return nil
-	case DividendReadDividendTypeLT:
-		*s = DividendReadDividendTypeLT
-		return nil
-	case DividendReadDividendTypeST:
-		*s = DividendReadDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Ref: #/components/schemas/Dividend_StockList
 type DividendStockList struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -3503,9 +3247,14 @@ func (s *DividendStockList) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *DividendStockList) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *DividendStockList) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *DividendStockList) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -3538,21 +3287,24 @@ func (s *DividendStockList) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *DividendStockList) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *DividendStockList) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *DividendStockList) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 // Ref: #/components/schemas/DividendUpdate
 type DividendUpdate struct {
-	ID              int                        `json:"id"`
-	CashAmount      float64                    `json:"cash_amount"`
-	DeclarationDate time.Time                  `json:"declaration_date"`
-	DividendType    DividendUpdateDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                  `json:"ex_dividend_date"`
-	Frequency       int                        `json:"frequency"`
-	RecordDate      time.Time                  `json:"record_date"`
-	PayDate         time.Time                  `json:"pay_date"`
+	ID              int       `json:"id"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
 }
 
 // GetID returns the value of ID.
@@ -3560,9 +3312,9 @@ func (s *DividendUpdate) GetID() int {
 	return s.ID
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *DividendUpdate) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *DividendUpdate) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -3570,19 +3322,9 @@ func (s *DividendUpdate) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *DividendUpdate) GetDividendType() DividendUpdateDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *DividendUpdate) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *DividendUpdate) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -3600,9 +3342,9 @@ func (s *DividendUpdate) SetID(val int) {
 	s.ID = val
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *DividendUpdate) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *DividendUpdate) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -3610,19 +3352,9 @@ func (s *DividendUpdate) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *DividendUpdate) SetDividendType(val DividendUpdateDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *DividendUpdate) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *DividendUpdate) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -3637,60 +3369,16 @@ func (s *DividendUpdate) SetPayDate(val time.Time) {
 
 func (*DividendUpdate) updateDividendRes() {}
 
-type DividendUpdateDividendType string
-
-const (
-	DividendUpdateDividendTypeCD DividendUpdateDividendType = "CD"
-	DividendUpdateDividendTypeSC DividendUpdateDividendType = "SC"
-	DividendUpdateDividendTypeLT DividendUpdateDividendType = "LT"
-	DividendUpdateDividendTypeST DividendUpdateDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s DividendUpdateDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case DividendUpdateDividendTypeCD:
-		return []byte(s), nil
-	case DividendUpdateDividendTypeSC:
-		return []byte(s), nil
-	case DividendUpdateDividendTypeLT:
-		return []byte(s), nil
-	case DividendUpdateDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *DividendUpdateDividendType) UnmarshalText(data []byte) error {
-	switch DividendUpdateDividendType(data) {
-	case DividendUpdateDividendTypeCD:
-		*s = DividendUpdateDividendTypeCD
-		return nil
-	case DividendUpdateDividendTypeSC:
-		*s = DividendUpdateDividendTypeSC
-		return nil
-	case DividendUpdateDividendTypeLT:
-		*s = DividendUpdateDividendTypeLT
-		return nil
-	case DividendUpdateDividendTypeST:
-		*s = DividendUpdateDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Ref: #/components/schemas/EntityCreate
 type EntityCreate struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -3723,9 +3411,14 @@ func (s *EntityCreate) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *EntityCreate) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *EntityCreate) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *EntityCreate) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -3758,23 +3451,26 @@ func (s *EntityCreate) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *EntityCreate) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *EntityCreate) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *EntityCreate) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 func (*EntityCreate) createEntityRes() {}
 
 // Ref: #/components/schemas/Entity_DividendsList
 type EntityDividendsList struct {
-	ID              int                             `json:"id"`
-	CashAmount      float64                         `json:"cash_amount"`
-	DeclarationDate time.Time                       `json:"declaration_date"`
-	DividendType    EntityDividendsListDividendType `json:"dividend_type"`
-	ExDividendDate  time.Time                       `json:"ex_dividend_date"`
-	Frequency       int                             `json:"frequency"`
-	RecordDate      time.Time                       `json:"record_date"`
-	PayDate         time.Time                       `json:"pay_date"`
+	ID              int       `json:"id"`
+	Rate            float64   `json:"rate"`
+	DeclarationDate time.Time `json:"declaration_date"`
+	ExDividendDate  time.Time `json:"ex_dividend_date"`
+	RecordDate      time.Time `json:"record_date"`
+	PayDate         time.Time `json:"pay_date"`
 }
 
 // GetID returns the value of ID.
@@ -3782,9 +3478,9 @@ func (s *EntityDividendsList) GetID() int {
 	return s.ID
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *EntityDividendsList) GetCashAmount() float64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *EntityDividendsList) GetRate() float64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -3792,19 +3488,9 @@ func (s *EntityDividendsList) GetDeclarationDate() time.Time {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *EntityDividendsList) GetDividendType() EntityDividendsListDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *EntityDividendsList) GetExDividendDate() time.Time {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *EntityDividendsList) GetFrequency() int {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -3822,9 +3508,9 @@ func (s *EntityDividendsList) SetID(val int) {
 	s.ID = val
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *EntityDividendsList) SetCashAmount(val float64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *EntityDividendsList) SetRate(val float64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -3832,19 +3518,9 @@ func (s *EntityDividendsList) SetDeclarationDate(val time.Time) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *EntityDividendsList) SetDividendType(val EntityDividendsListDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *EntityDividendsList) SetExDividendDate(val time.Time) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *EntityDividendsList) SetFrequency(val int) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -3855,51 +3531,6 @@ func (s *EntityDividendsList) SetRecordDate(val time.Time) {
 // SetPayDate sets the value of PayDate.
 func (s *EntityDividendsList) SetPayDate(val time.Time) {
 	s.PayDate = val
-}
-
-type EntityDividendsListDividendType string
-
-const (
-	EntityDividendsListDividendTypeCD EntityDividendsListDividendType = "CD"
-	EntityDividendsListDividendTypeSC EntityDividendsListDividendType = "SC"
-	EntityDividendsListDividendTypeLT EntityDividendsListDividendType = "LT"
-	EntityDividendsListDividendTypeST EntityDividendsListDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s EntityDividendsListDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case EntityDividendsListDividendTypeCD:
-		return []byte(s), nil
-	case EntityDividendsListDividendTypeSC:
-		return []byte(s), nil
-	case EntityDividendsListDividendTypeLT:
-		return []byte(s), nil
-	case EntityDividendsListDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *EntityDividendsListDividendType) UnmarshalText(data []byte) error {
-	switch EntityDividendsListDividendType(data) {
-	case EntityDividendsListDividendTypeCD:
-		*s = EntityDividendsListDividendTypeCD
-		return nil
-	case EntityDividendsListDividendTypeSC:
-		*s = EntityDividendsListDividendTypeSC
-		return nil
-	case EntityDividendsListDividendTypeLT:
-		*s = EntityDividendsListDividendTypeLT
-		return nil
-	case EntityDividendsListDividendTypeST:
-		*s = EntityDividendsListDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
 
 // Ref: #/components/schemas/Entity_ExchangesList
@@ -4066,13 +3697,14 @@ func (s *EntityIntervalsListInterval) UnmarshalText(data []byte) error {
 
 // Ref: #/components/schemas/EntityList
 type EntityList struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -4105,9 +3737,14 @@ func (s *EntityList) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *EntityList) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *EntityList) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *EntityList) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -4140,20 +3777,26 @@ func (s *EntityList) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *EntityList) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *EntityList) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *EntityList) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 // Ref: #/components/schemas/EntityRead
 type EntityRead struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -4186,9 +3829,14 @@ func (s *EntityRead) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *EntityRead) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *EntityRead) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *EntityRead) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -4221,9 +3869,14 @@ func (s *EntityRead) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *EntityRead) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *EntityRead) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *EntityRead) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 func (*EntityRead) readEntityRes() {}
@@ -4278,13 +3931,14 @@ func (s *EntitySplitsList) SetTo(val float64) {
 
 // Ref: #/components/schemas/EntityUpdate
 type EntityUpdate struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -4317,9 +3971,14 @@ func (s *EntityUpdate) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *EntityUpdate) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *EntityUpdate) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *EntityUpdate) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -4352,9 +4011,14 @@ func (s *EntityUpdate) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *EntityUpdate) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *EntityUpdate) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *EntityUpdate) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 func (*EntityUpdate) updateEntityRes() {}
@@ -4476,13 +4140,14 @@ func (*ExchangeRead) readExchangeRes() {}
 
 // Ref: #/components/schemas/Exchange_StocksList
 type ExchangeStocksList struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -4515,9 +4180,14 @@ func (s *ExchangeStocksList) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *ExchangeStocksList) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *ExchangeStocksList) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *ExchangeStocksList) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -4550,9 +4220,14 @@ func (s *ExchangeStocksList) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *ExchangeStocksList) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *ExchangeStocksList) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *ExchangeStocksList) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 // Ref: #/components/schemas/ExchangeUpdate
@@ -4645,13 +4320,14 @@ func (*FinancialRead) readFinancialRes() {}
 
 // Ref: #/components/schemas/Financial_StockList
 type FinancialStockList struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -4684,9 +4360,14 @@ func (s *FinancialStockList) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *FinancialStockList) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *FinancialStockList) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *FinancialStockList) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -4719,9 +4400,14 @@ func (s *FinancialStockList) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *FinancialStockList) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *FinancialStockList) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *FinancialStockList) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 // Ref: #/components/schemas/FinancialUpdate
@@ -5242,13 +4928,14 @@ func (s *IntervalReadInterval) UnmarshalText(data []byte) error {
 
 // Ref: #/components/schemas/Interval_StockRead
 type IntervalStockRead struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -5281,9 +4968,14 @@ func (s *IntervalStockRead) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *IntervalStockRead) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *IntervalStockRead) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *IntervalStockRead) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -5316,9 +5008,14 @@ func (s *IntervalStockRead) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *IntervalStockRead) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *IntervalStockRead) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *IntervalStockRead) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 func (*IntervalStockRead) readIntervalStockRes() {}
@@ -5485,147 +5182,147 @@ func (s *IntervalUpdateInterval) UnmarshalText(data []byte) error {
 
 type ListBarGroupOKApplicationJSON []BarGroupList
 
-func (ListBarGroupOKApplicationJSON) listBarGroupRes() {}
+func (*ListBarGroupOKApplicationJSON) listBarGroupRes() {}
 
 type ListBarGroupRecordsOKApplicationJSON []BarGroupRecordsList
 
-func (ListBarGroupRecordsOKApplicationJSON) listBarGroupRecordsRes() {}
+func (*ListBarGroupRecordsOKApplicationJSON) listBarGroupRecordsRes() {}
 
 type ListBarRecordOKApplicationJSON []BarRecordList
 
-func (ListBarRecordOKApplicationJSON) listBarRecordRes() {}
+func (*ListBarRecordOKApplicationJSON) listBarRecordRes() {}
 
 type ListBarTimeRangeGroupsOKApplicationJSON []BarTimeRangeGroupsList
 
-func (ListBarTimeRangeGroupsOKApplicationJSON) listBarTimeRangeGroupsRes() {}
+func (*ListBarTimeRangeGroupsOKApplicationJSON) listBarTimeRangeGroupsRes() {}
 
 type ListBarTimeRangeOKApplicationJSON []BarTimeRangeList
 
-func (ListBarTimeRangeOKApplicationJSON) listBarTimeRangeRes() {}
+func (*ListBarTimeRangeOKApplicationJSON) listBarTimeRangeRes() {}
 
 type ListDataSourceIntervalsOKApplicationJSON []DataSourceIntervalsList
 
-func (ListDataSourceIntervalsOKApplicationJSON) listDataSourceIntervalsRes() {}
+func (*ListDataSourceIntervalsOKApplicationJSON) listDataSourceIntervalsRes() {}
 
 type ListDataSourceOKApplicationJSON []DataSourceList
 
-func (ListDataSourceOKApplicationJSON) listDataSourceRes() {}
+func (*ListDataSourceOKApplicationJSON) listDataSourceRes() {}
 
 type ListDividendOKApplicationJSON []DividendList
 
-func (ListDividendOKApplicationJSON) listDividendRes() {}
+func (*ListDividendOKApplicationJSON) listDividendRes() {}
 
 type ListDividendStockOKApplicationJSON []DividendStockList
 
-func (ListDividendStockOKApplicationJSON) listDividendStockRes() {}
+func (*ListDividendStockOKApplicationJSON) listDividendStockRes() {}
 
 type ListEntityDividendsOKApplicationJSON []EntityDividendsList
 
-func (ListEntityDividendsOKApplicationJSON) listEntityDividendsRes() {}
+func (*ListEntityDividendsOKApplicationJSON) listEntityDividendsRes() {}
 
 type ListEntityExchangesOKApplicationJSON []EntityExchangesList
 
-func (ListEntityExchangesOKApplicationJSON) listEntityExchangesRes() {}
+func (*ListEntityExchangesOKApplicationJSON) listEntityExchangesRes() {}
 
 type ListEntityFinancialsOKApplicationJSON []EntityFinancialsList
 
-func (ListEntityFinancialsOKApplicationJSON) listEntityFinancialsRes() {}
+func (*ListEntityFinancialsOKApplicationJSON) listEntityFinancialsRes() {}
 
 type ListEntityIntervalsOKApplicationJSON []EntityIntervalsList
 
-func (ListEntityIntervalsOKApplicationJSON) listEntityIntervalsRes() {}
+func (*ListEntityIntervalsOKApplicationJSON) listEntityIntervalsRes() {}
 
 type ListEntityOKApplicationJSON []EntityList
 
-func (ListEntityOKApplicationJSON) listEntityRes() {}
+func (*ListEntityOKApplicationJSON) listEntityRes() {}
 
 type ListEntitySplitsOKApplicationJSON []EntitySplitsList
 
-func (ListEntitySplitsOKApplicationJSON) listEntitySplitsRes() {}
+func (*ListEntitySplitsOKApplicationJSON) listEntitySplitsRes() {}
 
 type ListExchangeOKApplicationJSON []ExchangeList
 
-func (ListExchangeOKApplicationJSON) listExchangeRes() {}
+func (*ListExchangeOKApplicationJSON) listExchangeRes() {}
 
 type ListExchangeStocksOKApplicationJSON []ExchangeStocksList
 
-func (ListExchangeStocksOKApplicationJSON) listExchangeStocksRes() {}
+func (*ListExchangeStocksOKApplicationJSON) listExchangeStocksRes() {}
 
 type ListFinancialOKApplicationJSON []FinancialList
 
-func (ListFinancialOKApplicationJSON) listFinancialRes() {}
+func (*ListFinancialOKApplicationJSON) listFinancialRes() {}
 
 type ListFinancialStockOKApplicationJSON []FinancialStockList
 
-func (ListFinancialStockOKApplicationJSON) listFinancialStockRes() {}
+func (*ListFinancialStockOKApplicationJSON) listFinancialStockRes() {}
 
 type ListIntervalBarsOKApplicationJSON []IntervalBarsList
 
-func (ListIntervalBarsOKApplicationJSON) listIntervalBarsRes() {}
+func (*ListIntervalBarsOKApplicationJSON) listIntervalBarsRes() {}
 
 type ListIntervalOKApplicationJSON []IntervalList
 
-func (ListIntervalOKApplicationJSON) listIntervalRes() {}
+func (*ListIntervalOKApplicationJSON) listIntervalRes() {}
 
 type ListIntervalTradesOKApplicationJSON []IntervalTradesList
 
-func (ListIntervalTradesOKApplicationJSON) listIntervalTradesRes() {}
+func (*ListIntervalTradesOKApplicationJSON) listIntervalTradesRes() {}
 
 type ListMarketHoursOKApplicationJSON []MarketHoursList
 
-func (ListMarketHoursOKApplicationJSON) listMarketHoursRes() {}
+func (*ListMarketHoursOKApplicationJSON) listMarketHoursRes() {}
 
 type ListMarketInfoHoursOKApplicationJSON []MarketInfoHoursList
 
-func (ListMarketInfoHoursOKApplicationJSON) listMarketInfoHoursRes() {}
+func (*ListMarketInfoHoursOKApplicationJSON) listMarketInfoHoursRes() {}
 
 type ListMarketInfoOKApplicationJSON []MarketInfoList
 
-func (ListMarketInfoOKApplicationJSON) listMarketInfoRes() {}
+func (*ListMarketInfoOKApplicationJSON) listMarketInfoRes() {}
 
 type ListSplitOKApplicationJSON []SplitList
 
-func (ListSplitOKApplicationJSON) listSplitRes() {}
+func (*ListSplitOKApplicationJSON) listSplitRes() {}
 
 type ListTradeConditionOKApplicationJSON []TradeConditionList
 
-func (ListTradeConditionOKApplicationJSON) listTradeConditionRes() {}
+func (*ListTradeConditionOKApplicationJSON) listTradeConditionRes() {}
 
 type ListTradeConditionRecordOKApplicationJSON []TradeConditionRecordList
 
-func (ListTradeConditionRecordOKApplicationJSON) listTradeConditionRecordRes() {}
+func (*ListTradeConditionRecordOKApplicationJSON) listTradeConditionRecordRes() {}
 
 type ListTradeCorrectionOKApplicationJSON []TradeCorrectionList
 
-func (ListTradeCorrectionOKApplicationJSON) listTradeCorrectionRes() {}
+func (*ListTradeCorrectionOKApplicationJSON) listTradeCorrectionRes() {}
 
 type ListTradeCorrectionRecordOKApplicationJSON []TradeCorrectionRecordList
 
-func (ListTradeCorrectionRecordOKApplicationJSON) listTradeCorrectionRecordRes() {}
+func (*ListTradeCorrectionRecordOKApplicationJSON) listTradeCorrectionRecordRes() {}
 
 type ListTradeRecordConditionsOKApplicationJSON []TradeRecordConditionsList
 
-func (ListTradeRecordConditionsOKApplicationJSON) listTradeRecordConditionsRes() {}
+func (*ListTradeRecordConditionsOKApplicationJSON) listTradeRecordConditionsRes() {}
 
 type ListTradeRecordCorrectionOKApplicationJSON []TradeRecordCorrectionList
 
-func (ListTradeRecordCorrectionOKApplicationJSON) listTradeRecordCorrectionRes() {}
+func (*ListTradeRecordCorrectionOKApplicationJSON) listTradeRecordCorrectionRes() {}
 
 type ListTradeRecordExchangeOKApplicationJSON []TradeRecordExchangeList
 
-func (ListTradeRecordExchangeOKApplicationJSON) listTradeRecordExchangeRes() {}
+func (*ListTradeRecordExchangeOKApplicationJSON) listTradeRecordExchangeRes() {}
 
 type ListTradeRecordOKApplicationJSON []TradeRecordList
 
-func (ListTradeRecordOKApplicationJSON) listTradeRecordRes() {}
+func (*ListTradeRecordOKApplicationJSON) listTradeRecordRes() {}
 
 type ListTradeTimeRangeOKApplicationJSON []TradeTimeRangeList
 
-func (ListTradeTimeRangeOKApplicationJSON) listTradeTimeRangeRes() {}
+func (*ListTradeTimeRangeOKApplicationJSON) listTradeTimeRangeRes() {}
 
 type ListTradeTimeRangeRecordsOKApplicationJSON []TradeTimeRangeRecordsList
 
-func (ListTradeTimeRangeRecordsOKApplicationJSON) listTradeTimeRangeRecordsRes() {}
+func (*ListTradeTimeRangeRecordsOKApplicationJSON) listTradeTimeRangeRecordsRes() {}
 
 // Ref: #/components/schemas/MarketHoursCreate
 type MarketHoursCreate struct {
@@ -6382,52 +6079,6 @@ func (o OptUpdateBarTimeRangeReqStatus) Get() (v UpdateBarTimeRangeReqStatus, ok
 
 // Or returns value if set, or given parameter if does not.
 func (o OptUpdateBarTimeRangeReqStatus) Or(d UpdateBarTimeRangeReqStatus) UpdateBarTimeRangeReqStatus {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptUpdateDividendReqDividendType returns new OptUpdateDividendReqDividendType with value set to v.
-func NewOptUpdateDividendReqDividendType(v UpdateDividendReqDividendType) OptUpdateDividendReqDividendType {
-	return OptUpdateDividendReqDividendType{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptUpdateDividendReqDividendType is optional UpdateDividendReqDividendType.
-type OptUpdateDividendReqDividendType struct {
-	Value UpdateDividendReqDividendType
-	Set   bool
-}
-
-// IsSet returns true if OptUpdateDividendReqDividendType was set.
-func (o OptUpdateDividendReqDividendType) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptUpdateDividendReqDividendType) Reset() {
-	var v UpdateDividendReqDividendType
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptUpdateDividendReqDividendType) SetTo(v UpdateDividendReqDividendType) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptUpdateDividendReqDividendType) Get() (v UpdateDividendReqDividendType, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptUpdateDividendReqDividendType) Or(d UpdateDividendReqDividendType) UpdateDividendReqDividendType {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -7259,13 +6910,14 @@ func (*SplitRead) readSplitRes() {}
 
 // Ref: #/components/schemas/Split_StockRead
 type SplitStockRead struct {
-	ID          int         `json:"id"`
-	Active      bool        `json:"active"`
-	Ticker      string      `json:"ticker"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	ListDate    time.Time   `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	ID          int       `json:"id"`
+	Active      bool      `json:"active"`
+	Ticker      string    `json:"ticker"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ListDate    time.Time `json:"list_date"`
+	Options     bool      `json:"options"`
+	Tradable    bool      `json:"tradable"`
 }
 
 // GetID returns the value of ID.
@@ -7298,9 +6950,14 @@ func (s *SplitStockRead) GetListDate() time.Time {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *SplitStockRead) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *SplitStockRead) GetOptions() bool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *SplitStockRead) GetTradable() bool {
+	return s.Tradable
 }
 
 // SetID sets the value of ID.
@@ -7333,9 +6990,14 @@ func (s *SplitStockRead) SetListDate(val time.Time) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *SplitStockRead) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *SplitStockRead) SetOptions(val bool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *SplitStockRead) SetTradable(val bool) {
+	s.Tradable = val
 }
 
 func (*SplitStockRead) readSplitStockRes() {}
@@ -8811,19 +8473,17 @@ func (s *UpdateDataSourceReq) SetIntervals(val []int) {
 }
 
 type UpdateDividendReq struct {
-	CashAmount      OptFloat64                       `json:"cash_amount"`
-	DeclarationDate OptDateTime                      `json:"declaration_date"`
-	DividendType    OptUpdateDividendReqDividendType `json:"dividend_type"`
-	ExDividendDate  OptDateTime                      `json:"ex_dividend_date"`
-	Frequency       OptInt                           `json:"frequency"`
-	RecordDate      OptDateTime                      `json:"record_date"`
-	PayDate         OptDateTime                      `json:"pay_date"`
-	Stock           []int                            `json:"stock"`
+	Rate            OptFloat64  `json:"rate"`
+	DeclarationDate OptDateTime `json:"declaration_date"`
+	ExDividendDate  OptDateTime `json:"ex_dividend_date"`
+	RecordDate      OptDateTime `json:"record_date"`
+	PayDate         OptDateTime `json:"pay_date"`
+	Stock           []int       `json:"stock"`
 }
 
-// GetCashAmount returns the value of CashAmount.
-func (s *UpdateDividendReq) GetCashAmount() OptFloat64 {
-	return s.CashAmount
+// GetRate returns the value of Rate.
+func (s *UpdateDividendReq) GetRate() OptFloat64 {
+	return s.Rate
 }
 
 // GetDeclarationDate returns the value of DeclarationDate.
@@ -8831,19 +8491,9 @@ func (s *UpdateDividendReq) GetDeclarationDate() OptDateTime {
 	return s.DeclarationDate
 }
 
-// GetDividendType returns the value of DividendType.
-func (s *UpdateDividendReq) GetDividendType() OptUpdateDividendReqDividendType {
-	return s.DividendType
-}
-
 // GetExDividendDate returns the value of ExDividendDate.
 func (s *UpdateDividendReq) GetExDividendDate() OptDateTime {
 	return s.ExDividendDate
-}
-
-// GetFrequency returns the value of Frequency.
-func (s *UpdateDividendReq) GetFrequency() OptInt {
-	return s.Frequency
 }
 
 // GetRecordDate returns the value of RecordDate.
@@ -8861,9 +8511,9 @@ func (s *UpdateDividendReq) GetStock() []int {
 	return s.Stock
 }
 
-// SetCashAmount sets the value of CashAmount.
-func (s *UpdateDividendReq) SetCashAmount(val OptFloat64) {
-	s.CashAmount = val
+// SetRate sets the value of Rate.
+func (s *UpdateDividendReq) SetRate(val OptFloat64) {
+	s.Rate = val
 }
 
 // SetDeclarationDate sets the value of DeclarationDate.
@@ -8871,19 +8521,9 @@ func (s *UpdateDividendReq) SetDeclarationDate(val OptDateTime) {
 	s.DeclarationDate = val
 }
 
-// SetDividendType sets the value of DividendType.
-func (s *UpdateDividendReq) SetDividendType(val OptUpdateDividendReqDividendType) {
-	s.DividendType = val
-}
-
 // SetExDividendDate sets the value of ExDividendDate.
 func (s *UpdateDividendReq) SetExDividendDate(val OptDateTime) {
 	s.ExDividendDate = val
-}
-
-// SetFrequency sets the value of Frequency.
-func (s *UpdateDividendReq) SetFrequency(val OptInt) {
-	s.Frequency = val
 }
 
 // SetRecordDate sets the value of RecordDate.
@@ -8901,58 +8541,14 @@ func (s *UpdateDividendReq) SetStock(val []int) {
 	s.Stock = val
 }
 
-type UpdateDividendReqDividendType string
-
-const (
-	UpdateDividendReqDividendTypeCD UpdateDividendReqDividendType = "CD"
-	UpdateDividendReqDividendTypeSC UpdateDividendReqDividendType = "SC"
-	UpdateDividendReqDividendTypeLT UpdateDividendReqDividendType = "LT"
-	UpdateDividendReqDividendTypeST UpdateDividendReqDividendType = "ST"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s UpdateDividendReqDividendType) MarshalText() ([]byte, error) {
-	switch s {
-	case UpdateDividendReqDividendTypeCD:
-		return []byte(s), nil
-	case UpdateDividendReqDividendTypeSC:
-		return []byte(s), nil
-	case UpdateDividendReqDividendTypeLT:
-		return []byte(s), nil
-	case UpdateDividendReqDividendTypeST:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *UpdateDividendReqDividendType) UnmarshalText(data []byte) error {
-	switch UpdateDividendReqDividendType(data) {
-	case UpdateDividendReqDividendTypeCD:
-		*s = UpdateDividendReqDividendTypeCD
-		return nil
-	case UpdateDividendReqDividendTypeSC:
-		*s = UpdateDividendReqDividendTypeSC
-		return nil
-	case UpdateDividendReqDividendTypeLT:
-		*s = UpdateDividendReqDividendTypeLT
-		return nil
-	case UpdateDividendReqDividendTypeST:
-		*s = UpdateDividendReqDividendTypeST
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 type UpdateEntityReq struct {
 	Active      OptBool     `json:"active"`
 	Ticker      OptString   `json:"ticker"`
 	Name        OptString   `json:"name"`
 	Description OptString   `json:"description"`
 	ListDate    OptDateTime `json:"list_date"`
-	Delisted    OptDateTime `json:"delisted"`
+	Options     OptBool     `json:"options"`
+	Tradable    OptBool     `json:"tradable"`
 	Exchanges   []int       `json:"exchanges"`
 	Intervals   []int       `json:"intervals"`
 	Dividends   []int       `json:"dividends"`
@@ -8985,9 +8581,14 @@ func (s *UpdateEntityReq) GetListDate() OptDateTime {
 	return s.ListDate
 }
 
-// GetDelisted returns the value of Delisted.
-func (s *UpdateEntityReq) GetDelisted() OptDateTime {
-	return s.Delisted
+// GetOptions returns the value of Options.
+func (s *UpdateEntityReq) GetOptions() OptBool {
+	return s.Options
+}
+
+// GetTradable returns the value of Tradable.
+func (s *UpdateEntityReq) GetTradable() OptBool {
+	return s.Tradable
 }
 
 // GetExchanges returns the value of Exchanges.
@@ -9040,9 +8641,14 @@ func (s *UpdateEntityReq) SetListDate(val OptDateTime) {
 	s.ListDate = val
 }
 
-// SetDelisted sets the value of Delisted.
-func (s *UpdateEntityReq) SetDelisted(val OptDateTime) {
-	s.Delisted = val
+// SetOptions sets the value of Options.
+func (s *UpdateEntityReq) SetOptions(val OptBool) {
+	s.Options = val
+}
+
+// SetTradable sets the value of Tradable.
+func (s *UpdateEntityReq) SetTradable(val OptBool) {
+	s.Tradable = val
 }
 
 // SetExchanges sets the value of Exchanges.

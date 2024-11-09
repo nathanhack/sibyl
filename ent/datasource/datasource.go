@@ -2,6 +2,11 @@
 
 package datasource
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the datasource type in the database.
 	Label = "data_source"
@@ -47,3 +52,42 @@ var (
 	// DefaultAddress holds the default value on creation for the "address" field.
 	DefaultAddress string
 )
+
+// OrderOption defines the ordering options for the DataSource queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByAddress orders the results by the address field.
+func ByAddress(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAddress, opts...).ToFunc()
+}
+
+// ByIntervalsCount orders the results by intervals count.
+func ByIntervalsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIntervalsStep(), opts...)
+	}
+}
+
+// ByIntervals orders the results by intervals terms.
+func ByIntervals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIntervalsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newIntervalsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IntervalsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IntervalsTable, IntervalsColumn),
+	)
+}

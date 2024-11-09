@@ -23,6 +23,7 @@ import (
 	"github.com/nathanhack/sibyl/cmd/server/cmd/barrequester"
 	"github.com/nathanhack/sibyl/cmd/server/cmd/config"
 	"github.com/nathanhack/sibyl/cmd/server/cmd/dividendrequester"
+	"github.com/nathanhack/sibyl/cmd/server/cmd/entityupdater"
 	"github.com/nathanhack/sibyl/cmd/server/cmd/markethoursrequester"
 	"github.com/nathanhack/sibyl/cmd/server/cmd/splitrequester"
 	"github.com/nathanhack/sibyl/ent"
@@ -158,6 +159,14 @@ var rootCmd = &cobra.Command{
 		logrus.Info("Database driver")
 		client := ent.NewClient(ent.Driver(drv))
 
+		ctx, cancel := context.WithCancel(context.Background())
+
+		// On a fresh install the database will not exist so we create it if it's not there
+		_, err = drv.DB().ExecContext(ctx, "CREATE DATABASE IF NOT EXISTS `sibyl`;")
+		if err != nil {
+			logrus.Fatalf("Create Database Error: %v", err)
+		}
+
 		// Run the migrations.
 		err = client.Schema.Create(context.Background(),
 			migrate.WithDropColumn(true),
@@ -166,7 +175,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatalf("Migration had an error: %v", err)
 		}
-		ctx, cancel := context.WithCancel(context.Background())
 
 		polyAgent, err := polygonio.New(ctx, client,
 			config.State.Agents.PolygonIO.ApiKey,
@@ -193,13 +201,15 @@ var rootCmd = &cobra.Command{
 			logrus.Fatalf("Unable to create Alpaca Agent error: %v", err)
 		}
 
-		go add.Entity(ctx, client, polyAgent)
+		go add.Entity(ctx, client, alpacaAgent)
 		wg := sync.WaitGroup{}
+		go entityupdater.Updater(ctx, client, alpacaAgent, &wg)
+		go entityupdater.Updater(ctx, client, polyAgent, &wg)
 		go barrequester.Grabber(ctx, client, polyAgent, &wg)
 		go barrequester.Grabber(ctx, client, alpacaAgent, &wg)
 		go barrequester.Scrubber(ctx, client, &wg)
-		go dividendrequester.Grabber(ctx, client, polyAgent, &wg)
-		go splitrequester.Grabber(ctx, client, polyAgent, &wg)
+		go dividendrequester.Grabber(ctx, client, alpacaAgent, &wg)
+		go splitrequester.Grabber(ctx, client, alpacaAgent, &wg)
 		go markethoursrequester.Grabber(ctx, client, alpacaAgent, &wg)
 
 		// Start listening.
@@ -263,62 +273,7 @@ var rootCmd = &cobra.Command{
 			logrus.Error(err)
 		}
 
-		// historyGrabber := internal.NewHistoryGrabber(db)
-		// if err := historyGrabber.Run(); err != nil {
-		// 	logrus.Errorf("Starting HistoryGrabber had an issue: %v", err)
-		// 	os.Exit(-1)
-		// }
 
-		// intradayGrabber := internal.NewIntradayGrabber(db, stockCache)
-		// if err := intradayGrabber.Run(); err != nil {
-		// 	logrus.Errorf("Starting IntradayGrabber had an issue: %v", err)
-		// 	os.Exit(-1)
-		// }
-
-		// stockValidator := internal.NewStockValidator(db, stockCache, optionSymbolGrabber)
-		// if err := stockValidator.Run(); err != nil {
-		// 	logrus.Errorf("Starting StockValidator had an issue: %v", err)
-		// 	os.Exit(-1)
-		// }
-
-		// serverDiedCtx, serverDied := context.WithCancel(context.Background())
-		// var restServer internal.RestServer
-		// restServer = internal.NewHttpRestServer(db, dataCache, config.State.Server.HTTP.Address, stockValidator, serverDied)
-
-		// if err := restServer.Run(); err != nil {
-		// 	logrus.Errorf("Starting HttpServer failed: %v", err)
-		// 	os.Exit(-1)
-		// }
-
-		// signalInterruptChan := make(chan os.Signal, 1)
-		// signal.Notify(signalInterruptChan, os.Interrupt)
-		// signalKillChan := make(chan os.Signal, 1)
-		// signal.Notify(signalKillChan, os.Kill)
-
-		// mainLoop:
-		// 	for {
-		// 		select {
-		// 		case <-signalKillChan:
-		// 			logrus.Infof("Received a Kill signal stopping server.")
-		// 			break mainLoop
-		// 		case <-signalInterruptChan:
-		// 			logrus.Infof("Received a Interrupt signal stopping server.")
-		// 			break mainLoop
-		// 		case <-serverDiedCtx.Done():
-		// 			logrus.Errorf("Server Died unexpectedly.")
-		// 			break mainLoop
-		// 		}
-		// 	}
-		// 	cancel()
-
-		// 	//now for each go routine we give upto a 1 min
-		// 	// we start with validator and work our way backwards
-		// 	stockValidator.Stop(5 * time.Second)
-		// 	intradayGrabber.Stop(5 * time.Second)
-		// 	historyGrabber.Stop(5 * time.Second)
-		// 	dataCache.Stop(5 * time.Second)
-		// 	restServer.Stop(5 * time.Second)
-		// 	db.Close()
 	},
 }
 

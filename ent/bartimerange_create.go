@@ -110,7 +110,7 @@ func (btrc *BarTimeRangeCreate) Mutation() *BarTimeRangeMutation {
 // Save creates the BarTimeRange in the database.
 func (btrc *BarTimeRangeCreate) Save(ctx context.Context) (*BarTimeRange, error) {
 	btrc.defaults()
-	return withHooks[*BarTimeRange, BarTimeRangeMutation](ctx, btrc.sqlSave, btrc.mutation, btrc.hooks)
+	return withHooks(ctx, btrc.sqlSave, btrc.mutation, btrc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -176,7 +176,7 @@ func (btrc *BarTimeRangeCreate) check() error {
 	if _, ok := btrc.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "BarTimeRange.update_time"`)}
 	}
-	if _, ok := btrc.mutation.IntervalID(); !ok {
+	if len(btrc.mutation.IntervalIDs()) == 0 {
 		return &ValidationError{Name: "interval", err: errors.New(`ent: missing required edge "BarTimeRange.interval"`)}
 	}
 	return nil
@@ -203,13 +203,7 @@ func (btrc *BarTimeRangeCreate) sqlSave(ctx context.Context) (*BarTimeRange, err
 func (btrc *BarTimeRangeCreate) createSpec() (*BarTimeRange, *sqlgraph.CreateSpec) {
 	var (
 		_node = &BarTimeRange{config: btrc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: bartimerange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bartimerange.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(bartimerange.Table, sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt))
 	)
 	if value, ok := btrc.mutation.Start(); ok {
 		_spec.SetField(bartimerange.FieldStart, field.TypeTime, value)
@@ -239,10 +233,7 @@ func (btrc *BarTimeRangeCreate) createSpec() (*BarTimeRange, *sqlgraph.CreateSpe
 			Columns: []string{bartimerange.IntervalColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -259,10 +250,7 @@ func (btrc *BarTimeRangeCreate) createSpec() (*BarTimeRange, *sqlgraph.CreateSpe
 			Columns: []string{bartimerange.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: bargroup.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(bargroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -276,11 +264,15 @@ func (btrc *BarTimeRangeCreate) createSpec() (*BarTimeRange, *sqlgraph.CreateSpe
 // BarTimeRangeCreateBulk is the builder for creating many BarTimeRange entities in bulk.
 type BarTimeRangeCreateBulk struct {
 	config
+	err      error
 	builders []*BarTimeRangeCreate
 }
 
 // Save creates the BarTimeRange entities in the database.
 func (btrcb *BarTimeRangeCreateBulk) Save(ctx context.Context) ([]*BarTimeRange, error) {
+	if btrcb.err != nil {
+		return nil, btrcb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(btrcb.builders))
 	nodes := make([]*BarTimeRange, len(btrcb.builders))
 	mutators := make([]Mutator, len(btrcb.builders))
@@ -297,8 +289,8 @@ func (btrcb *BarTimeRangeCreateBulk) Save(ctx context.Context) ([]*BarTimeRange,
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, btrcb.builders[i+1].mutation)
 				} else {

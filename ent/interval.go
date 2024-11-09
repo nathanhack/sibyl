@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/datasource"
 	"github.com/nathanhack/sibyl/ent/entity"
@@ -27,7 +28,8 @@ type Interval struct {
 	DataSourceID int `json:"data_source_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the IntervalQuery when eager-loading is set.
-	Edges IntervalEdges `json:"edges"`
+	Edges        IntervalEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // IntervalEdges holds the relations/edges for other nodes in the graph.
@@ -48,12 +50,10 @@ type IntervalEdges struct {
 // DataSourceOrErr returns the DataSource value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e IntervalEdges) DataSourceOrErr() (*DataSource, error) {
-	if e.loadedTypes[0] {
-		if e.DataSource == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: datasource.Label}
-		}
+	if e.DataSource != nil {
 		return e.DataSource, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: datasource.Label}
 	}
 	return nil, &NotLoadedError{edge: "data_source"}
 }
@@ -61,12 +61,10 @@ func (e IntervalEdges) DataSourceOrErr() (*DataSource, error) {
 // StockOrErr returns the Stock value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e IntervalEdges) StockOrErr() (*Entity, error) {
-	if e.loadedTypes[1] {
-		if e.Stock == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: entity.Label}
-		}
+	if e.Stock != nil {
 		return e.Stock, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: entity.Label}
 	}
 	return nil, &NotLoadedError{edge: "stock"}
 }
@@ -101,7 +99,7 @@ func (*Interval) scanValues(columns []string) ([]any, error) {
 		case interval.FieldInterval:
 			values[i] = new(sql.NullString)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Interval", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -145,36 +143,44 @@ func (i *Interval) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.DataSourceID = int(value.Int64)
 			}
+		default:
+			i.selectValues.Set(columns[j], values[j])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Interval.
+// This includes values selected through modifiers, order, etc.
+func (i *Interval) Value(name string) (ent.Value, error) {
+	return i.selectValues.Get(name)
+}
+
 // QueryDataSource queries the "data_source" edge of the Interval entity.
 func (i *Interval) QueryDataSource() *DataSourceQuery {
-	return (&IntervalClient{config: i.config}).QueryDataSource(i)
+	return NewIntervalClient(i.config).QueryDataSource(i)
 }
 
 // QueryStock queries the "stock" edge of the Interval entity.
 func (i *Interval) QueryStock() *EntityQuery {
-	return (&IntervalClient{config: i.config}).QueryStock(i)
+	return NewIntervalClient(i.config).QueryStock(i)
 }
 
 // QueryBars queries the "bars" edge of the Interval entity.
 func (i *Interval) QueryBars() *BarTimeRangeQuery {
-	return (&IntervalClient{config: i.config}).QueryBars(i)
+	return NewIntervalClient(i.config).QueryBars(i)
 }
 
 // QueryTrades queries the "trades" edge of the Interval entity.
 func (i *Interval) QueryTrades() *TradeTimeRangeQuery {
-	return (&IntervalClient{config: i.config}).QueryTrades(i)
+	return NewIntervalClient(i.config).QueryTrades(i)
 }
 
 // Update returns a builder for updating this Interval.
 // Note that you need to call Interval.Unwrap() before calling this method if this Interval
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (i *Interval) Update() *IntervalUpdateOne {
-	return (&IntervalClient{config: i.config}).UpdateOne(i)
+	return NewIntervalClient(i.config).UpdateOne(i)
 }
 
 // Unwrap unwraps the Interval entity that was returned from a transaction after it was closed,
@@ -210,9 +216,3 @@ func (i *Interval) String() string {
 
 // Intervals is a parsable slice of Interval.
 type Intervals []*Interval
-
-func (i Intervals) config(cfg config) {
-	for _i := range i {
-		i[_i].config = cfg
-	}
-}

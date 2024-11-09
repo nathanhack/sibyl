@@ -13,7 +13,7 @@ import (
 var AddEntity = make(chan string, 10000)
 var filtered = make(chan string, 1000)
 
-func Entity(ctx context.Context, entClient *ent.Client, agent agents.EntitySearcher) {
+func Entity(ctx context.Context, entClient *ent.Client, agent agents.EntitySourcing) {
 	logrus.Info("AddEntity Running")
 
 	go func() {
@@ -45,7 +45,7 @@ func Entity(ctx context.Context, entClient *ent.Client, agent agents.EntitySearc
 			logrus.Info("AddEntity Stopping")
 			return
 		case x := <-filtered:
-			entity, err := agent.Entity(ctx, x)
+			entity, err := agent.EntityCreate(ctx, x)
 			if err != nil {
 				logrus.Errorf("AddEntity(%v): %v", x, err)
 				continue

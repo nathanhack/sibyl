@@ -5,6 +5,9 @@ package bartimerange
 import (
 	"fmt"
 	"time"
+
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -102,4 +105,77 @@ func StatusValidator(s Status) error {
 	default:
 		return fmt.Errorf("bartimerange: invalid enum value for status field: %q", s)
 	}
+}
+
+// OrderOption defines the ordering options for the BarTimeRange queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByStart orders the results by the start field.
+func ByStart(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStart, opts...).ToFunc()
+}
+
+// ByEnd orders the results by the end field.
+func ByEnd(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEnd, opts...).ToFunc()
+}
+
+// ByCount orders the results by the count field.
+func ByCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCount, opts...).ToFunc()
+}
+
+// ByIntervalID orders the results by the interval_id field.
+func ByIntervalID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIntervalID, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByUpdateTime orders the results by the update_time field.
+func ByUpdateTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdateTime, opts...).ToFunc()
+}
+
+// ByIntervalField orders the results by interval field.
+func ByIntervalField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIntervalStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByGroupsCount orders the results by groups count.
+func ByGroupsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newGroupsStep(), opts...)
+	}
+}
+
+// ByGroups orders the results by groups terms.
+func ByGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newIntervalStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IntervalInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, IntervalTable, IntervalColumn),
+	)
+}
+func newGroupsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(GroupsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, GroupsTable, GroupsColumn),
+	)
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,11 +21,8 @@ import (
 // BarTimeRangeQuery is the builder for querying BarTimeRange entities.
 type BarTimeRangeQuery struct {
 	config
-	limit        *int
-	offset       *int
-	unique       *bool
-	order        []OrderFunc
-	fields       []string
+	ctx          *QueryContext
+	order        []bartimerange.OrderOption
 	inters       []Interceptor
 	predicates   []predicate.BarTimeRange
 	withInterval *IntervalQuery
@@ -42,25 +40,25 @@ func (btrq *BarTimeRangeQuery) Where(ps ...predicate.BarTimeRange) *BarTimeRange
 
 // Limit the number of records to be returned by this query.
 func (btrq *BarTimeRangeQuery) Limit(limit int) *BarTimeRangeQuery {
-	btrq.limit = &limit
+	btrq.ctx.Limit = &limit
 	return btrq
 }
 
 // Offset to start from.
 func (btrq *BarTimeRangeQuery) Offset(offset int) *BarTimeRangeQuery {
-	btrq.offset = &offset
+	btrq.ctx.Offset = &offset
 	return btrq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (btrq *BarTimeRangeQuery) Unique(unique bool) *BarTimeRangeQuery {
-	btrq.unique = &unique
+	btrq.ctx.Unique = &unique
 	return btrq
 }
 
 // Order specifies how the records should be ordered.
-func (btrq *BarTimeRangeQuery) Order(o ...OrderFunc) *BarTimeRangeQuery {
+func (btrq *BarTimeRangeQuery) Order(o ...bartimerange.OrderOption) *BarTimeRangeQuery {
 	btrq.order = append(btrq.order, o...)
 	return btrq
 }
@@ -112,7 +110,7 @@ func (btrq *BarTimeRangeQuery) QueryGroups() *BarGroupQuery {
 // First returns the first BarTimeRange entity from the query.
 // Returns a *NotFoundError when no BarTimeRange was found.
 func (btrq *BarTimeRangeQuery) First(ctx context.Context) (*BarTimeRange, error) {
-	nodes, err := btrq.Limit(1).All(newQueryContext(ctx, TypeBarTimeRange, "First"))
+	nodes, err := btrq.Limit(1).All(setContextOp(ctx, btrq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +133,7 @@ func (btrq *BarTimeRangeQuery) FirstX(ctx context.Context) *BarTimeRange {
 // Returns a *NotFoundError when no BarTimeRange ID was found.
 func (btrq *BarTimeRangeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = btrq.Limit(1).IDs(newQueryContext(ctx, TypeBarTimeRange, "FirstID")); err != nil {
+	if ids, err = btrq.Limit(1).IDs(setContextOp(ctx, btrq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -158,7 +156,7 @@ func (btrq *BarTimeRangeQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one BarTimeRange entity is found.
 // Returns a *NotFoundError when no BarTimeRange entities are found.
 func (btrq *BarTimeRangeQuery) Only(ctx context.Context) (*BarTimeRange, error) {
-	nodes, err := btrq.Limit(2).All(newQueryContext(ctx, TypeBarTimeRange, "Only"))
+	nodes, err := btrq.Limit(2).All(setContextOp(ctx, btrq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +184,7 @@ func (btrq *BarTimeRangeQuery) OnlyX(ctx context.Context) *BarTimeRange {
 // Returns a *NotFoundError when no entities are found.
 func (btrq *BarTimeRangeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = btrq.Limit(2).IDs(newQueryContext(ctx, TypeBarTimeRange, "OnlyID")); err != nil {
+	if ids, err = btrq.Limit(2).IDs(setContextOp(ctx, btrq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -211,7 +209,7 @@ func (btrq *BarTimeRangeQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of BarTimeRanges.
 func (btrq *BarTimeRangeQuery) All(ctx context.Context) ([]*BarTimeRange, error) {
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "All")
+	ctx = setContextOp(ctx, btrq.ctx, ent.OpQueryAll)
 	if err := btrq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -229,10 +227,12 @@ func (btrq *BarTimeRangeQuery) AllX(ctx context.Context) []*BarTimeRange {
 }
 
 // IDs executes the query and returns a list of BarTimeRange IDs.
-func (btrq *BarTimeRangeQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "IDs")
-	if err := btrq.Select(bartimerange.FieldID).Scan(ctx, &ids); err != nil {
+func (btrq *BarTimeRangeQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if btrq.ctx.Unique == nil && btrq.path != nil {
+		btrq.Unique(true)
+	}
+	ctx = setContextOp(ctx, btrq.ctx, ent.OpQueryIDs)
+	if err = btrq.Select(bartimerange.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -249,7 +249,7 @@ func (btrq *BarTimeRangeQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (btrq *BarTimeRangeQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "Count")
+	ctx = setContextOp(ctx, btrq.ctx, ent.OpQueryCount)
 	if err := btrq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -267,7 +267,7 @@ func (btrq *BarTimeRangeQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (btrq *BarTimeRangeQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "Exist")
+	ctx = setContextOp(ctx, btrq.ctx, ent.OpQueryExist)
 	switch _, err := btrq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -295,17 +295,15 @@ func (btrq *BarTimeRangeQuery) Clone() *BarTimeRangeQuery {
 	}
 	return &BarTimeRangeQuery{
 		config:       btrq.config,
-		limit:        btrq.limit,
-		offset:       btrq.offset,
-		order:        append([]OrderFunc{}, btrq.order...),
+		ctx:          btrq.ctx.Clone(),
+		order:        append([]bartimerange.OrderOption{}, btrq.order...),
 		inters:       append([]Interceptor{}, btrq.inters...),
 		predicates:   append([]predicate.BarTimeRange{}, btrq.predicates...),
 		withInterval: btrq.withInterval.Clone(),
 		withGroups:   btrq.withGroups.Clone(),
 		// clone intermediate query.
-		sql:    btrq.sql.Clone(),
-		path:   btrq.path,
-		unique: btrq.unique,
+		sql:  btrq.sql.Clone(),
+		path: btrq.path,
 	}
 }
 
@@ -346,9 +344,9 @@ func (btrq *BarTimeRangeQuery) WithGroups(opts ...func(*BarGroupQuery)) *BarTime
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (btrq *BarTimeRangeQuery) GroupBy(field string, fields ...string) *BarTimeRangeGroupBy {
-	btrq.fields = append([]string{field}, fields...)
+	btrq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &BarTimeRangeGroupBy{build: btrq}
-	grbuild.flds = &btrq.fields
+	grbuild.flds = &btrq.ctx.Fields
 	grbuild.label = bartimerange.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -367,10 +365,10 @@ func (btrq *BarTimeRangeQuery) GroupBy(field string, fields ...string) *BarTimeR
 //		Select(bartimerange.FieldStart).
 //		Scan(ctx, &v)
 func (btrq *BarTimeRangeQuery) Select(fields ...string) *BarTimeRangeSelect {
-	btrq.fields = append(btrq.fields, fields...)
+	btrq.ctx.Fields = append(btrq.ctx.Fields, fields...)
 	sbuild := &BarTimeRangeSelect{BarTimeRangeQuery: btrq}
 	sbuild.label = bartimerange.Label
-	sbuild.flds, sbuild.scan = &btrq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &btrq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -390,7 +388,7 @@ func (btrq *BarTimeRangeQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range btrq.fields {
+	for _, f := range btrq.ctx.Fields {
 		if !bartimerange.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -458,6 +456,9 @@ func (btrq *BarTimeRangeQuery) loadInterval(ctx context.Context, query *Interval
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(interval.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -484,8 +485,11 @@ func (btrq *BarTimeRangeQuery) loadGroups(ctx context.Context, query *BarGroupQu
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(bargroup.FieldTimeRangeID)
+	}
 	query.Where(predicate.BarGroup(func(s *sql.Selector) {
-		s.Where(sql.InValues(bartimerange.GroupsColumn, fks...))
+		s.Where(sql.InValues(s.C(bartimerange.GroupsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -495,7 +499,7 @@ func (btrq *BarTimeRangeQuery) loadGroups(ctx context.Context, query *BarGroupQu
 		fk := n.TimeRangeID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "time_range_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "time_range_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -504,36 +508,31 @@ func (btrq *BarTimeRangeQuery) loadGroups(ctx context.Context, query *BarGroupQu
 
 func (btrq *BarTimeRangeQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := btrq.querySpec()
-	_spec.Node.Columns = btrq.fields
-	if len(btrq.fields) > 0 {
-		_spec.Unique = btrq.unique != nil && *btrq.unique
+	_spec.Node.Columns = btrq.ctx.Fields
+	if len(btrq.ctx.Fields) > 0 {
+		_spec.Unique = btrq.ctx.Unique != nil && *btrq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, btrq.driver, _spec)
 }
 
 func (btrq *BarTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   bartimerange.Table,
-			Columns: bartimerange.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bartimerange.FieldID,
-			},
-		},
-		From:   btrq.sql,
-		Unique: true,
-	}
-	if unique := btrq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(bartimerange.Table, bartimerange.Columns, sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt))
+	_spec.From = btrq.sql
+	if unique := btrq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if btrq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := btrq.fields; len(fields) > 0 {
+	if fields := btrq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, bartimerange.FieldID)
 		for i := range fields {
 			if fields[i] != bartimerange.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if btrq.withInterval != nil {
+			_spec.Node.AddColumnOnce(bartimerange.FieldIntervalID)
 		}
 	}
 	if ps := btrq.predicates; len(ps) > 0 {
@@ -543,10 +542,10 @@ func (btrq *BarTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := btrq.limit; limit != nil {
+	if limit := btrq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := btrq.offset; offset != nil {
+	if offset := btrq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := btrq.order; len(ps) > 0 {
@@ -562,7 +561,7 @@ func (btrq *BarTimeRangeQuery) querySpec() *sqlgraph.QuerySpec {
 func (btrq *BarTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(btrq.driver.Dialect())
 	t1 := builder.Table(bartimerange.Table)
-	columns := btrq.fields
+	columns := btrq.ctx.Fields
 	if len(columns) == 0 {
 		columns = bartimerange.Columns
 	}
@@ -571,7 +570,7 @@ func (btrq *BarTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = btrq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if btrq.unique != nil && *btrq.unique {
+	if btrq.ctx.Unique != nil && *btrq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range btrq.predicates {
@@ -580,12 +579,12 @@ func (btrq *BarTimeRangeQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range btrq.order {
 		p(selector)
 	}
-	if offset := btrq.offset; offset != nil {
+	if offset := btrq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := btrq.limit; limit != nil {
+	if limit := btrq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -605,7 +604,7 @@ func (btrgb *BarTimeRangeGroupBy) Aggregate(fns ...AggregateFunc) *BarTimeRangeG
 
 // Scan applies the selector query and scans the result into the given value.
 func (btrgb *BarTimeRangeGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "GroupBy")
+	ctx = setContextOp(ctx, btrgb.build.ctx, ent.OpQueryGroupBy)
 	if err := btrgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -653,7 +652,7 @@ func (btrs *BarTimeRangeSelect) Aggregate(fns ...AggregateFunc) *BarTimeRangeSel
 
 // Scan applies the selector query and scans the result into the given value.
 func (btrs *BarTimeRangeSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeBarTimeRange, "Select")
+	ctx = setContextOp(ctx, btrs.ctx, ent.OpQuerySelect)
 	if err := btrs.prepareQuery(ctx); err != nil {
 		return err
 	}

@@ -39,9 +39,25 @@ func (eu *EntityUpdate) SetActive(b bool) *EntityUpdate {
 	return eu
 }
 
+// SetNillableActive sets the "active" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableActive(b *bool) *EntityUpdate {
+	if b != nil {
+		eu.SetActive(*b)
+	}
+	return eu
+}
+
 // SetTicker sets the "ticker" field.
 func (eu *EntityUpdate) SetTicker(s string) *EntityUpdate {
 	eu.mutation.SetTicker(s)
+	return eu
+}
+
+// SetNillableTicker sets the "ticker" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableTicker(s *string) *EntityUpdate {
+	if s != nil {
+		eu.SetTicker(*s)
+	}
 	return eu
 }
 
@@ -51,9 +67,25 @@ func (eu *EntityUpdate) SetName(s string) *EntityUpdate {
 	return eu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableName(s *string) *EntityUpdate {
+	if s != nil {
+		eu.SetName(*s)
+	}
+	return eu
+}
+
 // SetDescription sets the "description" field.
 func (eu *EntityUpdate) SetDescription(s string) *EntityUpdate {
 	eu.mutation.SetDescription(s)
+	return eu
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableDescription(s *string) *EntityUpdate {
+	if s != nil {
+		eu.SetDescription(*s)
+	}
 	return eu
 }
 
@@ -63,23 +95,39 @@ func (eu *EntityUpdate) SetListDate(t time.Time) *EntityUpdate {
 	return eu
 }
 
-// SetDelisted sets the "delisted" field.
-func (eu *EntityUpdate) SetDelisted(t time.Time) *EntityUpdate {
-	eu.mutation.SetDelisted(t)
-	return eu
-}
-
-// SetNillableDelisted sets the "delisted" field if the given value is not nil.
-func (eu *EntityUpdate) SetNillableDelisted(t *time.Time) *EntityUpdate {
+// SetNillableListDate sets the "list_date" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableListDate(t *time.Time) *EntityUpdate {
 	if t != nil {
-		eu.SetDelisted(*t)
+		eu.SetListDate(*t)
 	}
 	return eu
 }
 
-// ClearDelisted clears the value of the "delisted" field.
-func (eu *EntityUpdate) ClearDelisted() *EntityUpdate {
-	eu.mutation.ClearDelisted()
+// SetOptions sets the "options" field.
+func (eu *EntityUpdate) SetOptions(b bool) *EntityUpdate {
+	eu.mutation.SetOptions(b)
+	return eu
+}
+
+// SetNillableOptions sets the "options" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableOptions(b *bool) *EntityUpdate {
+	if b != nil {
+		eu.SetOptions(*b)
+	}
+	return eu
+}
+
+// SetTradable sets the "tradable" field.
+func (eu *EntityUpdate) SetTradable(b bool) *EntityUpdate {
+	eu.mutation.SetTradable(b)
+	return eu
+}
+
+// SetNillableTradable sets the "tradable" field if the given value is not nil.
+func (eu *EntityUpdate) SetNillableTradable(b *bool) *EntityUpdate {
+	if b != nil {
+		eu.SetTradable(*b)
+	}
 	return eu
 }
 
@@ -270,7 +318,7 @@ func (eu *EntityUpdate) RemoveFinancials(f ...*Financial) *EntityUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (eu *EntityUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, EntityMutation](ctx, eu.sqlSave, eu.mutation, eu.hooks)
+	return withHooks(ctx, eu.sqlSave, eu.mutation, eu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -319,16 +367,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := eu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   entity.Table,
-			Columns: entity.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: entity.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(entity.Table, entity.Columns, sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt))
 	if ps := eu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -351,11 +390,11 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := eu.mutation.ListDate(); ok {
 		_spec.SetField(entity.FieldListDate, field.TypeTime, value)
 	}
-	if value, ok := eu.mutation.Delisted(); ok {
-		_spec.SetField(entity.FieldDelisted, field.TypeTime, value)
+	if value, ok := eu.mutation.Options(); ok {
+		_spec.SetField(entity.FieldOptions, field.TypeBool, value)
 	}
-	if eu.mutation.DelistedCleared() {
-		_spec.ClearField(entity.FieldDelisted, field.TypeTime)
+	if value, ok := eu.mutation.Tradable(); ok {
+		_spec.SetField(entity.FieldTradable, field.TypeBool, value)
 	}
 	if eu.mutation.ExchangesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -365,10 +404,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -381,10 +417,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -400,10 +433,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -419,10 +449,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -435,10 +462,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -454,10 +478,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -473,10 +494,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -489,10 +507,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -508,10 +523,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -527,10 +539,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -543,10 +552,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -562,10 +568,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -581,10 +584,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -597,10 +597,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -616,10 +613,7 @@ func (eu *EntityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -653,9 +647,25 @@ func (euo *EntityUpdateOne) SetActive(b bool) *EntityUpdateOne {
 	return euo
 }
 
+// SetNillableActive sets the "active" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableActive(b *bool) *EntityUpdateOne {
+	if b != nil {
+		euo.SetActive(*b)
+	}
+	return euo
+}
+
 // SetTicker sets the "ticker" field.
 func (euo *EntityUpdateOne) SetTicker(s string) *EntityUpdateOne {
 	euo.mutation.SetTicker(s)
+	return euo
+}
+
+// SetNillableTicker sets the "ticker" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableTicker(s *string) *EntityUpdateOne {
+	if s != nil {
+		euo.SetTicker(*s)
+	}
 	return euo
 }
 
@@ -665,9 +675,25 @@ func (euo *EntityUpdateOne) SetName(s string) *EntityUpdateOne {
 	return euo
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableName(s *string) *EntityUpdateOne {
+	if s != nil {
+		euo.SetName(*s)
+	}
+	return euo
+}
+
 // SetDescription sets the "description" field.
 func (euo *EntityUpdateOne) SetDescription(s string) *EntityUpdateOne {
 	euo.mutation.SetDescription(s)
+	return euo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableDescription(s *string) *EntityUpdateOne {
+	if s != nil {
+		euo.SetDescription(*s)
+	}
 	return euo
 }
 
@@ -677,23 +703,39 @@ func (euo *EntityUpdateOne) SetListDate(t time.Time) *EntityUpdateOne {
 	return euo
 }
 
-// SetDelisted sets the "delisted" field.
-func (euo *EntityUpdateOne) SetDelisted(t time.Time) *EntityUpdateOne {
-	euo.mutation.SetDelisted(t)
-	return euo
-}
-
-// SetNillableDelisted sets the "delisted" field if the given value is not nil.
-func (euo *EntityUpdateOne) SetNillableDelisted(t *time.Time) *EntityUpdateOne {
+// SetNillableListDate sets the "list_date" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableListDate(t *time.Time) *EntityUpdateOne {
 	if t != nil {
-		euo.SetDelisted(*t)
+		euo.SetListDate(*t)
 	}
 	return euo
 }
 
-// ClearDelisted clears the value of the "delisted" field.
-func (euo *EntityUpdateOne) ClearDelisted() *EntityUpdateOne {
-	euo.mutation.ClearDelisted()
+// SetOptions sets the "options" field.
+func (euo *EntityUpdateOne) SetOptions(b bool) *EntityUpdateOne {
+	euo.mutation.SetOptions(b)
+	return euo
+}
+
+// SetNillableOptions sets the "options" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableOptions(b *bool) *EntityUpdateOne {
+	if b != nil {
+		euo.SetOptions(*b)
+	}
+	return euo
+}
+
+// SetTradable sets the "tradable" field.
+func (euo *EntityUpdateOne) SetTradable(b bool) *EntityUpdateOne {
+	euo.mutation.SetTradable(b)
+	return euo
+}
+
+// SetNillableTradable sets the "tradable" field if the given value is not nil.
+func (euo *EntityUpdateOne) SetNillableTradable(b *bool) *EntityUpdateOne {
+	if b != nil {
+		euo.SetTradable(*b)
+	}
 	return euo
 }
 
@@ -882,6 +924,12 @@ func (euo *EntityUpdateOne) RemoveFinancials(f ...*Financial) *EntityUpdateOne {
 	return euo.RemoveFinancialIDs(ids...)
 }
 
+// Where appends a list predicates to the EntityUpdate builder.
+func (euo *EntityUpdateOne) Where(ps ...predicate.Entity) *EntityUpdateOne {
+	euo.mutation.Where(ps...)
+	return euo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (euo *EntityUpdateOne) Select(field string, fields ...string) *EntityUpdateOne {
@@ -891,7 +939,7 @@ func (euo *EntityUpdateOne) Select(field string, fields ...string) *EntityUpdate
 
 // Save executes the query and returns the updated Entity entity.
 func (euo *EntityUpdateOne) Save(ctx context.Context) (*Entity, error) {
-	return withHooks[*Entity, EntityMutation](ctx, euo.sqlSave, euo.mutation, euo.hooks)
+	return withHooks(ctx, euo.sqlSave, euo.mutation, euo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -940,16 +988,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 	if err := euo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   entity.Table,
-			Columns: entity.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: entity.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(entity.Table, entity.Columns, sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt))
 	id, ok := euo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Entity.id" for update`)}
@@ -989,11 +1028,11 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 	if value, ok := euo.mutation.ListDate(); ok {
 		_spec.SetField(entity.FieldListDate, field.TypeTime, value)
 	}
-	if value, ok := euo.mutation.Delisted(); ok {
-		_spec.SetField(entity.FieldDelisted, field.TypeTime, value)
+	if value, ok := euo.mutation.Options(); ok {
+		_spec.SetField(entity.FieldOptions, field.TypeBool, value)
 	}
-	if euo.mutation.DelistedCleared() {
-		_spec.ClearField(entity.FieldDelisted, field.TypeTime)
+	if value, ok := euo.mutation.Tradable(); ok {
+		_spec.SetField(entity.FieldTradable, field.TypeBool, value)
 	}
 	if euo.mutation.ExchangesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1003,10 +1042,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1019,10 +1055,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1038,10 +1071,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.ExchangesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: exchange.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(exchange.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1057,10 +1087,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1073,10 +1100,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1092,10 +1116,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1111,10 +1132,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1127,10 +1145,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1146,10 +1161,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.DividendsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: dividend.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1165,10 +1177,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1181,10 +1190,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1200,10 +1206,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: []string{entity.SplitsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: split.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(split.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1219,10 +1222,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1235,10 +1235,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1254,10 +1251,7 @@ func (euo *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err err
 			Columns: entity.FinancialsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: financial.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(financial.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

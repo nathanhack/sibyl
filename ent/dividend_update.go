@@ -29,16 +29,24 @@ func (du *DividendUpdate) Where(ps ...predicate.Dividend) *DividendUpdate {
 	return du
 }
 
-// SetCashAmount sets the "cash_amount" field.
-func (du *DividendUpdate) SetCashAmount(f float64) *DividendUpdate {
-	du.mutation.ResetCashAmount()
-	du.mutation.SetCashAmount(f)
+// SetRate sets the "rate" field.
+func (du *DividendUpdate) SetRate(f float64) *DividendUpdate {
+	du.mutation.ResetRate()
+	du.mutation.SetRate(f)
 	return du
 }
 
-// AddCashAmount adds f to the "cash_amount" field.
-func (du *DividendUpdate) AddCashAmount(f float64) *DividendUpdate {
-	du.mutation.AddCashAmount(f)
+// SetNillableRate sets the "rate" field if the given value is not nil.
+func (du *DividendUpdate) SetNillableRate(f *float64) *DividendUpdate {
+	if f != nil {
+		du.SetRate(*f)
+	}
+	return du
+}
+
+// AddRate adds f to the "rate" field.
+func (du *DividendUpdate) AddRate(f float64) *DividendUpdate {
+	du.mutation.AddRate(f)
 	return du
 }
 
@@ -48,9 +56,11 @@ func (du *DividendUpdate) SetDeclarationDate(t time.Time) *DividendUpdate {
 	return du
 }
 
-// SetDividendType sets the "dividend_type" field.
-func (du *DividendUpdate) SetDividendType(dt dividend.DividendType) *DividendUpdate {
-	du.mutation.SetDividendType(dt)
+// SetNillableDeclarationDate sets the "declaration_date" field if the given value is not nil.
+func (du *DividendUpdate) SetNillableDeclarationDate(t *time.Time) *DividendUpdate {
+	if t != nil {
+		du.SetDeclarationDate(*t)
+	}
 	return du
 }
 
@@ -60,16 +70,11 @@ func (du *DividendUpdate) SetExDividendDate(t time.Time) *DividendUpdate {
 	return du
 }
 
-// SetFrequency sets the "frequency" field.
-func (du *DividendUpdate) SetFrequency(i int) *DividendUpdate {
-	du.mutation.ResetFrequency()
-	du.mutation.SetFrequency(i)
-	return du
-}
-
-// AddFrequency adds i to the "frequency" field.
-func (du *DividendUpdate) AddFrequency(i int) *DividendUpdate {
-	du.mutation.AddFrequency(i)
+// SetNillableExDividendDate sets the "ex_dividend_date" field if the given value is not nil.
+func (du *DividendUpdate) SetNillableExDividendDate(t *time.Time) *DividendUpdate {
+	if t != nil {
+		du.SetExDividendDate(*t)
+	}
 	return du
 }
 
@@ -79,9 +84,25 @@ func (du *DividendUpdate) SetRecordDate(t time.Time) *DividendUpdate {
 	return du
 }
 
+// SetNillableRecordDate sets the "record_date" field if the given value is not nil.
+func (du *DividendUpdate) SetNillableRecordDate(t *time.Time) *DividendUpdate {
+	if t != nil {
+		du.SetRecordDate(*t)
+	}
+	return du
+}
+
 // SetPayDate sets the "pay_date" field.
 func (du *DividendUpdate) SetPayDate(t time.Time) *DividendUpdate {
 	du.mutation.SetPayDate(t)
+	return du
+}
+
+// SetNillablePayDate sets the "pay_date" field if the given value is not nil.
+func (du *DividendUpdate) SetNillablePayDate(t *time.Time) *DividendUpdate {
+	if t != nil {
+		du.SetPayDate(*t)
+	}
 	return du
 }
 
@@ -128,7 +149,7 @@ func (du *DividendUpdate) RemoveStock(e ...*Entity) *DividendUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (du *DividendUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, DividendMutation](ctx, du.sqlSave, du.mutation, du.hooks)
+	return withHooks(ctx, du.sqlSave, du.mutation, du.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -153,30 +174,8 @@ func (du *DividendUpdate) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (du *DividendUpdate) check() error {
-	if v, ok := du.mutation.DividendType(); ok {
-		if err := dividend.DividendTypeValidator(v); err != nil {
-			return &ValidationError{Name: "dividend_type", err: fmt.Errorf(`ent: validator failed for field "Dividend.dividend_type": %w`, err)}
-		}
-	}
-	return nil
-}
-
 func (du *DividendUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := du.check(); err != nil {
-		return n, err
-	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   dividend.Table,
-			Columns: dividend.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: dividend.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(dividend.Table, dividend.Columns, sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt))
 	if ps := du.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -184,26 +183,17 @@ func (du *DividendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := du.mutation.CashAmount(); ok {
-		_spec.SetField(dividend.FieldCashAmount, field.TypeFloat64, value)
+	if value, ok := du.mutation.Rate(); ok {
+		_spec.SetField(dividend.FieldRate, field.TypeFloat64, value)
 	}
-	if value, ok := du.mutation.AddedCashAmount(); ok {
-		_spec.AddField(dividend.FieldCashAmount, field.TypeFloat64, value)
+	if value, ok := du.mutation.AddedRate(); ok {
+		_spec.AddField(dividend.FieldRate, field.TypeFloat64, value)
 	}
 	if value, ok := du.mutation.DeclarationDate(); ok {
 		_spec.SetField(dividend.FieldDeclarationDate, field.TypeTime, value)
 	}
-	if value, ok := du.mutation.DividendType(); ok {
-		_spec.SetField(dividend.FieldDividendType, field.TypeEnum, value)
-	}
 	if value, ok := du.mutation.ExDividendDate(); ok {
 		_spec.SetField(dividend.FieldExDividendDate, field.TypeTime, value)
-	}
-	if value, ok := du.mutation.Frequency(); ok {
-		_spec.SetField(dividend.FieldFrequency, field.TypeInt, value)
-	}
-	if value, ok := du.mutation.AddedFrequency(); ok {
-		_spec.AddField(dividend.FieldFrequency, field.TypeInt, value)
 	}
 	if value, ok := du.mutation.RecordDate(); ok {
 		_spec.SetField(dividend.FieldRecordDate, field.TypeTime, value)
@@ -219,10 +209,7 @@ func (du *DividendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -235,10 +222,7 @@ func (du *DividendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -254,10 +238,7 @@ func (du *DividendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -285,16 +266,24 @@ type DividendUpdateOne struct {
 	mutation *DividendMutation
 }
 
-// SetCashAmount sets the "cash_amount" field.
-func (duo *DividendUpdateOne) SetCashAmount(f float64) *DividendUpdateOne {
-	duo.mutation.ResetCashAmount()
-	duo.mutation.SetCashAmount(f)
+// SetRate sets the "rate" field.
+func (duo *DividendUpdateOne) SetRate(f float64) *DividendUpdateOne {
+	duo.mutation.ResetRate()
+	duo.mutation.SetRate(f)
 	return duo
 }
 
-// AddCashAmount adds f to the "cash_amount" field.
-func (duo *DividendUpdateOne) AddCashAmount(f float64) *DividendUpdateOne {
-	duo.mutation.AddCashAmount(f)
+// SetNillableRate sets the "rate" field if the given value is not nil.
+func (duo *DividendUpdateOne) SetNillableRate(f *float64) *DividendUpdateOne {
+	if f != nil {
+		duo.SetRate(*f)
+	}
+	return duo
+}
+
+// AddRate adds f to the "rate" field.
+func (duo *DividendUpdateOne) AddRate(f float64) *DividendUpdateOne {
+	duo.mutation.AddRate(f)
 	return duo
 }
 
@@ -304,9 +293,11 @@ func (duo *DividendUpdateOne) SetDeclarationDate(t time.Time) *DividendUpdateOne
 	return duo
 }
 
-// SetDividendType sets the "dividend_type" field.
-func (duo *DividendUpdateOne) SetDividendType(dt dividend.DividendType) *DividendUpdateOne {
-	duo.mutation.SetDividendType(dt)
+// SetNillableDeclarationDate sets the "declaration_date" field if the given value is not nil.
+func (duo *DividendUpdateOne) SetNillableDeclarationDate(t *time.Time) *DividendUpdateOne {
+	if t != nil {
+		duo.SetDeclarationDate(*t)
+	}
 	return duo
 }
 
@@ -316,16 +307,11 @@ func (duo *DividendUpdateOne) SetExDividendDate(t time.Time) *DividendUpdateOne 
 	return duo
 }
 
-// SetFrequency sets the "frequency" field.
-func (duo *DividendUpdateOne) SetFrequency(i int) *DividendUpdateOne {
-	duo.mutation.ResetFrequency()
-	duo.mutation.SetFrequency(i)
-	return duo
-}
-
-// AddFrequency adds i to the "frequency" field.
-func (duo *DividendUpdateOne) AddFrequency(i int) *DividendUpdateOne {
-	duo.mutation.AddFrequency(i)
+// SetNillableExDividendDate sets the "ex_dividend_date" field if the given value is not nil.
+func (duo *DividendUpdateOne) SetNillableExDividendDate(t *time.Time) *DividendUpdateOne {
+	if t != nil {
+		duo.SetExDividendDate(*t)
+	}
 	return duo
 }
 
@@ -335,9 +321,25 @@ func (duo *DividendUpdateOne) SetRecordDate(t time.Time) *DividendUpdateOne {
 	return duo
 }
 
+// SetNillableRecordDate sets the "record_date" field if the given value is not nil.
+func (duo *DividendUpdateOne) SetNillableRecordDate(t *time.Time) *DividendUpdateOne {
+	if t != nil {
+		duo.SetRecordDate(*t)
+	}
+	return duo
+}
+
 // SetPayDate sets the "pay_date" field.
 func (duo *DividendUpdateOne) SetPayDate(t time.Time) *DividendUpdateOne {
 	duo.mutation.SetPayDate(t)
+	return duo
+}
+
+// SetNillablePayDate sets the "pay_date" field if the given value is not nil.
+func (duo *DividendUpdateOne) SetNillablePayDate(t *time.Time) *DividendUpdateOne {
+	if t != nil {
+		duo.SetPayDate(*t)
+	}
 	return duo
 }
 
@@ -382,6 +384,12 @@ func (duo *DividendUpdateOne) RemoveStock(e ...*Entity) *DividendUpdateOne {
 	return duo.RemoveStockIDs(ids...)
 }
 
+// Where appends a list predicates to the DividendUpdate builder.
+func (duo *DividendUpdateOne) Where(ps ...predicate.Dividend) *DividendUpdateOne {
+	duo.mutation.Where(ps...)
+	return duo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (duo *DividendUpdateOne) Select(field string, fields ...string) *DividendUpdateOne {
@@ -391,7 +399,7 @@ func (duo *DividendUpdateOne) Select(field string, fields ...string) *DividendUp
 
 // Save executes the query and returns the updated Dividend entity.
 func (duo *DividendUpdateOne) Save(ctx context.Context) (*Dividend, error) {
-	return withHooks[*Dividend, DividendMutation](ctx, duo.sqlSave, duo.mutation, duo.hooks)
+	return withHooks(ctx, duo.sqlSave, duo.mutation, duo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -416,30 +424,8 @@ func (duo *DividendUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
-// check runs all checks and user-defined validators on the builder.
-func (duo *DividendUpdateOne) check() error {
-	if v, ok := duo.mutation.DividendType(); ok {
-		if err := dividend.DividendTypeValidator(v); err != nil {
-			return &ValidationError{Name: "dividend_type", err: fmt.Errorf(`ent: validator failed for field "Dividend.dividend_type": %w`, err)}
-		}
-	}
-	return nil
-}
-
 func (duo *DividendUpdateOne) sqlSave(ctx context.Context) (_node *Dividend, err error) {
-	if err := duo.check(); err != nil {
-		return _node, err
-	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   dividend.Table,
-			Columns: dividend.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: dividend.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(dividend.Table, dividend.Columns, sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt))
 	id, ok := duo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Dividend.id" for update`)}
@@ -464,26 +450,17 @@ func (duo *DividendUpdateOne) sqlSave(ctx context.Context) (_node *Dividend, err
 			}
 		}
 	}
-	if value, ok := duo.mutation.CashAmount(); ok {
-		_spec.SetField(dividend.FieldCashAmount, field.TypeFloat64, value)
+	if value, ok := duo.mutation.Rate(); ok {
+		_spec.SetField(dividend.FieldRate, field.TypeFloat64, value)
 	}
-	if value, ok := duo.mutation.AddedCashAmount(); ok {
-		_spec.AddField(dividend.FieldCashAmount, field.TypeFloat64, value)
+	if value, ok := duo.mutation.AddedRate(); ok {
+		_spec.AddField(dividend.FieldRate, field.TypeFloat64, value)
 	}
 	if value, ok := duo.mutation.DeclarationDate(); ok {
 		_spec.SetField(dividend.FieldDeclarationDate, field.TypeTime, value)
 	}
-	if value, ok := duo.mutation.DividendType(); ok {
-		_spec.SetField(dividend.FieldDividendType, field.TypeEnum, value)
-	}
 	if value, ok := duo.mutation.ExDividendDate(); ok {
 		_spec.SetField(dividend.FieldExDividendDate, field.TypeTime, value)
-	}
-	if value, ok := duo.mutation.Frequency(); ok {
-		_spec.SetField(dividend.FieldFrequency, field.TypeInt, value)
-	}
-	if value, ok := duo.mutation.AddedFrequency(); ok {
-		_spec.AddField(dividend.FieldFrequency, field.TypeInt, value)
 	}
 	if value, ok := duo.mutation.RecordDate(); ok {
 		_spec.SetField(dividend.FieldRecordDate, field.TypeTime, value)
@@ -499,10 +476,7 @@ func (duo *DividendUpdateOne) sqlSave(ctx context.Context) (_node *Dividend, err
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -515,10 +489,7 @@ func (duo *DividendUpdateOne) sqlSave(ctx context.Context) (_node *Dividend, err
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -534,10 +505,7 @@ func (duo *DividendUpdateOne) sqlSave(ctx context.Context) (_node *Dividend, err
 			Columns: dividend.StockPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: entity.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

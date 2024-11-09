@@ -65,6 +65,15 @@ var enableBar1MinCmd = &cobra.Command{
 	},
 }
 
+var enableTradesCmd = &cobra.Command{
+	Use:   "trades STOCK [STOCK] ...",
+	Short: "Enables intraday trades for a particular stock(s)",
+	Long:  `Enables gathering intraday trades for a particular stock(s)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return enableBars(args, ogent.EntityIntervalsListIntervalTrades)
+	},
+}
+
 func parserStockList(args []string) []string {
 	spaceReplacer := strings.NewReplacer("  ", " ")
 	toCommas := strings.NewReplacer(" ,", ",", ", ", ",", " ", ",", ",,", ",")
@@ -124,7 +133,12 @@ func enableBars(args []string, stockInterval ogent.EntityIntervalsListInterval) 
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Successfully enabled %v bars for stock: %v\n", stockInterval, s)
+		if stockInterval == ogent.EntityIntervalsListIntervalTrades {
+			fmt.Printf("Successfully enabled %v for stock: %v\n", stockInterval, s)
+		} else {
+			fmt.Printf("Successfully enabled %v bars for stock: %v\n", stockInterval, s)
+		}
+
 	}
 
 	return nil
@@ -134,11 +148,13 @@ func init() {
 	rootCmd.AddCommand(enableCmd)
 	enableCmd.AddCommand(enableBarCmd)
 
+	enableCmd.AddCommand(enableTradesCmd)
+
 	enableBarCmd.AddCommand(enableBar1MinCmd)
 	enableBarCmd.AddCommand(enableBarDailyCmd)
 	enableBarCmd.AddCommand(enableBarMonthlyCmd)
 	enableBarCmd.AddCommand(enableBarYearlyCmd)
 
-	enableBarCmd.PersistentFlags().BoolVarP(&enableAll, "all", "", false, "When used it will apply to all active stocks in the database")
-	enableBarCmd.PersistentFlags().IntVarP(&enableDataSourceID, "datasource", "d", 0, "The DataSourceID to use when enabling (defaults to 0 -- use whatever is available)")
+	enableCmd.PersistentFlags().BoolVarP(&enableAll, "all", "", false, "When used it will apply to all active stocks in the database")
+	enableCmd.PersistentFlags().IntVarP(&enableDataSourceID, "datasource", "d", 0, "The DataSourceID to use when enabling (defaults to 0 -- use whatever is available)")
 }

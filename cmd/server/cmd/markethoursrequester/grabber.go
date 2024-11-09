@@ -3,14 +3,12 @@ package markethoursrequester
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 
 	"github.com/nathanhack/sibyl/agents"
 	"github.com/nathanhack/sibyl/cmd/server/cmd/internal"
 	"github.com/nathanhack/sibyl/ent"
-	"github.com/nathanhack/sibyl/ent/entity"
 	"github.com/nathanhack/sibyl/ent/markethours"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
@@ -33,26 +31,9 @@ func Grabber(ctx context.Context, client *ent.Client, agent agents.MarketHoursRe
 		case <-time.After(24 * time.Hour):
 		}
 
-		//we first get all the stocks
-		stocks, err := client.Entity.Query().Where(
-			entity.Active(true),
-		).All(ctx)
-		if err != nil {
-			logrus.Errorf("MarketHours.Grabber(%v): failed to get stocks: %v", agent.Name(), err)
-			continue
-		}
+		startDate := time.Date(1900, 0, 0, 0, 0, 0, 0, time.Local)
+		endDate := time.Now().AddDate(0, 0, 1)
 
-		// now with the stock we now can figure out what date range we need
-		sort.Slice(stocks, func(i, j int) bool {
-			return stocks[i].ListDate.Before(stocks[j].ListDate)
-		})
-		now := time.Now()
-		startDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-		endDate := startDate.AddDate(0, 0, 1)
-
-		if len(stocks) > 0 {
-			startDate = stocks[0].ListDate
-		}
 		currentIntervals := []internal.TimeInterval{{Start: startDate, End: endDate}}
 
 		marketInfo, err := client.MarketInfo.Query().Only(ctx)

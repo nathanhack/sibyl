@@ -2,6 +2,13 @@
 
 package entity
 
+import (
+	"time"
+
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the entity type in the database.
 	Label = "entity"
@@ -17,8 +24,10 @@ const (
 	FieldDescription = "description"
 	// FieldListDate holds the string denoting the list_date field in the database.
 	FieldListDate = "list_date"
-	// FieldDelisted holds the string denoting the delisted field in the database.
-	FieldDelisted = "delisted"
+	// FieldOptions holds the string denoting the options field in the database.
+	FieldOptions = "options"
+	// FieldTradable holds the string denoting the tradable field in the database.
+	FieldTradable = "tradable"
 	// EdgeExchanges holds the string denoting the exchanges edge name in mutations.
 	EdgeExchanges = "exchanges"
 	// EdgeIntervals holds the string denoting the intervals edge name in mutations.
@@ -70,7 +79,8 @@ var Columns = []string{
 	FieldName,
 	FieldDescription,
 	FieldListDate,
-	FieldDelisted,
+	FieldOptions,
+	FieldTradable,
 }
 
 var (
@@ -100,6 +110,158 @@ var (
 	TickerValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DefaultDescription holds the default value on creation for the "description" field.
+	DefaultDescription string
 	// DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
 	DescriptionValidator func(string) error
+	// DefaultListDate holds the default value on creation for the "list_date" field.
+	DefaultListDate time.Time
 )
+
+// OrderOption defines the ordering options for the Entity queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByActive orders the results by the active field.
+func ByActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldActive, opts...).ToFunc()
+}
+
+// ByTicker orders the results by the ticker field.
+func ByTicker(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicker, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByListDate orders the results by the list_date field.
+func ByListDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldListDate, opts...).ToFunc()
+}
+
+// ByOptions orders the results by the options field.
+func ByOptions(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOptions, opts...).ToFunc()
+}
+
+// ByTradable orders the results by the tradable field.
+func ByTradable(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTradable, opts...).ToFunc()
+}
+
+// ByExchangesCount orders the results by exchanges count.
+func ByExchangesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newExchangesStep(), opts...)
+	}
+}
+
+// ByExchanges orders the results by exchanges terms.
+func ByExchanges(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newExchangesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByIntervalsCount orders the results by intervals count.
+func ByIntervalsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newIntervalsStep(), opts...)
+	}
+}
+
+// ByIntervals orders the results by intervals terms.
+func ByIntervals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newIntervalsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByDividendsCount orders the results by dividends count.
+func ByDividendsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDividendsStep(), opts...)
+	}
+}
+
+// ByDividends orders the results by dividends terms.
+func ByDividends(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDividendsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// BySplitsCount orders the results by splits count.
+func BySplitsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSplitsStep(), opts...)
+	}
+}
+
+// BySplits orders the results by splits terms.
+func BySplits(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSplitsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByFinancialsCount orders the results by financials count.
+func ByFinancialsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newFinancialsStep(), opts...)
+	}
+}
+
+// ByFinancials orders the results by financials terms.
+func ByFinancials(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFinancialsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newExchangesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ExchangesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ExchangesTable, ExchangesPrimaryKey...),
+	)
+}
+func newIntervalsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(IntervalsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, IntervalsTable, IntervalsColumn),
+	)
+}
+func newDividendsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DividendsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, DividendsTable, DividendsPrimaryKey...),
+	)
+}
+func newSplitsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SplitsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SplitsTable, SplitsColumn),
+	)
+}
+func newFinancialsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FinancialsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, FinancialsTable, FinancialsPrimaryKey...),
+	)
+}

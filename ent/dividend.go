@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/dividend"
 )
@@ -16,23 +17,20 @@ type Dividend struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CashAmount holds the value of the "cash_amount" field.
-	CashAmount float64 `json:"cash_amount,omitempty"`
+	// Rate holds the value of the "rate" field.
+	Rate float64 `json:"rate,omitempty"`
 	// DeclarationDate holds the value of the "declaration_date" field.
 	DeclarationDate time.Time `json:"declaration_date,omitempty"`
-	// DividendType holds the value of the "dividend_type" field.
-	DividendType dividend.DividendType `json:"dividend_type,omitempty"`
 	// ExDividendDate holds the value of the "ex_dividend_date" field.
 	ExDividendDate time.Time `json:"ex_dividend_date,omitempty"`
-	// Frequency holds the value of the "frequency" field.
-	Frequency int `json:"frequency,omitempty"`
 	// RecordDate holds the value of the "record_date" field.
 	RecordDate time.Time `json:"record_date,omitempty"`
 	// PayDate holds the value of the "pay_date" field.
 	PayDate time.Time `json:"pay_date,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DividendQuery when eager-loading is set.
-	Edges DividendEdges `json:"edges"`
+	Edges        DividendEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // DividendEdges holds the relations/edges for other nodes in the graph.
@@ -58,16 +56,14 @@ func (*Dividend) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case dividend.FieldCashAmount:
+		case dividend.FieldRate:
 			values[i] = new(sql.NullFloat64)
-		case dividend.FieldID, dividend.FieldFrequency:
+		case dividend.FieldID:
 			values[i] = new(sql.NullInt64)
-		case dividend.FieldDividendType:
-			values[i] = new(sql.NullString)
 		case dividend.FieldDeclarationDate, dividend.FieldExDividendDate, dividend.FieldRecordDate, dividend.FieldPayDate:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Dividend", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -87,11 +83,11 @@ func (d *Dividend) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			d.ID = int(value.Int64)
-		case dividend.FieldCashAmount:
+		case dividend.FieldRate:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field cash_amount", values[i])
+				return fmt.Errorf("unexpected type %T for field rate", values[i])
 			} else if value.Valid {
-				d.CashAmount = value.Float64
+				d.Rate = value.Float64
 			}
 		case dividend.FieldDeclarationDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -99,23 +95,11 @@ func (d *Dividend) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				d.DeclarationDate = value.Time
 			}
-		case dividend.FieldDividendType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field dividend_type", values[i])
-			} else if value.Valid {
-				d.DividendType = dividend.DividendType(value.String)
-			}
 		case dividend.FieldExDividendDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field ex_dividend_date", values[i])
 			} else if value.Valid {
 				d.ExDividendDate = value.Time
-			}
-		case dividend.FieldFrequency:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field frequency", values[i])
-			} else if value.Valid {
-				d.Frequency = int(value.Int64)
 			}
 		case dividend.FieldRecordDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -129,21 +113,29 @@ func (d *Dividend) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				d.PayDate = value.Time
 			}
+		default:
+			d.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the Dividend.
+// This includes values selected through modifiers, order, etc.
+func (d *Dividend) Value(name string) (ent.Value, error) {
+	return d.selectValues.Get(name)
+}
+
 // QueryStock queries the "stock" edge of the Dividend entity.
 func (d *Dividend) QueryStock() *EntityQuery {
-	return (&DividendClient{config: d.config}).QueryStock(d)
+	return NewDividendClient(d.config).QueryStock(d)
 }
 
 // Update returns a builder for updating this Dividend.
 // Note that you need to call Dividend.Unwrap() before calling this method if this Dividend
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (d *Dividend) Update() *DividendUpdateOne {
-	return (&DividendClient{config: d.config}).UpdateOne(d)
+	return NewDividendClient(d.config).UpdateOne(d)
 }
 
 // Unwrap unwraps the Dividend entity that was returned from a transaction after it was closed,
@@ -162,20 +154,14 @@ func (d *Dividend) String() string {
 	var builder strings.Builder
 	builder.WriteString("Dividend(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", d.ID))
-	builder.WriteString("cash_amount=")
-	builder.WriteString(fmt.Sprintf("%v", d.CashAmount))
+	builder.WriteString("rate=")
+	builder.WriteString(fmt.Sprintf("%v", d.Rate))
 	builder.WriteString(", ")
 	builder.WriteString("declaration_date=")
 	builder.WriteString(d.DeclarationDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("dividend_type=")
-	builder.WriteString(fmt.Sprintf("%v", d.DividendType))
-	builder.WriteString(", ")
 	builder.WriteString("ex_dividend_date=")
 	builder.WriteString(d.ExDividendDate.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("frequency=")
-	builder.WriteString(fmt.Sprintf("%v", d.Frequency))
 	builder.WriteString(", ")
 	builder.WriteString("record_date=")
 	builder.WriteString(d.RecordDate.Format(time.ANSIC))
@@ -188,9 +174,3 @@ func (d *Dividend) String() string {
 
 // Dividends is a parsable slice of Dividend.
 type Dividends []*Dividend
-
-func (d Dividends) config(cfg config) {
-	for _i := range d {
-		d[_i].config = cfg
-	}
-}

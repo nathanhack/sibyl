@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,11 +20,8 @@ import (
 // TradeCorrectionQuery is the builder for querying TradeCorrection entities.
 type TradeCorrectionQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
+	ctx        *QueryContext
+	order      []tradecorrection.OrderOption
 	inters     []Interceptor
 	predicates []predicate.TradeCorrection
 	withRecord *TradeRecordQuery
@@ -40,25 +38,25 @@ func (tcq *TradeCorrectionQuery) Where(ps ...predicate.TradeCorrection) *TradeCo
 
 // Limit the number of records to be returned by this query.
 func (tcq *TradeCorrectionQuery) Limit(limit int) *TradeCorrectionQuery {
-	tcq.limit = &limit
+	tcq.ctx.Limit = &limit
 	return tcq
 }
 
 // Offset to start from.
 func (tcq *TradeCorrectionQuery) Offset(offset int) *TradeCorrectionQuery {
-	tcq.offset = &offset
+	tcq.ctx.Offset = &offset
 	return tcq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (tcq *TradeCorrectionQuery) Unique(unique bool) *TradeCorrectionQuery {
-	tcq.unique = &unique
+	tcq.ctx.Unique = &unique
 	return tcq
 }
 
 // Order specifies how the records should be ordered.
-func (tcq *TradeCorrectionQuery) Order(o ...OrderFunc) *TradeCorrectionQuery {
+func (tcq *TradeCorrectionQuery) Order(o ...tradecorrection.OrderOption) *TradeCorrectionQuery {
 	tcq.order = append(tcq.order, o...)
 	return tcq
 }
@@ -88,7 +86,7 @@ func (tcq *TradeCorrectionQuery) QueryRecord() *TradeRecordQuery {
 // First returns the first TradeCorrection entity from the query.
 // Returns a *NotFoundError when no TradeCorrection was found.
 func (tcq *TradeCorrectionQuery) First(ctx context.Context) (*TradeCorrection, error) {
-	nodes, err := tcq.Limit(1).All(newQueryContext(ctx, TypeTradeCorrection, "First"))
+	nodes, err := tcq.Limit(1).All(setContextOp(ctx, tcq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (tcq *TradeCorrectionQuery) FirstX(ctx context.Context) *TradeCorrection {
 // Returns a *NotFoundError when no TradeCorrection ID was found.
 func (tcq *TradeCorrectionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tcq.Limit(1).IDs(newQueryContext(ctx, TypeTradeCorrection, "FirstID")); err != nil {
+	if ids, err = tcq.Limit(1).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -134,7 +132,7 @@ func (tcq *TradeCorrectionQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one TradeCorrection entity is found.
 // Returns a *NotFoundError when no TradeCorrection entities are found.
 func (tcq *TradeCorrectionQuery) Only(ctx context.Context) (*TradeCorrection, error) {
-	nodes, err := tcq.Limit(2).All(newQueryContext(ctx, TypeTradeCorrection, "Only"))
+	nodes, err := tcq.Limit(2).All(setContextOp(ctx, tcq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +160,7 @@ func (tcq *TradeCorrectionQuery) OnlyX(ctx context.Context) *TradeCorrection {
 // Returns a *NotFoundError when no entities are found.
 func (tcq *TradeCorrectionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tcq.Limit(2).IDs(newQueryContext(ctx, TypeTradeCorrection, "OnlyID")); err != nil {
+	if ids, err = tcq.Limit(2).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -187,7 +185,7 @@ func (tcq *TradeCorrectionQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of TradeCorrections.
 func (tcq *TradeCorrectionQuery) All(ctx context.Context) ([]*TradeCorrection, error) {
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "All")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryAll)
 	if err := tcq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -205,10 +203,12 @@ func (tcq *TradeCorrectionQuery) AllX(ctx context.Context) []*TradeCorrection {
 }
 
 // IDs executes the query and returns a list of TradeCorrection IDs.
-func (tcq *TradeCorrectionQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "IDs")
-	if err := tcq.Select(tradecorrection.FieldID).Scan(ctx, &ids); err != nil {
+func (tcq *TradeCorrectionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if tcq.ctx.Unique == nil && tcq.path != nil {
+		tcq.Unique(true)
+	}
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryIDs)
+	if err = tcq.Select(tradecorrection.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -225,7 +225,7 @@ func (tcq *TradeCorrectionQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (tcq *TradeCorrectionQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "Count")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryCount)
 	if err := tcq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -243,7 +243,7 @@ func (tcq *TradeCorrectionQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (tcq *TradeCorrectionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "Exist")
+	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryExist)
 	switch _, err := tcq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -271,16 +271,14 @@ func (tcq *TradeCorrectionQuery) Clone() *TradeCorrectionQuery {
 	}
 	return &TradeCorrectionQuery{
 		config:     tcq.config,
-		limit:      tcq.limit,
-		offset:     tcq.offset,
-		order:      append([]OrderFunc{}, tcq.order...),
+		ctx:        tcq.ctx.Clone(),
+		order:      append([]tradecorrection.OrderOption{}, tcq.order...),
 		inters:     append([]Interceptor{}, tcq.inters...),
 		predicates: append([]predicate.TradeCorrection{}, tcq.predicates...),
 		withRecord: tcq.withRecord.Clone(),
 		// clone intermediate query.
-		sql:    tcq.sql.Clone(),
-		path:   tcq.path,
-		unique: tcq.unique,
+		sql:  tcq.sql.Clone(),
+		path: tcq.path,
 	}
 }
 
@@ -310,9 +308,9 @@ func (tcq *TradeCorrectionQuery) WithRecord(opts ...func(*TradeRecordQuery)) *Tr
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (tcq *TradeCorrectionQuery) GroupBy(field string, fields ...string) *TradeCorrectionGroupBy {
-	tcq.fields = append([]string{field}, fields...)
+	tcq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &TradeCorrectionGroupBy{build: tcq}
-	grbuild.flds = &tcq.fields
+	grbuild.flds = &tcq.ctx.Fields
 	grbuild.label = tradecorrection.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -331,10 +329,10 @@ func (tcq *TradeCorrectionQuery) GroupBy(field string, fields ...string) *TradeC
 //		Select(tradecorrection.FieldCorrection).
 //		Scan(ctx, &v)
 func (tcq *TradeCorrectionQuery) Select(fields ...string) *TradeCorrectionSelect {
-	tcq.fields = append(tcq.fields, fields...)
+	tcq.ctx.Fields = append(tcq.ctx.Fields, fields...)
 	sbuild := &TradeCorrectionSelect{TradeCorrectionQuery: tcq}
 	sbuild.label = tradecorrection.Label
-	sbuild.flds, sbuild.scan = &tcq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &tcq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -354,7 +352,7 @@ func (tcq *TradeCorrectionQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range tcq.fields {
+	for _, f := range tcq.ctx.Fields {
 		if !tradecorrection.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -428,27 +426,30 @@ func (tcq *TradeCorrectionQuery) loadRecord(ctx context.Context, query *TradeRec
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*TradeCorrection]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*TradeCorrection]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*TradeRecord](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -466,30 +467,22 @@ func (tcq *TradeCorrectionQuery) loadRecord(ctx context.Context, query *TradeRec
 
 func (tcq *TradeCorrectionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := tcq.querySpec()
-	_spec.Node.Columns = tcq.fields
-	if len(tcq.fields) > 0 {
-		_spec.Unique = tcq.unique != nil && *tcq.unique
+	_spec.Node.Columns = tcq.ctx.Fields
+	if len(tcq.ctx.Fields) > 0 {
+		_spec.Unique = tcq.ctx.Unique != nil && *tcq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, tcq.driver, _spec)
 }
 
 func (tcq *TradeCorrectionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   tradecorrection.Table,
-			Columns: tradecorrection.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradecorrection.FieldID,
-			},
-		},
-		From:   tcq.sql,
-		Unique: true,
-	}
-	if unique := tcq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(tradecorrection.Table, tradecorrection.Columns, sqlgraph.NewFieldSpec(tradecorrection.FieldID, field.TypeInt))
+	_spec.From = tcq.sql
+	if unique := tcq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if tcq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := tcq.fields; len(fields) > 0 {
+	if fields := tcq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tradecorrection.FieldID)
 		for i := range fields {
@@ -505,10 +498,10 @@ func (tcq *TradeCorrectionQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := tcq.limit; limit != nil {
+	if limit := tcq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tcq.offset; offset != nil {
+	if offset := tcq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := tcq.order; len(ps) > 0 {
@@ -524,7 +517,7 @@ func (tcq *TradeCorrectionQuery) querySpec() *sqlgraph.QuerySpec {
 func (tcq *TradeCorrectionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(tcq.driver.Dialect())
 	t1 := builder.Table(tradecorrection.Table)
-	columns := tcq.fields
+	columns := tcq.ctx.Fields
 	if len(columns) == 0 {
 		columns = tradecorrection.Columns
 	}
@@ -533,7 +526,7 @@ func (tcq *TradeCorrectionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = tcq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tcq.unique != nil && *tcq.unique {
+	if tcq.ctx.Unique != nil && *tcq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range tcq.predicates {
@@ -542,12 +535,12 @@ func (tcq *TradeCorrectionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range tcq.order {
 		p(selector)
 	}
-	if offset := tcq.offset; offset != nil {
+	if offset := tcq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tcq.limit; limit != nil {
+	if limit := tcq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -567,7 +560,7 @@ func (tcgb *TradeCorrectionGroupBy) Aggregate(fns ...AggregateFunc) *TradeCorrec
 
 // Scan applies the selector query and scans the result into the given value.
 func (tcgb *TradeCorrectionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "GroupBy")
+	ctx = setContextOp(ctx, tcgb.build.ctx, ent.OpQueryGroupBy)
 	if err := tcgb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -615,7 +608,7 @@ func (tcs *TradeCorrectionSelect) Aggregate(fns ...AggregateFunc) *TradeCorrecti
 
 // Scan applies the selector query and scans the result into the given value.
 func (tcs *TradeCorrectionSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeTradeCorrection, "Select")
+	ctx = setContextOp(ctx, tcs.ctx, ent.OpQuerySelect)
 	if err := tcs.prepareQuery(ctx); err != nil {
 		return err
 	}

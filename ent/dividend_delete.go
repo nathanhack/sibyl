@@ -27,7 +27,7 @@ func (dd *DividendDelete) Where(ps ...predicate.Dividend) *DividendDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (dd *DividendDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, DividendMutation](ctx, dd.sqlExec, dd.mutation, dd.hooks)
+	return withHooks(ctx, dd.sqlExec, dd.mutation, dd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (dd *DividendDelete) ExecX(ctx context.Context) int {
 }
 
 func (dd *DividendDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: dividend.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: dividend.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(dividend.Table, sqlgraph.NewFieldSpec(dividend.FieldID, field.TypeInt))
 	if ps := dd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type DividendDeleteOne struct {
 	dd *DividendDelete
 }
 
+// Where appends a list predicates to the DividendDelete builder.
+func (ddo *DividendDeleteOne) Where(ps ...predicate.Dividend) *DividendDeleteOne {
+	ddo.dd.mutation.Where(ps...)
+	return ddo
+}
+
 // Exec executes the deletion query.
 func (ddo *DividendDeleteOne) Exec(ctx context.Context) error {
 	n, err := ddo.dd.Exec(ctx)
@@ -84,5 +82,7 @@ func (ddo *DividendDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (ddo *DividendDeleteOne) ExecX(ctx context.Context) {
-	ddo.dd.ExecX(ctx)
+	if err := ddo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

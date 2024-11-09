@@ -1,23 +1,17 @@
 package schema
 
-import (
-	"time"
-
-	"entgo.io/ent"
-	"entgo.io/ent/schema/edge"
-	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/index"
-)
+import "entgo.io/ent"
 
 //go generate ./...
 //go run -mod=mod entgo.io/ent/cmd/ent init Entity
 
 // Entity holds the schema definition for the Entity(Stock) entity.
-type Entity struct {
+type OptionContract struct {
 	ent.Schema
 }
 
-// Fields of the StockEntity.
+
+/ Fields of the StockEntity.
 func (Entity) Fields() []ent.Field {
 	return []ent.Field{
 		field.Bool("active"),

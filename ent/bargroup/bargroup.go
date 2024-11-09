@@ -2,6 +2,11 @@
 
 package bargroup
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the bargroup type in the database.
 	Label = "bar_group"
@@ -54,4 +59,67 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the BarGroup queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByFirst orders the results by the first field.
+func ByFirst(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFirst, opts...).ToFunc()
+}
+
+// ByLast orders the results by the last field.
+func ByLast(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLast, opts...).ToFunc()
+}
+
+// ByCount orders the results by the count field.
+func ByCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCount, opts...).ToFunc()
+}
+
+// ByTimeRangeID orders the results by the time_range_id field.
+func ByTimeRangeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimeRangeID, opts...).ToFunc()
+}
+
+// ByTimeRangeField orders the results by time_range field.
+func ByTimeRangeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTimeRangeStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByRecordsCount orders the results by records count.
+func ByRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRecordsStep(), opts...)
+	}
+}
+
+// ByRecords orders the results by records terms.
+func ByRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTimeRangeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TimeRangeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TimeRangeTable, TimeRangeColumn),
+	)
+}
+func newRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RecordsTable, RecordsColumn),
+	)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/tradecondition"
 )
@@ -19,7 +20,8 @@ type TradeCondition struct {
 	Condition string `json:"condition,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TradeConditionQuery when eager-loading is set.
-	Edges TradeConditionEdges `json:"edges"`
+	Edges        TradeConditionEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // TradeConditionEdges holds the relations/edges for other nodes in the graph.
@@ -50,7 +52,7 @@ func (*TradeCondition) scanValues(columns []string) ([]any, error) {
 		case tradecondition.FieldCondition:
 			values[i] = new(sql.NullString)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type TradeCondition", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -76,21 +78,29 @@ func (tc *TradeCondition) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tc.Condition = value.String
 			}
+		default:
+			tc.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the TradeCondition.
+// This includes values selected through modifiers, order, etc.
+func (tc *TradeCondition) Value(name string) (ent.Value, error) {
+	return tc.selectValues.Get(name)
+}
+
 // QueryRecord queries the "record" edge of the TradeCondition entity.
 func (tc *TradeCondition) QueryRecord() *TradeRecordQuery {
-	return (&TradeConditionClient{config: tc.config}).QueryRecord(tc)
+	return NewTradeConditionClient(tc.config).QueryRecord(tc)
 }
 
 // Update returns a builder for updating this TradeCondition.
 // Note that you need to call TradeCondition.Unwrap() before calling this method if this TradeCondition
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (tc *TradeCondition) Update() *TradeConditionUpdateOne {
-	return (&TradeConditionClient{config: tc.config}).UpdateOne(tc)
+	return NewTradeConditionClient(tc.config).UpdateOne(tc)
 }
 
 // Unwrap unwraps the TradeCondition entity that was returned from a transaction after it was closed,
@@ -117,9 +127,3 @@ func (tc *TradeCondition) String() string {
 
 // TradeConditions is a parsable slice of TradeCondition.
 type TradeConditions []*TradeCondition
-
-func (tc TradeConditions) config(cfg config) {
-	for _i := range tc {
-		tc[_i].config = cfg
-	}
-}

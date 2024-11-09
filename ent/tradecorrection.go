@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/tradecorrection"
 )
@@ -19,7 +20,8 @@ type TradeCorrection struct {
 	Correction string `json:"correction,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TradeCorrectionQuery when eager-loading is set.
-	Edges TradeCorrectionEdges `json:"edges"`
+	Edges        TradeCorrectionEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // TradeCorrectionEdges holds the relations/edges for other nodes in the graph.
@@ -50,7 +52,7 @@ func (*TradeCorrection) scanValues(columns []string) ([]any, error) {
 		case tradecorrection.FieldCorrection:
 			values[i] = new(sql.NullString)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type TradeCorrection", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -76,21 +78,29 @@ func (tc *TradeCorrection) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				tc.Correction = value.String
 			}
+		default:
+			tc.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the TradeCorrection.
+// This includes values selected through modifiers, order, etc.
+func (tc *TradeCorrection) Value(name string) (ent.Value, error) {
+	return tc.selectValues.Get(name)
+}
+
 // QueryRecord queries the "record" edge of the TradeCorrection entity.
 func (tc *TradeCorrection) QueryRecord() *TradeRecordQuery {
-	return (&TradeCorrectionClient{config: tc.config}).QueryRecord(tc)
+	return NewTradeCorrectionClient(tc.config).QueryRecord(tc)
 }
 
 // Update returns a builder for updating this TradeCorrection.
 // Note that you need to call TradeCorrection.Unwrap() before calling this method if this TradeCorrection
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (tc *TradeCorrection) Update() *TradeCorrectionUpdateOne {
-	return (&TradeCorrectionClient{config: tc.config}).UpdateOne(tc)
+	return NewTradeCorrectionClient(tc.config).UpdateOne(tc)
 }
 
 // Unwrap unwraps the TradeCorrection entity that was returned from a transaction after it was closed,
@@ -117,9 +127,3 @@ func (tc *TradeCorrection) String() string {
 
 // TradeCorrections is a parsable slice of TradeCorrection.
 type TradeCorrections []*TradeCorrection
-
-func (tc TradeCorrections) config(cfg config) {
-	for _i := range tc {
-		tc[_i].config = cfg
-	}
-}

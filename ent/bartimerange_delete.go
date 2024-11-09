@@ -27,7 +27,7 @@ func (btrd *BarTimeRangeDelete) Where(ps ...predicate.BarTimeRange) *BarTimeRang
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (btrd *BarTimeRangeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, BarTimeRangeMutation](ctx, btrd.sqlExec, btrd.mutation, btrd.hooks)
+	return withHooks(ctx, btrd.sqlExec, btrd.mutation, btrd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (btrd *BarTimeRangeDelete) ExecX(ctx context.Context) int {
 }
 
 func (btrd *BarTimeRangeDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: bartimerange.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: bartimerange.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(bartimerange.Table, sqlgraph.NewFieldSpec(bartimerange.FieldID, field.TypeInt))
 	if ps := btrd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type BarTimeRangeDeleteOne struct {
 	btrd *BarTimeRangeDelete
 }
 
+// Where appends a list predicates to the BarTimeRangeDelete builder.
+func (btrdo *BarTimeRangeDeleteOne) Where(ps ...predicate.BarTimeRange) *BarTimeRangeDeleteOne {
+	btrdo.btrd.mutation.Where(ps...)
+	return btrdo
+}
+
 // Exec executes the deletion query.
 func (btrdo *BarTimeRangeDeleteOne) Exec(ctx context.Context) error {
 	n, err := btrdo.btrd.Exec(ctx)
@@ -84,5 +82,7 @@ func (btrdo *BarTimeRangeDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (btrdo *BarTimeRangeDeleteOne) ExecX(ctx context.Context) {
-	btrdo.btrd.ExecX(ctx)
+	if err := btrdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

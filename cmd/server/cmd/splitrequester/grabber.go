@@ -64,13 +64,13 @@ func Grabber(ctx context.Context, client *ent.Client, agent agents.SplitRequeste
 				startDate = splits[len(splits)-1].ExecutionDate
 			}
 
-			dividendCreates, executionDates, err := agent.SplitRequest(ctx, stock.Ticker, startDate, time.Now())
+			splitCreates, executionDates, err := agent.SplitRequest(ctx, stock.Ticker, startDate, time.Now())
 			if err != nil {
 				logrus.Errorf("Split.Grabber(%v): DividendRequest: %v", agent.Name(), err)
 				continue
 			}
 
-			err = processSplitData(ctx, stock.ID, dividendCreates, executionDates, splits)
+			err = processSplitData(ctx, stock.ID, splitCreates, executionDates, splits)
 			if err != nil {
 				logrus.Errorf("Split.Grabber(%v): processDividendData: %v", agent.Name(), err)
 			}

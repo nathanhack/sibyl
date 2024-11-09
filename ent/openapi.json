@@ -1587,7 +1587,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "cash_amount": {
+                  "rate": {
                     "type": "number",
                     "format": "double"
                   },
@@ -1595,21 +1595,9 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "dividend_type": {
-                    "type": "string",
-                    "enum": [
-                      "CD",
-                      "SC",
-                      "LT",
-                      "ST"
-                    ]
-                  },
                   "ex_dividend_date": {
                     "type": "string",
                     "format": "date-time"
-                  },
-                  "frequency": {
-                    "type": "integer"
                   },
                   "record_date": {
                     "type": "string",
@@ -1627,11 +1615,9 @@
                   }
                 },
                 "required": [
-                  "cash_amount",
+                  "rate",
                   "declaration_date",
-                  "dividend_type",
                   "ex_dividend_date",
-                  "frequency",
                   "record_date",
                   "pay_date"
                 ]
@@ -1768,7 +1754,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "cash_amount": {
+                  "rate": {
                     "type": "number",
                     "format": "double"
                   },
@@ -1776,21 +1762,9 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "dividend_type": {
-                    "type": "string",
-                    "enum": [
-                      "CD",
-                      "SC",
-                      "LT",
-                      "ST"
-                    ]
-                  },
                   "ex_dividend_date": {
                     "type": "string",
                     "format": "date-time"
-                  },
-                  "frequency": {
-                    "type": "integer"
                   },
                   "record_date": {
                     "type": "string",
@@ -1989,9 +1963,11 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "delisted": {
-                    "type": "string",
-                    "format": "date-time"
+                  "options": {
+                    "type": "boolean"
+                  },
+                  "tradable": {
+                    "type": "boolean"
                   },
                   "exchanges": {
                     "type": "array",
@@ -2029,7 +2005,9 @@
                   "ticker",
                   "name",
                   "description",
-                  "list_date"
+                  "list_date",
+                  "options",
+                  "tradable"
                 ]
               }
             }
@@ -2205,9 +2183,11 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "delisted": {
-                    "type": "string",
-                    "format": "date-time"
+                  "options": {
+                    "type": "boolean"
+                  },
+                  "tradable": {
+                    "type": "boolean"
                   },
                   "exchanges": {
                     "type": "array",
@@ -7334,7 +7314,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7342,21 +7322,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7375,11 +7343,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -7390,7 +7356,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7398,21 +7364,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7425,11 +7379,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -7440,7 +7392,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7448,21 +7400,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7475,11 +7415,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -7490,7 +7428,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7498,21 +7436,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7525,11 +7451,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -7540,7 +7464,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7548,21 +7472,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7575,11 +7487,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -7606,9 +7516,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7617,7 +7529,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "Entity": {
@@ -7642,9 +7556,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           },
           "exchanges": {
             "type": "array",
@@ -7683,7 +7599,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "EntityCreate": {
@@ -7708,9 +7626,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7719,7 +7639,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "EntityList": {
@@ -7744,9 +7666,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7755,7 +7679,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "EntityRead": {
@@ -7780,9 +7706,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7791,7 +7719,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "EntityUpdate": {
@@ -7816,9 +7746,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7827,7 +7759,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "Entity_DividendsList": {
@@ -7836,7 +7770,7 @@
           "id": {
             "type": "integer"
           },
-          "cash_amount": {
+          "rate": {
             "type": "number",
             "format": "double"
           },
@@ -7844,21 +7778,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "dividend_type": {
-            "type": "string",
-            "enum": [
-              "CD",
-              "SC",
-              "LT",
-              "ST"
-            ]
-          },
           "ex_dividend_date": {
             "type": "string",
             "format": "date-time"
-          },
-          "frequency": {
-            "type": "integer"
           },
           "record_date": {
             "type": "string",
@@ -7871,11 +7793,9 @@
         },
         "required": [
           "id",
-          "cash_amount",
+          "rate",
           "declaration_date",
-          "dividend_type",
           "ex_dividend_date",
-          "frequency",
           "record_date",
           "pay_date"
         ]
@@ -8093,9 +8013,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -8104,7 +8026,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "Financial": {
@@ -8190,9 +8114,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -8201,7 +8127,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "Interval": {
@@ -8480,9 +8408,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -8491,7 +8421,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "Interval_TradesList": {
@@ -8965,9 +8897,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "delisted": {
-            "type": "string",
-            "format": "date-time"
+          "options": {
+            "type": "boolean"
+          },
+          "tradable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -8976,7 +8910,9 @@
           "ticker",
           "name",
           "description",
-          "list_date"
+          "list_date",
+          "options",
+          "tradable"
         ]
       },
       "TradeCondition": {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/nathanhack/sibyl/ent/marketinfo"
 )
@@ -22,7 +23,8 @@ type MarketInfo struct {
 	HoursEnd time.Time `json:"hours_end,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MarketInfoQuery when eager-loading is set.
-	Edges MarketInfoEdges `json:"edges"`
+	Edges        MarketInfoEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // MarketInfoEdges holds the relations/edges for other nodes in the graph.
@@ -53,7 +55,7 @@ func (*MarketInfo) scanValues(columns []string) ([]any, error) {
 		case marketinfo.FieldHoursStart, marketinfo.FieldHoursEnd:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type MarketInfo", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -85,21 +87,29 @@ func (mi *MarketInfo) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				mi.HoursEnd = value.Time
 			}
+		default:
+			mi.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
+// Value returns the ent.Value that was dynamically selected and assigned to the MarketInfo.
+// This includes values selected through modifiers, order, etc.
+func (mi *MarketInfo) Value(name string) (ent.Value, error) {
+	return mi.selectValues.Get(name)
+}
+
 // QueryHours queries the "hours" edge of the MarketInfo entity.
 func (mi *MarketInfo) QueryHours() *MarketHoursQuery {
-	return (&MarketInfoClient{config: mi.config}).QueryHours(mi)
+	return NewMarketInfoClient(mi.config).QueryHours(mi)
 }
 
 // Update returns a builder for updating this MarketInfo.
 // Note that you need to call MarketInfo.Unwrap() before calling this method if this MarketInfo
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (mi *MarketInfo) Update() *MarketInfoUpdateOne {
-	return (&MarketInfoClient{config: mi.config}).UpdateOne(mi)
+	return NewMarketInfoClient(mi.config).UpdateOne(mi)
 }
 
 // Unwrap unwraps the MarketInfo entity that was returned from a transaction after it was closed,
@@ -129,9 +139,3 @@ func (mi *MarketInfo) String() string {
 
 // MarketInfos is a parsable slice of MarketInfo.
 type MarketInfos []*MarketInfo
-
-func (mi MarketInfos) config(cfg config) {
-	for _i := range mi {
-		mi[_i].config = cfg
-	}
-}

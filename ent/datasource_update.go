@@ -34,6 +34,14 @@ func (dsu *DataSourceUpdate) SetName(s string) *DataSourceUpdate {
 	return dsu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (dsu *DataSourceUpdate) SetNillableName(s *string) *DataSourceUpdate {
+	if s != nil {
+		dsu.SetName(*s)
+	}
+	return dsu
+}
+
 // SetAddress sets the "address" field.
 func (dsu *DataSourceUpdate) SetAddress(s string) *DataSourceUpdate {
 	dsu.mutation.SetAddress(s)
@@ -91,7 +99,7 @@ func (dsu *DataSourceUpdate) RemoveIntervals(i ...*Interval) *DataSourceUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (dsu *DataSourceUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks[int, DataSourceMutation](ctx, dsu.sqlSave, dsu.mutation, dsu.hooks)
+	return withHooks(ctx, dsu.sqlSave, dsu.mutation, dsu.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -130,16 +138,7 @@ func (dsu *DataSourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := dsu.check(); err != nil {
 		return n, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   datasource.Table,
-			Columns: datasource.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: datasource.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(datasource.Table, datasource.Columns, sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt))
 	if ps := dsu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -161,10 +160,7 @@ func (dsu *DataSourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -177,10 +173,7 @@ func (dsu *DataSourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -196,10 +189,7 @@ func (dsu *DataSourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -230,6 +220,14 @@ type DataSourceUpdateOne struct {
 // SetName sets the "name" field.
 func (dsuo *DataSourceUpdateOne) SetName(s string) *DataSourceUpdateOne {
 	dsuo.mutation.SetName(s)
+	return dsuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (dsuo *DataSourceUpdateOne) SetNillableName(s *string) *DataSourceUpdateOne {
+	if s != nil {
+		dsuo.SetName(*s)
+	}
 	return dsuo
 }
 
@@ -288,6 +286,12 @@ func (dsuo *DataSourceUpdateOne) RemoveIntervals(i ...*Interval) *DataSourceUpda
 	return dsuo.RemoveIntervalIDs(ids...)
 }
 
+// Where appends a list predicates to the DataSourceUpdate builder.
+func (dsuo *DataSourceUpdateOne) Where(ps ...predicate.DataSource) *DataSourceUpdateOne {
+	dsuo.mutation.Where(ps...)
+	return dsuo
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (dsuo *DataSourceUpdateOne) Select(field string, fields ...string) *DataSourceUpdateOne {
@@ -297,7 +301,7 @@ func (dsuo *DataSourceUpdateOne) Select(field string, fields ...string) *DataSou
 
 // Save executes the query and returns the updated DataSource entity.
 func (dsuo *DataSourceUpdateOne) Save(ctx context.Context) (*DataSource, error) {
-	return withHooks[*DataSource, DataSourceMutation](ctx, dsuo.sqlSave, dsuo.mutation, dsuo.hooks)
+	return withHooks(ctx, dsuo.sqlSave, dsuo.mutation, dsuo.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
@@ -336,16 +340,7 @@ func (dsuo *DataSourceUpdateOne) sqlSave(ctx context.Context) (_node *DataSource
 	if err := dsuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := &sqlgraph.UpdateSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   datasource.Table,
-			Columns: datasource.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: datasource.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewUpdateSpec(datasource.Table, datasource.Columns, sqlgraph.NewFieldSpec(datasource.FieldID, field.TypeInt))
 	id, ok := dsuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DataSource.id" for update`)}
@@ -384,10 +379,7 @@ func (dsuo *DataSourceUpdateOne) sqlSave(ctx context.Context) (_node *DataSource
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -400,10 +392,7 @@ func (dsuo *DataSourceUpdateOne) sqlSave(ctx context.Context) (_node *DataSource
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -419,10 +408,7 @@ func (dsuo *DataSourceUpdateOne) sqlSave(ctx context.Context) (_node *DataSource
 			Columns: []string{datasource.IntervalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: interval.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

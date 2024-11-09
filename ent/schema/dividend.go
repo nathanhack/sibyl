@@ -14,18 +14,15 @@ type Dividend struct {
 // Fields of the Dividend.
 func (Dividend) Fields() []ent.Field {
 	return []ent.Field{
-		field.Float("cash_amount"), // From Polygon.io
+		field.Float("rate"), 
 		field.Time("declaration_date").
-			SchemaType(dateTimeSchemaType), // From Polygon.io
-		field.Enum("dividend_type").
-			Values("CD", "SC", "LT", "ST"), // From Polygon.io
+			SchemaType(dateTimeSchemaType), 
 		field.Time("ex_dividend_date").
-			SchemaType(dateTimeSchemaType), // From Polygon.io
-		field.Int("frequency"), // From Polygon.io
+			SchemaType(dateTimeSchemaType), 
 		field.Time("record_date").
-			SchemaType(dateTimeSchemaType), // From Polygon.io
+			SchemaType(dateTimeSchemaType), 
 		field.Time("pay_date").
-			SchemaType(dateTimeSchemaType), // From Polygon.io
+			SchemaType(dateTimeSchemaType), 
 	}
 }
 

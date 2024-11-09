@@ -27,7 +27,7 @@ func (mhd *MarketHoursDelete) Where(ps ...predicate.MarketHours) *MarketHoursDel
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (mhd *MarketHoursDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, MarketHoursMutation](ctx, mhd.sqlExec, mhd.mutation, mhd.hooks)
+	return withHooks(ctx, mhd.sqlExec, mhd.mutation, mhd.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (mhd *MarketHoursDelete) ExecX(ctx context.Context) int {
 }
 
 func (mhd *MarketHoursDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: markethours.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: markethours.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(markethours.Table, sqlgraph.NewFieldSpec(markethours.FieldID, field.TypeInt))
 	if ps := mhd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type MarketHoursDeleteOne struct {
 	mhd *MarketHoursDelete
 }
 
+// Where appends a list predicates to the MarketHoursDelete builder.
+func (mhdo *MarketHoursDeleteOne) Where(ps ...predicate.MarketHours) *MarketHoursDeleteOne {
+	mhdo.mhd.mutation.Where(ps...)
+	return mhdo
+}
+
 // Exec executes the deletion query.
 func (mhdo *MarketHoursDeleteOne) Exec(ctx context.Context) error {
 	n, err := mhdo.mhd.Exec(ctx)
@@ -84,5 +82,7 @@ func (mhdo *MarketHoursDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (mhdo *MarketHoursDeleteOne) ExecX(ctx context.Context) {
-	mhdo.mhd.ExecX(ctx)
+	if err := mhdo.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

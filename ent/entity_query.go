@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -23,11 +24,8 @@ import (
 // EntityQuery is the builder for querying Entity entities.
 type EntityQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
+	ctx            *QueryContext
+	order          []entity.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.Entity
 	withExchanges  *ExchangeQuery
@@ -48,25 +46,25 @@ func (eq *EntityQuery) Where(ps ...predicate.Entity) *EntityQuery {
 
 // Limit the number of records to be returned by this query.
 func (eq *EntityQuery) Limit(limit int) *EntityQuery {
-	eq.limit = &limit
+	eq.ctx.Limit = &limit
 	return eq
 }
 
 // Offset to start from.
 func (eq *EntityQuery) Offset(offset int) *EntityQuery {
-	eq.offset = &offset
+	eq.ctx.Offset = &offset
 	return eq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (eq *EntityQuery) Unique(unique bool) *EntityQuery {
-	eq.unique = &unique
+	eq.ctx.Unique = &unique
 	return eq
 }
 
 // Order specifies how the records should be ordered.
-func (eq *EntityQuery) Order(o ...OrderFunc) *EntityQuery {
+func (eq *EntityQuery) Order(o ...entity.OrderOption) *EntityQuery {
 	eq.order = append(eq.order, o...)
 	return eq
 }
@@ -184,7 +182,7 @@ func (eq *EntityQuery) QueryFinancials() *FinancialQuery {
 // First returns the first Entity entity from the query.
 // Returns a *NotFoundError when no Entity was found.
 func (eq *EntityQuery) First(ctx context.Context) (*Entity, error) {
-	nodes, err := eq.Limit(1).All(newQueryContext(ctx, TypeEntity, "First"))
+	nodes, err := eq.Limit(1).All(setContextOp(ctx, eq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +205,7 @@ func (eq *EntityQuery) FirstX(ctx context.Context) *Entity {
 // Returns a *NotFoundError when no Entity ID was found.
 func (eq *EntityQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = eq.Limit(1).IDs(newQueryContext(ctx, TypeEntity, "FirstID")); err != nil {
+	if ids, err = eq.Limit(1).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -230,7 +228,7 @@ func (eq *EntityQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Entity entity is found.
 // Returns a *NotFoundError when no Entity entities are found.
 func (eq *EntityQuery) Only(ctx context.Context) (*Entity, error) {
-	nodes, err := eq.Limit(2).All(newQueryContext(ctx, TypeEntity, "Only"))
+	nodes, err := eq.Limit(2).All(setContextOp(ctx, eq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +256,7 @@ func (eq *EntityQuery) OnlyX(ctx context.Context) *Entity {
 // Returns a *NotFoundError when no entities are found.
 func (eq *EntityQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = eq.Limit(2).IDs(newQueryContext(ctx, TypeEntity, "OnlyID")); err != nil {
+	if ids, err = eq.Limit(2).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -283,7 +281,7 @@ func (eq *EntityQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Entities.
 func (eq *EntityQuery) All(ctx context.Context) ([]*Entity, error) {
-	ctx = newQueryContext(ctx, TypeEntity, "All")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryAll)
 	if err := eq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -301,10 +299,12 @@ func (eq *EntityQuery) AllX(ctx context.Context) []*Entity {
 }
 
 // IDs executes the query and returns a list of Entity IDs.
-func (eq *EntityQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeEntity, "IDs")
-	if err := eq.Select(entity.FieldID).Scan(ctx, &ids); err != nil {
+func (eq *EntityQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if eq.ctx.Unique == nil && eq.path != nil {
+		eq.Unique(true)
+	}
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryIDs)
+	if err = eq.Select(entity.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -321,7 +321,7 @@ func (eq *EntityQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (eq *EntityQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeEntity, "Count")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryCount)
 	if err := eq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -339,7 +339,7 @@ func (eq *EntityQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (eq *EntityQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeEntity, "Exist")
+	ctx = setContextOp(ctx, eq.ctx, ent.OpQueryExist)
 	switch _, err := eq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -367,9 +367,8 @@ func (eq *EntityQuery) Clone() *EntityQuery {
 	}
 	return &EntityQuery{
 		config:         eq.config,
-		limit:          eq.limit,
-		offset:         eq.offset,
-		order:          append([]OrderFunc{}, eq.order...),
+		ctx:            eq.ctx.Clone(),
+		order:          append([]entity.OrderOption{}, eq.order...),
 		inters:         append([]Interceptor{}, eq.inters...),
 		predicates:     append([]predicate.Entity{}, eq.predicates...),
 		withExchanges:  eq.withExchanges.Clone(),
@@ -378,9 +377,8 @@ func (eq *EntityQuery) Clone() *EntityQuery {
 		withSplits:     eq.withSplits.Clone(),
 		withFinancials: eq.withFinancials.Clone(),
 		// clone intermediate query.
-		sql:    eq.sql.Clone(),
-		path:   eq.path,
-		unique: eq.unique,
+		sql:  eq.sql.Clone(),
+		path: eq.path,
 	}
 }
 
@@ -454,9 +452,9 @@ func (eq *EntityQuery) WithFinancials(opts ...func(*FinancialQuery)) *EntityQuer
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (eq *EntityQuery) GroupBy(field string, fields ...string) *EntityGroupBy {
-	eq.fields = append([]string{field}, fields...)
+	eq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &EntityGroupBy{build: eq}
-	grbuild.flds = &eq.fields
+	grbuild.flds = &eq.ctx.Fields
 	grbuild.label = entity.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -475,10 +473,10 @@ func (eq *EntityQuery) GroupBy(field string, fields ...string) *EntityGroupBy {
 //		Select(entity.FieldActive).
 //		Scan(ctx, &v)
 func (eq *EntityQuery) Select(fields ...string) *EntitySelect {
-	eq.fields = append(eq.fields, fields...)
+	eq.ctx.Fields = append(eq.ctx.Fields, fields...)
 	sbuild := &EntitySelect{EntityQuery: eq}
 	sbuild.label = entity.Label
-	sbuild.flds, sbuild.scan = &eq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &eq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -498,7 +496,7 @@ func (eq *EntityQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range eq.fields {
+	for _, f := range eq.ctx.Fields {
 		if !entity.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -604,27 +602,30 @@ func (eq *EntityQuery) loadExchanges(ctx context.Context, query *ExchangeQuery, 
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Exchange](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -649,8 +650,11 @@ func (eq *EntityQuery) loadIntervals(ctx context.Context, query *IntervalQuery, 
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(interval.FieldStockID)
+	}
 	query.Where(predicate.Interval(func(s *sql.Selector) {
-		s.Where(sql.InValues(entity.IntervalsColumn, fks...))
+		s.Where(sql.InValues(s.C(entity.IntervalsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -660,7 +664,7 @@ func (eq *EntityQuery) loadIntervals(ctx context.Context, query *IntervalQuery, 
 		fk := n.StockID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "stock_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "stock_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -689,27 +693,30 @@ func (eq *EntityQuery) loadDividends(ctx context.Context, query *DividendQuery, 
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Dividend](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -736,7 +743,7 @@ func (eq *EntityQuery) loadSplits(ctx context.Context, query *SplitQuery, nodes 
 	}
 	query.withFKs = true
 	query.Where(predicate.Split(func(s *sql.Selector) {
-		s.Where(sql.InValues(entity.SplitsColumn, fks...))
+		s.Where(sql.InValues(s.C(entity.SplitsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -749,7 +756,7 @@ func (eq *EntityQuery) loadSplits(ctx context.Context, query *SplitQuery, nodes 
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "entity_splits" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "entity_splits" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -778,27 +785,30 @@ func (eq *EntityQuery) loadFinancials(ctx context.Context, query *FinancialQuery
 	if err := query.prepareQuery(ctx); err != nil {
 		return err
 	}
-	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-		assign := spec.Assign
-		values := spec.ScanValues
-		spec.ScanValues = func(columns []string) ([]any, error) {
-			values, err := values(columns[1:])
-			if err != nil {
-				return nil, err
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
 			}
-			return append([]any{new(sql.NullInt64)}, values...), nil
-		}
-		spec.Assign = func(columns []string, values []any) error {
-			outValue := int(values[0].(*sql.NullInt64).Int64)
-			inValue := int(values[1].(*sql.NullInt64).Int64)
-			if nids[inValue] == nil {
-				nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
-				return assign(columns[1:], values[1:])
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Entity]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
 			}
-			nids[inValue][byID[outValue]] = struct{}{}
-			return nil
-		}
+		})
 	})
+	neighbors, err := withInterceptors[[]*Financial](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
@@ -816,30 +826,22 @@ func (eq *EntityQuery) loadFinancials(ctx context.Context, query *FinancialQuery
 
 func (eq *EntityQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := eq.querySpec()
-	_spec.Node.Columns = eq.fields
-	if len(eq.fields) > 0 {
-		_spec.Unique = eq.unique != nil && *eq.unique
+	_spec.Node.Columns = eq.ctx.Fields
+	if len(eq.ctx.Fields) > 0 {
+		_spec.Unique = eq.ctx.Unique != nil && *eq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, eq.driver, _spec)
 }
 
 func (eq *EntityQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   entity.Table,
-			Columns: entity.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: entity.FieldID,
-			},
-		},
-		From:   eq.sql,
-		Unique: true,
-	}
-	if unique := eq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(entity.Table, entity.Columns, sqlgraph.NewFieldSpec(entity.FieldID, field.TypeInt))
+	_spec.From = eq.sql
+	if unique := eq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if eq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := eq.fields; len(fields) > 0 {
+	if fields := eq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, entity.FieldID)
 		for i := range fields {
@@ -855,10 +857,10 @@ func (eq *EntityQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := eq.limit; limit != nil {
+	if limit := eq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := eq.offset; offset != nil {
+	if offset := eq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := eq.order; len(ps) > 0 {
@@ -874,7 +876,7 @@ func (eq *EntityQuery) querySpec() *sqlgraph.QuerySpec {
 func (eq *EntityQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(eq.driver.Dialect())
 	t1 := builder.Table(entity.Table)
-	columns := eq.fields
+	columns := eq.ctx.Fields
 	if len(columns) == 0 {
 		columns = entity.Columns
 	}
@@ -883,7 +885,7 @@ func (eq *EntityQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = eq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if eq.unique != nil && *eq.unique {
+	if eq.ctx.Unique != nil && *eq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range eq.predicates {
@@ -892,12 +894,12 @@ func (eq *EntityQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range eq.order {
 		p(selector)
 	}
-	if offset := eq.offset; offset != nil {
+	if offset := eq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := eq.limit; limit != nil {
+	if limit := eq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -917,7 +919,7 @@ func (egb *EntityGroupBy) Aggregate(fns ...AggregateFunc) *EntityGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (egb *EntityGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeEntity, "GroupBy")
+	ctx = setContextOp(ctx, egb.build.ctx, ent.OpQueryGroupBy)
 	if err := egb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -965,7 +967,7 @@ func (es *EntitySelect) Aggregate(fns ...AggregateFunc) *EntitySelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (es *EntitySelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeEntity, "Select")
+	ctx = setContextOp(ctx, es.ctx, ent.OpQuerySelect)
 	if err := es.prepareQuery(ctx); err != nil {
 		return err
 	}

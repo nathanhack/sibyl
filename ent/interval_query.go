@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -22,11 +23,8 @@ import (
 // IntervalQuery is the builder for querying Interval entities.
 type IntervalQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
+	ctx            *QueryContext
+	order          []interval.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.Interval
 	withDataSource *DataSourceQuery
@@ -46,25 +44,25 @@ func (iq *IntervalQuery) Where(ps ...predicate.Interval) *IntervalQuery {
 
 // Limit the number of records to be returned by this query.
 func (iq *IntervalQuery) Limit(limit int) *IntervalQuery {
-	iq.limit = &limit
+	iq.ctx.Limit = &limit
 	return iq
 }
 
 // Offset to start from.
 func (iq *IntervalQuery) Offset(offset int) *IntervalQuery {
-	iq.offset = &offset
+	iq.ctx.Offset = &offset
 	return iq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
 func (iq *IntervalQuery) Unique(unique bool) *IntervalQuery {
-	iq.unique = &unique
+	iq.ctx.Unique = &unique
 	return iq
 }
 
 // Order specifies how the records should be ordered.
-func (iq *IntervalQuery) Order(o ...OrderFunc) *IntervalQuery {
+func (iq *IntervalQuery) Order(o ...interval.OrderOption) *IntervalQuery {
 	iq.order = append(iq.order, o...)
 	return iq
 }
@@ -160,7 +158,7 @@ func (iq *IntervalQuery) QueryTrades() *TradeTimeRangeQuery {
 // First returns the first Interval entity from the query.
 // Returns a *NotFoundError when no Interval was found.
 func (iq *IntervalQuery) First(ctx context.Context) (*Interval, error) {
-	nodes, err := iq.Limit(1).All(newQueryContext(ctx, TypeInterval, "First"))
+	nodes, err := iq.Limit(1).All(setContextOp(ctx, iq.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +181,7 @@ func (iq *IntervalQuery) FirstX(ctx context.Context) *Interval {
 // Returns a *NotFoundError when no Interval ID was found.
 func (iq *IntervalQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = iq.Limit(1).IDs(newQueryContext(ctx, TypeInterval, "FirstID")); err != nil {
+	if ids, err = iq.Limit(1).IDs(setContextOp(ctx, iq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -206,7 +204,7 @@ func (iq *IntervalQuery) FirstIDX(ctx context.Context) int {
 // Returns a *NotSingularError when more than one Interval entity is found.
 // Returns a *NotFoundError when no Interval entities are found.
 func (iq *IntervalQuery) Only(ctx context.Context) (*Interval, error) {
-	nodes, err := iq.Limit(2).All(newQueryContext(ctx, TypeInterval, "Only"))
+	nodes, err := iq.Limit(2).All(setContextOp(ctx, iq.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +232,7 @@ func (iq *IntervalQuery) OnlyX(ctx context.Context) *Interval {
 // Returns a *NotFoundError when no entities are found.
 func (iq *IntervalQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = iq.Limit(2).IDs(newQueryContext(ctx, TypeInterval, "OnlyID")); err != nil {
+	if ids, err = iq.Limit(2).IDs(setContextOp(ctx, iq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -259,7 +257,7 @@ func (iq *IntervalQuery) OnlyIDX(ctx context.Context) int {
 
 // All executes the query and returns a list of Intervals.
 func (iq *IntervalQuery) All(ctx context.Context) ([]*Interval, error) {
-	ctx = newQueryContext(ctx, TypeInterval, "All")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryAll)
 	if err := iq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -277,10 +275,12 @@ func (iq *IntervalQuery) AllX(ctx context.Context) []*Interval {
 }
 
 // IDs executes the query and returns a list of Interval IDs.
-func (iq *IntervalQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
-	ctx = newQueryContext(ctx, TypeInterval, "IDs")
-	if err := iq.Select(interval.FieldID).Scan(ctx, &ids); err != nil {
+func (iq *IntervalQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if iq.ctx.Unique == nil && iq.path != nil {
+		iq.Unique(true)
+	}
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryIDs)
+	if err = iq.Select(interval.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -297,7 +297,7 @@ func (iq *IntervalQuery) IDsX(ctx context.Context) []int {
 
 // Count returns the count of the given query.
 func (iq *IntervalQuery) Count(ctx context.Context) (int, error) {
-	ctx = newQueryContext(ctx, TypeInterval, "Count")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryCount)
 	if err := iq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -315,7 +315,7 @@ func (iq *IntervalQuery) CountX(ctx context.Context) int {
 
 // Exist returns true if the query has elements in the graph.
 func (iq *IntervalQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = newQueryContext(ctx, TypeInterval, "Exist")
+	ctx = setContextOp(ctx, iq.ctx, ent.OpQueryExist)
 	switch _, err := iq.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
@@ -343,9 +343,8 @@ func (iq *IntervalQuery) Clone() *IntervalQuery {
 	}
 	return &IntervalQuery{
 		config:         iq.config,
-		limit:          iq.limit,
-		offset:         iq.offset,
-		order:          append([]OrderFunc{}, iq.order...),
+		ctx:            iq.ctx.Clone(),
+		order:          append([]interval.OrderOption{}, iq.order...),
 		inters:         append([]Interceptor{}, iq.inters...),
 		predicates:     append([]predicate.Interval{}, iq.predicates...),
 		withDataSource: iq.withDataSource.Clone(),
@@ -353,9 +352,8 @@ func (iq *IntervalQuery) Clone() *IntervalQuery {
 		withBars:       iq.withBars.Clone(),
 		withTrades:     iq.withTrades.Clone(),
 		// clone intermediate query.
-		sql:    iq.sql.Clone(),
-		path:   iq.path,
-		unique: iq.unique,
+		sql:  iq.sql.Clone(),
+		path: iq.path,
 	}
 }
 
@@ -418,9 +416,9 @@ func (iq *IntervalQuery) WithTrades(opts ...func(*TradeTimeRangeQuery)) *Interva
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (iq *IntervalQuery) GroupBy(field string, fields ...string) *IntervalGroupBy {
-	iq.fields = append([]string{field}, fields...)
+	iq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &IntervalGroupBy{build: iq}
-	grbuild.flds = &iq.fields
+	grbuild.flds = &iq.ctx.Fields
 	grbuild.label = interval.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -439,10 +437,10 @@ func (iq *IntervalQuery) GroupBy(field string, fields ...string) *IntervalGroupB
 //		Select(interval.FieldActive).
 //		Scan(ctx, &v)
 func (iq *IntervalQuery) Select(fields ...string) *IntervalSelect {
-	iq.fields = append(iq.fields, fields...)
+	iq.ctx.Fields = append(iq.ctx.Fields, fields...)
 	sbuild := &IntervalSelect{IntervalQuery: iq}
 	sbuild.label = interval.Label
-	sbuild.flds, sbuild.scan = &iq.fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &iq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
@@ -462,7 +460,7 @@ func (iq *IntervalQuery) prepareQuery(ctx context.Context) error {
 			}
 		}
 	}
-	for _, f := range iq.fields {
+	for _, f := range iq.ctx.Fields {
 		if !interval.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
@@ -545,6 +543,9 @@ func (iq *IntervalQuery) loadDataSource(ctx context.Context, query *DataSourceQu
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	query.Where(datasource.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -570,6 +571,9 @@ func (iq *IntervalQuery) loadStock(ctx context.Context, query *EntityQuery, node
 			ids = append(ids, fk)
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
 	}
 	query.Where(entity.IDIn(ids...))
 	neighbors, err := query.All(ctx)
@@ -597,8 +601,11 @@ func (iq *IntervalQuery) loadBars(ctx context.Context, query *BarTimeRangeQuery,
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(bartimerange.FieldIntervalID)
+	}
 	query.Where(predicate.BarTimeRange(func(s *sql.Selector) {
-		s.Where(sql.InValues(interval.BarsColumn, fks...))
+		s.Where(sql.InValues(s.C(interval.BarsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -608,7 +615,7 @@ func (iq *IntervalQuery) loadBars(ctx context.Context, query *BarTimeRangeQuery,
 		fk := n.IntervalID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "interval_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "interval_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -624,8 +631,11 @@ func (iq *IntervalQuery) loadTrades(ctx context.Context, query *TradeTimeRangeQu
 			init(nodes[i])
 		}
 	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(tradetimerange.FieldIntervalID)
+	}
 	query.Where(predicate.TradeTimeRange(func(s *sql.Selector) {
-		s.Where(sql.InValues(interval.TradesColumn, fks...))
+		s.Where(sql.InValues(s.C(interval.TradesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -635,7 +645,7 @@ func (iq *IntervalQuery) loadTrades(ctx context.Context, query *TradeTimeRangeQu
 		fk := n.IntervalID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "interval_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "interval_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -644,36 +654,34 @@ func (iq *IntervalQuery) loadTrades(ctx context.Context, query *TradeTimeRangeQu
 
 func (iq *IntervalQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := iq.querySpec()
-	_spec.Node.Columns = iq.fields
-	if len(iq.fields) > 0 {
-		_spec.Unique = iq.unique != nil && *iq.unique
+	_spec.Node.Columns = iq.ctx.Fields
+	if len(iq.ctx.Fields) > 0 {
+		_spec.Unique = iq.ctx.Unique != nil && *iq.ctx.Unique
 	}
 	return sqlgraph.CountNodes(ctx, iq.driver, _spec)
 }
 
 func (iq *IntervalQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := &sqlgraph.QuerySpec{
-		Node: &sqlgraph.NodeSpec{
-			Table:   interval.Table,
-			Columns: interval.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: interval.FieldID,
-			},
-		},
-		From:   iq.sql,
-		Unique: true,
-	}
-	if unique := iq.unique; unique != nil {
+	_spec := sqlgraph.NewQuerySpec(interval.Table, interval.Columns, sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt))
+	_spec.From = iq.sql
+	if unique := iq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
+	} else if iq.path != nil {
+		_spec.Unique = true
 	}
-	if fields := iq.fields; len(fields) > 0 {
+	if fields := iq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, interval.FieldID)
 		for i := range fields {
 			if fields[i] != interval.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if iq.withDataSource != nil {
+			_spec.Node.AddColumnOnce(interval.FieldDataSourceID)
+		}
+		if iq.withStock != nil {
+			_spec.Node.AddColumnOnce(interval.FieldStockID)
 		}
 	}
 	if ps := iq.predicates; len(ps) > 0 {
@@ -683,10 +691,10 @@ func (iq *IntervalQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if limit := iq.limit; limit != nil {
+	if limit := iq.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := iq.offset; offset != nil {
+	if offset := iq.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
 	if ps := iq.order; len(ps) > 0 {
@@ -702,7 +710,7 @@ func (iq *IntervalQuery) querySpec() *sqlgraph.QuerySpec {
 func (iq *IntervalQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(iq.driver.Dialect())
 	t1 := builder.Table(interval.Table)
-	columns := iq.fields
+	columns := iq.ctx.Fields
 	if len(columns) == 0 {
 		columns = interval.Columns
 	}
@@ -711,7 +719,7 @@ func (iq *IntervalQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector = iq.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if iq.unique != nil && *iq.unique {
+	if iq.ctx.Unique != nil && *iq.ctx.Unique {
 		selector.Distinct()
 	}
 	for _, p := range iq.predicates {
@@ -720,12 +728,12 @@ func (iq *IntervalQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	for _, p := range iq.order {
 		p(selector)
 	}
-	if offset := iq.offset; offset != nil {
+	if offset := iq.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := iq.limit; limit != nil {
+	if limit := iq.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -745,7 +753,7 @@ func (igb *IntervalGroupBy) Aggregate(fns ...AggregateFunc) *IntervalGroupBy {
 
 // Scan applies the selector query and scans the result into the given value.
 func (igb *IntervalGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeInterval, "GroupBy")
+	ctx = setContextOp(ctx, igb.build.ctx, ent.OpQueryGroupBy)
 	if err := igb.build.prepareQuery(ctx); err != nil {
 		return err
 	}
@@ -793,7 +801,7 @@ func (is *IntervalSelect) Aggregate(fns ...AggregateFunc) *IntervalSelect {
 
 // Scan applies the selector query and scans the result into the given value.
 func (is *IntervalSelect) Scan(ctx context.Context, v any) error {
-	ctx = newQueryContext(ctx, TypeInterval, "Select")
+	ctx = setContextOp(ctx, is.ctx, ent.OpQuerySelect)
 	if err := is.prepareQuery(ctx); err != nil {
 		return err
 	}

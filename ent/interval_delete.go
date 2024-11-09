@@ -27,7 +27,7 @@ func (id *IntervalDelete) Where(ps ...predicate.Interval) *IntervalDelete {
 
 // Exec executes the deletion query and returns how many vertices were deleted.
 func (id *IntervalDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks[int, IntervalMutation](ctx, id.sqlExec, id.mutation, id.hooks)
+	return withHooks(ctx, id.sqlExec, id.mutation, id.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
@@ -40,15 +40,7 @@ func (id *IntervalDelete) ExecX(ctx context.Context) int {
 }
 
 func (id *IntervalDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := &sqlgraph.DeleteSpec{
-		Node: &sqlgraph.NodeSpec{
-			Table: interval.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: interval.FieldID,
-			},
-		},
-	}
+	_spec := sqlgraph.NewDeleteSpec(interval.Table, sqlgraph.NewFieldSpec(interval.FieldID, field.TypeInt))
 	if ps := id.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -69,6 +61,12 @@ type IntervalDeleteOne struct {
 	id *IntervalDelete
 }
 
+// Where appends a list predicates to the IntervalDelete builder.
+func (ido *IntervalDeleteOne) Where(ps ...predicate.Interval) *IntervalDeleteOne {
+	ido.id.mutation.Where(ps...)
+	return ido
+}
+
 // Exec executes the deletion query.
 func (ido *IntervalDeleteOne) Exec(ctx context.Context) error {
 	n, err := ido.id.Exec(ctx)
@@ -84,5 +82,7 @@ func (ido *IntervalDeleteOne) Exec(ctx context.Context) error {
 
 // ExecX is like Exec, but panics if an error occurs.
 func (ido *IntervalDeleteOne) ExecX(ctx context.Context) {
-	ido.id.ExecX(ctx)
+	if err := ido.Exec(ctx); err != nil {
+		panic(err)
+	}
 }

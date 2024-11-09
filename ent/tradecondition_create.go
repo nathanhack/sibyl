@@ -48,7 +48,7 @@ func (tcc *TradeConditionCreate) Mutation() *TradeConditionMutation {
 
 // Save creates the TradeCondition in the database.
 func (tcc *TradeConditionCreate) Save(ctx context.Context) (*TradeCondition, error) {
-	return withHooks[*TradeCondition, TradeConditionMutation](ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
+	return withHooks(ctx, tcc.sqlSave, tcc.mutation, tcc.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
@@ -102,13 +102,7 @@ func (tcc *TradeConditionCreate) sqlSave(ctx context.Context) (*TradeCondition, 
 func (tcc *TradeConditionCreate) createSpec() (*TradeCondition, *sqlgraph.CreateSpec) {
 	var (
 		_node = &TradeCondition{config: tcc.config}
-		_spec = &sqlgraph.CreateSpec{
-			Table: tradecondition.Table,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: tradecondition.FieldID,
-			},
-		}
+		_spec = sqlgraph.NewCreateSpec(tradecondition.Table, sqlgraph.NewFieldSpec(tradecondition.FieldID, field.TypeInt))
 	)
 	if value, ok := tcc.mutation.Condition(); ok {
 		_spec.SetField(tradecondition.FieldCondition, field.TypeString, value)
@@ -122,10 +116,7 @@ func (tcc *TradeConditionCreate) createSpec() (*TradeCondition, *sqlgraph.Create
 			Columns: tradecondition.RecordPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: traderecord.FieldID,
-				},
+				IDSpec: sqlgraph.NewFieldSpec(traderecord.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -139,11 +130,15 @@ func (tcc *TradeConditionCreate) createSpec() (*TradeCondition, *sqlgraph.Create
 // TradeConditionCreateBulk is the builder for creating many TradeCondition entities in bulk.
 type TradeConditionCreateBulk struct {
 	config
+	err      error
 	builders []*TradeConditionCreate
 }
 
 // Save creates the TradeCondition entities in the database.
 func (tccb *TradeConditionCreateBulk) Save(ctx context.Context) ([]*TradeCondition, error) {
+	if tccb.err != nil {
+		return nil, tccb.err
+	}
 	specs := make([]*sqlgraph.CreateSpec, len(tccb.builders))
 	nodes := make([]*TradeCondition, len(tccb.builders))
 	mutators := make([]Mutator, len(tccb.builders))
@@ -159,8 +154,8 @@ func (tccb *TradeConditionCreateBulk) Save(ctx context.Context) ([]*TradeConditi
 					return nil, err
 				}
 				builder.mutation = mutation
-				nodes[i], specs[i] = builder.createSpec()
 				var err error
+				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
 					_, err = mutators[i+1].Mutate(root, tccb.builders[i+1].mutation)
 				} else {

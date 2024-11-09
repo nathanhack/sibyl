@@ -2,6 +2,11 @@
 
 package split
 
+import (
+	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+)
+
 const (
 	// Label holds the string label denoting the split type in the database.
 	Label = "split"
@@ -53,4 +58,41 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+// OrderOption defines the ordering options for the Split queries.
+type OrderOption func(*sql.Selector)
+
+// ByID orders the results by the id field.
+func ByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByExecutionDate orders the results by the execution_date field.
+func ByExecutionDate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExecutionDate, opts...).ToFunc()
+}
+
+// ByFrom orders the results by the from field.
+func ByFrom(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFrom, opts...).ToFunc()
+}
+
+// ByTo orders the results by the to field.
+func ByTo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTo, opts...).ToFunc()
+}
+
+// ByStockField orders the results by stock field.
+func ByStockField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStockStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newStockStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StockInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, StockTable, StockColumn),
+	)
 }
