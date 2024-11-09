@@ -94,12 +94,12 @@ go run cmd/cli/main.go show bars daily STOCK
 ## Roadmap
 client
     
-    - [ ] Add a Load command (reverse of dump)
+- [ ] Add a Load command (reverse of dump)
 
 server
 
-    - [ ] Add a web GUI
-    - [ ] Get stock financials from Polygon.io
-    - [X]Add support trades history
-    - [ ] Add support for realtime data (websockets)
-    - [ ] Add external web api to trade through Alpaca
+- [ ] Add a web GUI
+- [ ] Get stock financials from Polygon.io
+- [X] Add support trades history
+- [ ] Add support for realtime data (websockets)
+- [ ] Add external web api to trade through Alpaca
